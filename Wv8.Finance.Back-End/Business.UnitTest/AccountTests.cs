@@ -98,15 +98,15 @@ namespace Business.UnitTest
             var account = this.GenerateAccount();
 
             const string newDescription = "Description";
-            const bool isDefault = true;
+            const bool newIsDefault = true;
             const string newIconPack = "fas";
             const string newIconName = "circle";
             const string newIconColor = "#FFFFFF";
 
-            var updated = this.AccountManager.UpdateAccount(account.Id, newDescription, isDefault, newIconPack, newIconName, newIconColor);
+            var updated = this.AccountManager.UpdateAccount(account.Id, newDescription, newIsDefault, newIconPack, newIconName, newIconColor);
 
             Assert.Equal(newDescription, updated.Description);
-            Assert.Equal(isDefault, updated.IsDefault);
+            Assert.Equal(newIsDefault, updated.IsDefault);
             Assert.Equal(updated.Icon.IconPack, newIconPack);
             Assert.Equal(updated.Icon.Name, newIconName);
             Assert.Equal(updated.Icon.Color, newIconColor);
