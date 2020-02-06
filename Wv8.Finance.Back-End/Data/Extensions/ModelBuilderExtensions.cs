@@ -30,8 +30,7 @@
 
             entity.Property(e => e.IconPack).IsRequired();
             entity.Property(e => e.Name).IsRequired();
-            entity.Property(e => e.TextColor).IsRequired();
-            entity.Property(e => e.BackgroundColor).IsRequired();
+            entity.Property(e => e.Color).IsRequired();
 
             return builder;
         }

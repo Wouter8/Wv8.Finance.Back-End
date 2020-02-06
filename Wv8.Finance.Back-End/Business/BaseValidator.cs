@@ -24,7 +24,7 @@
             this.NotEmpty(iconName, nameof(iconColor));
 
             this.InRange(iconPack, 1, 3, nameof(iconPack));
-            this.InRange(iconPack, 7, 7, nameof(iconColor));
+            this.InRange(iconColor, 7, 7, nameof(iconColor));
         }
 
         /// <summary>
