@@ -19,7 +19,7 @@
             {
                 Id = entity.Id,
                 Name = entity.Name,
-                IconPack = entity.IconPack,
+                Pack = entity.Pack,
                 Color = entity.Color,
             };
         }

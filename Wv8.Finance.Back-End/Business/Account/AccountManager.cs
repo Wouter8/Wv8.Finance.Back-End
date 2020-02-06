@@ -81,7 +81,7 @@
                 entity.IsDefault = isDefault;
 
                 entity.Icon.Name = iconName;
-                entity.Icon.IconPack = iconPack;
+                entity.Icon.Pack = iconPack;
                 entity.Icon.Color = iconColor;
 
                 this.Context.SaveChanges();
@@ -109,7 +109,7 @@
                     IsObsolete = false,
                     Icon = new IconEntity
                     {
-                        IconPack = iconPack,
+                        Pack = iconPack,
                         Name = iconName,
                         Color = iconColor,
                     },

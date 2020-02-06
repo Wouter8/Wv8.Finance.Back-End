@@ -96,7 +96,8 @@ namespace PersonalFinance.Service
                 endpoints.MapControllers();
             });
 
-            this.UpdateDatabase(app);
+            if (env.IsProduction())
+                this.UpdateDatabase(app);
         }
 
         /// <summary>

@@ -28,7 +28,7 @@
         {
             var entity = builder.Entity<IconEntity>();
 
-            entity.Property(e => e.IconPack).IsRequired();
+            entity.Property(e => e.Pack).IsRequired();
             entity.Property(e => e.Name).IsRequired();
             entity.Property(e => e.Color).IsRequired();
 

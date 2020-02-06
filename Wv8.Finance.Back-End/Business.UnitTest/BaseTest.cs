@@ -59,7 +59,7 @@ namespace Business.UnitTest
             Assert.Equal(a.Id, b.Id);
             Assert.Equal(a.Name, b.Name);
             Assert.Equal(a.Color, b.Color);
-            Assert.Equal(a.IconPack, b.IconPack);
+            Assert.Equal(a.Pack, b.Pack);
         }
 
         protected void AssertEqual(Account a, Account b)

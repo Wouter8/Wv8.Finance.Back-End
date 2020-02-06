@@ -54,7 +54,7 @@ namespace Business.UnitTest
                 savedAccounts[defaultAccountIndex].Id,
                 savedAccounts[defaultAccountIndex].Description,
                 true,
-                savedAccounts[defaultAccountIndex].Icon.IconPack,
+                savedAccounts[defaultAccountIndex].Icon.Pack,
                 savedAccounts[defaultAccountIndex].Icon.Name,
                 savedAccounts[defaultAccountIndex].Icon.Color);
             savedAccounts[defaultAccountIndex] = this.AccountManager.GetAccount(savedAccounts[defaultAccountIndex].Id);
@@ -107,13 +107,13 @@ namespace Business.UnitTest
 
             Assert.Equal(newDescription, updated.Description);
             Assert.Equal(newIsDefault, updated.IsDefault);
-            Assert.Equal(updated.Icon.IconPack, newIconPack);
+            Assert.Equal(updated.Icon.Pack, newIconPack);
             Assert.Equal(updated.Icon.Name, newIconName);
             Assert.Equal(updated.Icon.Color, newIconColor);
 
             // Add new account and mark as default.
             var account2 = this.GenerateAccount();
-            this.AccountManager.UpdateAccount(account2.Id, account2.Description, true, account2.Icon.IconPack, account2.Icon.Name, account2.Icon.Color);
+            this.AccountManager.UpdateAccount(account2.Id, account2.Description, true, account2.Icon.Pack, account2.Icon.Name, account2.Icon.Color);
 
             // Retrieve old default account and verify it is no longer default.
             updated = this.AccountManager.GetAccount(account.Id);
@@ -159,7 +159,7 @@ namespace Business.UnitTest
             var account = this.AccountManager.CreateAccount(description, iconPack, iconName, iconColor);
 
             Assert.Equal(description, account.Description);
-            Assert.Equal(iconPack, account.Icon.IconPack);
+            Assert.Equal(iconPack, account.Icon.Pack);
             Assert.Equal(iconName, account.Icon.Name);
             Assert.Equal(iconColor, account.Icon.Color);
             Assert.False(account.IsDefault);
@@ -194,7 +194,7 @@ namespace Business.UnitTest
             this.AccountManager.UpdateAccount(account.Id,
                 account.Description,
                 true,
-                account.Icon.IconPack,
+                account.Icon.Pack,
                 account.Icon.Name,
                 account.Icon.Color);
             this.AccountManager.SetAccountObsolete(account.Id, true);

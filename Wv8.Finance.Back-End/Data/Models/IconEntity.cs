@@ -13,7 +13,7 @@
         /// <summary>
         /// The icon pack this icon belongs to.
         /// </summary>
-        public string IconPack { get; set; }
+        public string Pack { get; set; }
 
         /// <summary>
         /// The name of the icon.

@@ -39,6 +39,7 @@
         /// </summary>
         /// <param name="includeObsolete">Value indicating if obsolete accounts should also be retrieved.</param>
         /// <returns>The list of accounts.</returns>
+        [HttpGet]
         public List<Account> GetAccounts(bool includeObsolete)
         {
             return this.manager.GetAccounts(includeObsolete);
@@ -54,6 +55,7 @@
         /// <param name="iconName">The new name of the icon for the account.</param>
         /// <param name="iconColor">The new background color of the icon for the account.</param>
         /// <returns>The updated account.</returns>
+        [HttpPut("{id}")]
         public Account UpdateAccount(int id, string description, bool isDefault, string iconPack, string iconName, string iconColor)
         {
             return this.manager.UpdateAccount(id, description, isDefault, iconPack, iconName, iconColor);
@@ -67,6 +69,7 @@
         /// <param name="iconName">The name of the icon for the account.</param>
         /// <param name="iconColor">The background color of the icon for the account.</param>
         /// <returns>The created account.</returns>
+        [HttpPost]
         public Account CreateAccount(string description, string iconPack, string iconName, string iconColor)
         {
             return this.manager.CreateAccount(description, iconPack, iconName, iconColor);
@@ -78,6 +81,7 @@
         /// <param name="id">The identifier of the account.</param>
         /// <param name="obsolete">The new obsolete value for the account.</param>
         /// <remarks>Nothing happens if the existing obsolete value is the same as the provided obsolete value.</remarks>
+        [HttpPut("obsolete/{id}")]
         public void SetAccountObsolete(int id, bool obsolete)
         {
             this.manager.SetAccountObsolete(id, obsolete);
