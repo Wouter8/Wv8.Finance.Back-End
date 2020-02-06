@@ -3,6 +3,7 @@ using Xunit;
 
 namespace Business.UnitTest
 {
+    using System.Linq;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;
     using PersonalFinance.Business.Account;
@@ -33,10 +34,10 @@ namespace Business.UnitTest
 
         private string GetRandomString(int length = 16)
         {
-
+            return Guid.NewGuid().ToString().Substring(0, length);
         }
 
-        protected Account CreateAccount(
+        protected Account GenerateAccount(
             string description = null,
             string iconPack = null,
             string iconName = null,
@@ -53,7 +54,7 @@ namespace Business.UnitTest
 
         #region AssertHelpers
 
-        protected void Equal(Icon a, Icon b)
+        protected void AssertEqual(Icon a, Icon b)
         {
             Assert.Equal(a.Id, b.Id);
             Assert.Equal(a.Name, b.Name);
@@ -61,7 +62,7 @@ namespace Business.UnitTest
             Assert.Equal(a.IconPack, b.IconPack);
         }
 
-        protected void Equal(Account a, Account b)
+        protected void AssertEqual(Account a, Account b)
         {
             Assert.Equal(a.Id, b.Id);
             Assert.Equal(a.Description, b.Description);
@@ -69,7 +70,7 @@ namespace Business.UnitTest
             Assert.Equal(a.IsDefault, b.IsDefault);
             Assert.Equal(a.IsObsolete, b.IsObsolete);
             Assert.Equal(a.IconId, b.IconId);
-            this.Equal(a.Icon, b.Icon);
+            this.AssertEqual(a.Icon, b.Icon);
         }
 
         #endregion AssertHelpers

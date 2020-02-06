@@ -16,7 +16,7 @@
     /// </summary>
     public class AccountManager : BaseManager, IAccountManager
     {
-        private AccountValidator validator;
+        private readonly AccountValidator validator;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AccountManager"/> class.
@@ -44,6 +44,8 @@
             return this.Context.Accounts
                 .Include(a => a.Icon)
                 .WhereIf(!includeObsolete, a => !a.IsObsolete)
+                .OrderByDescending(a => a.IsDefault)
+                .ThenBy(a => a.Description)
                 .Select(a => a.AsAccount())
                 .ToList();
         }
@@ -60,6 +62,20 @@
                     .Include(a => a.Icon)
                     .SingleOrNone(a => a.Id == id)
                     .ValueOrThrow(() => new DoesNotExistException($"Account with identifier {id} does not exist."));
+
+                if (this.Context.Accounts.Any(a => a.Id != id && a.Description == description && !a.IsObsolete))
+                {
+                    throw new ValidationException($"An active account with description \"{description}\" already exists.");
+                }
+
+                if (isDefault)
+                {
+                    var defaultAccount = this.Context.Accounts.SingleOrNone(a => a.IsDefault);
+                    if (defaultAccount.IsSome)
+                    {
+                        defaultAccount.Value.IsDefault = false;
+                    }
+                }
 
                 entity.Description = description;
                 entity.IsDefault = isDefault;
@@ -116,9 +132,13 @@
                     .SingleOrNone(a => a.Id == id)
                     .ValueOrThrow(() => new DoesNotExistException($"Account with identifier {id} does not exist."));
 
-                // Validate that no other active account exists with the same description.
                 if (obsolete)
                 {
+                    entity.IsDefault = false;
+                }
+                else
+                {
+                    // Validate that no other active account exists with the same description.
                     if (this.Context.Accounts.Any(a => a.Description == entity.Description && !a.IsObsolete && a.Id != entity.Id))
                         throw new ValidationException($"An active account with description \"{entity.Description}\" already exists. Change the description of that account first.");
                 }

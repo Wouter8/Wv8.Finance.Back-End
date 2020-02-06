@@ -105,13 +105,11 @@ namespace PersonalFinance.Service
         /// <param name="app">The application builder.</param>
         private void UpdateDatabase(IApplicationBuilder app)
         {
-            using (var serviceScope = app.ApplicationServices
+            using var serviceScope = app.ApplicationServices
                 .GetRequiredService<IServiceScopeFactory>()
-                .CreateScope())
-            using (var context = serviceScope.ServiceProvider.GetService<Context>())
-            {
-                context.Database.Migrate();
-            }
+                .CreateScope();
+            using var context = serviceScope.ServiceProvider.GetService<Context>();
+            context.Database.Migrate();
         }
     }
 }
