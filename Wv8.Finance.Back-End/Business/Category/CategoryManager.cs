@@ -35,6 +35,7 @@
             return this.Context.Categories
                 .Include(c => c.Icon)
                 .Include(c => c.ParentCategory)
+                .Include(c => c.Children)
                 .SingleOrNone(c => c.Id == id)
                 .ValueOrThrow(() => new DoesNotExistException($"Category with identifier {id} does not exist."))
                 .AsCategory();
@@ -45,8 +46,9 @@
         {
             return this.Context.Categories
                 .Include(c => c.Icon)
-                .Include(c => c.ParentCategory)
+                .Include(c => c.Children)
                 .WhereIf(!includeObsolete, c => !c.IsObsolete)
+                .Where(c => !c.ParentCategoryId.HasValue)
                 .OrderBy(c => c.Description)
                 .Select(c => c.AsCategory())
                 .ToList();
@@ -56,10 +58,11 @@
         public List<Category> GetCategoriesByFilter(bool includeObsolete, CategoryType type)
         {
             return this.Context.Categories
-                .Include(c => c.ParentCategory)
                 .Include(c => c.Icon)
+                .Include(c => c.Children)
                 .WhereIf(!includeObsolete, c => !c.IsObsolete)
                 .Where(c => c.Type == type)
+                .Where(c => !c.ParentCategoryId.HasValue)
                 .OrderBy(c => c.Description)
                 .Select(c => c.AsCategory())
                 .ToList();
@@ -76,6 +79,7 @@
                 var entity = this.Context.Categories
                     .Include(c => c.Icon)
                     .Include(c => c.ParentCategory)
+                    .Include(c => c.Children)
                     .SingleOrNone(c => c.Id == id)
                     .ValueOrThrow(() => new DoesNotExistException($"Category with identifier {id} does not exist."));
 

@@ -125,6 +125,12 @@ namespace Business.UnitTest
             Assert.Equal(a.IconId, b.IconId);
             this.AssertEqual(a.ParentCategory, b.ParentCategory);
             this.AssertEqual(a.Icon, b.Icon);
+
+            foreach (var child in a.Children)
+            {
+                var bChild = b.Children.Single(c => c.Id == child.Id);
+                this.AssertEqual(child, bChild);
+            }
         }
 
         protected void AssertEqual(Maybe<Category> a, Maybe<Category> b)

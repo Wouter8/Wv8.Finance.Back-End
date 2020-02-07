@@ -1,5 +1,7 @@
 ﻿namespace PersonalFinance.Data.Models
 {
+    using System.Collections;
+    using System.Collections.Generic;
     using PersonalFinance.Common.Enums;
 
     /// <summary>
@@ -7,6 +9,14 @@
     /// </summary>
     public class CategoryEntity
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CategoryEntity"/> class.
+        /// </summary>
+        public CategoryEntity()
+        {
+            this.Children = new List<CategoryEntity>();
+        }
+
         /// <summary>
         /// The identifier of this account.
         /// </summary>
@@ -46,5 +56,10 @@
         /// The icon for this account.
         /// </summary>
         public IconEntity Icon { get; set; }
+
+        /// <summary>
+        /// The children of this category. All transactions of a child also belong to the parent.
+        /// </summary>
+        public IList<CategoryEntity> Children { get; set; }
     }
 }

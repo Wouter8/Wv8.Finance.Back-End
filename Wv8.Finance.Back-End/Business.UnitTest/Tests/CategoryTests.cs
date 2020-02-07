@@ -41,10 +41,29 @@
 
             // Create categories.
             const int categoryCount = 5;
-            var savedCategories = new List<Category>();
+            const int childrenCount = 3;
+            const int grandChildrenCount = 2;
+            const int grandGrandChildrenCount = 1;
+            var parentCategories = new List<Category>();
             for (int i = 0; i < categoryCount; i++)
             {
-                savedCategories.Add(this.GenerateCategory());
+                var parent = this.GenerateCategory();
+                for (int j = 0; j < childrenCount; j++)
+                {
+                    var child = this.GenerateCategory(parentCategoryId: parent.Id);
+                    for (int k = 0; k < grandChildrenCount; k++)
+                    {
+                        var grandChild = this.GenerateCategory(parentCategoryId: child.Id);
+                        for (int l = 0; l < grandGrandChildrenCount; l++)
+                        {
+                            var grandGrandChild = this.GenerateCategory(parentCategoryId: grandChild.Id);
+                            grandChild.Children.Add(grandGrandChild);
+                        }
+                        child.Children.Add(grandChild);
+                    }
+                    parent.Children.Add(child);
+                }
+                parentCategories.Add(parent);
             }
 
             // Load all active categories (all active).
@@ -52,11 +71,19 @@
             Assert.Equal(categoryCount, retrievedCategories.Count);
 
             // Verify categories.
-            foreach (var savedCategory in savedCategories)
+            foreach (var savedCategory in parentCategories)
             {
                 var retrievedCategory = retrievedCategories.Single(a => a.Id == savedCategory.Id);
+                Assert.Equal(retrievedCategory.Children.Count, childrenCount);
 
-                this.AssertEqual(savedCategory, retrievedCategory);
+                foreach (var child in retrievedCategory.Children)
+                {
+                    Assert.Equal(child.Children.Count, grandChildrenCount);
+                    foreach (var grandChild in child.Children)
+                    {
+                        Assert.Equal(grandChild.Children.Count, grandGrandChildrenCount);
+                    }
+                }
             }
 
             // Load active and inactive categories (all active).
@@ -64,12 +91,12 @@
             Assert.Equal(categoryCount, retrievedCategories.Count);
 
             // Set category obsolete
-            this.CategoryManager.SetCategoryObsolete(savedCategories.Last().Id, true);
+            this.CategoryManager.SetCategoryObsolete(parentCategories.Last().Id, true);
 
             // Load all active categories (all except 1)
             retrievedCategories = this.CategoryManager.GetCategories(false);
             Assert.Equal(categoryCount - 1, retrievedCategories.Count);
-            Assert.True(retrievedCategories.All(c => c.Id != savedCategories.Last().Id));
+            Assert.True(retrievedCategories.All(c => c.Id != parentCategories.Last().Id));
 
             // Load active and inactive categories (should return all again).
             retrievedCategories = this.CategoryManager.GetCategories(true);

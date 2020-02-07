@@ -1,5 +1,6 @@
 ﻿namespace PersonalFinance.Common.DataTransfer
 {
+    using System.Collections.Generic;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;
 
@@ -47,5 +48,10 @@
         /// The icon for this account.
         /// </summary>
         public Icon Icon { get; set; }
+
+        /// <summary>
+        /// The children of this category. All transactions of a child also belong to the parent.
+        /// </summary>
+        public List<Category> Children { get; set; }
     }
 }
