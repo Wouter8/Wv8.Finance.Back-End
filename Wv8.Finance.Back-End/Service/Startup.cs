@@ -15,6 +15,7 @@ namespace PersonalFinance.Service
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using PersonalFinance.Business.Account;
+    using PersonalFinance.Business.Budget;
     using PersonalFinance.Business.Category;
     using PersonalFinance.Data;
     using Wv8.Core.ModelBinding;
@@ -74,6 +75,7 @@ namespace PersonalFinance.Service
             // Managers
             services.AddTransient<IAccountManager, AccountManager>();
             services.AddTransient<ICategoryManager, CategoryManager>();
+            services.AddTransient<IBudgetManager, BudgetManager>();
         }
 
         /// <summary>

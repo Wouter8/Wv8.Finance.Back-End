@@ -1,20 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Business.UnitTest.Tests
+﻿namespace Business.UnitTest.Tests
 {
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer;
     using Wv8.Core.Exceptions;
     using Xunit;
 
+    /// <summary>
+    /// Tests for the account manager.
+    /// </summary>
     public class AccountTests : BaseTest
     {
-
         #region GetAccount
 
+        /// <summary>
+        /// Tests the good flow of the GetAccount method.
+        /// </summary>
         [Fact]
         public void GetAccount()
         {
@@ -24,6 +28,9 @@ namespace Business.UnitTest.Tests
             this.AssertEqual(savedAccount, retrievedAccount);
         }
 
+        /// <summary>
+        /// Tests the exceptional flow of the GetAccount method.
+        /// </summary>
         [Fact]
         public void GetAccount_Exceptions()
         {
@@ -34,6 +41,9 @@ namespace Business.UnitTest.Tests
 
         #region GetAccounts
 
+        /// <summary>
+        /// Tests the good flow of the GetAccounts method.
+        /// </summary>
         [Fact]
         public void GetAccounts()
         {
@@ -93,6 +103,9 @@ namespace Business.UnitTest.Tests
 
         #region UpdateAccount
 
+        /// <summary>
+        /// Tests the good flow of the UpdateAccount method.
+        /// </summary>
         [Fact]
         public void UpdateAccount()
         {
@@ -121,6 +134,9 @@ namespace Business.UnitTest.Tests
             Assert.False(updated.IsDefault);
         }
 
+        /// <summary>
+        /// Tests the exceptional flow of the UpdateAccount method.
+        /// </summary>
         [Fact]
         public void UpdateAccount_Exceptions()
         {
@@ -149,6 +165,9 @@ namespace Business.UnitTest.Tests
 
         #region CreateAccount
 
+        /// <summary>
+        /// Tests the good flow of the CreateAccount method.
+        /// </summary>
         [Fact]
         public void CreateAccount()
         {
@@ -167,6 +186,9 @@ namespace Business.UnitTest.Tests
             Assert.False(account.IsObsolete);
         }
 
+        /// <summary>
+        /// Tests the exceptional flow of the CreateAccount method.
+        /// </summary>
         [Fact]
         public void CreateAccount_Exceptions()
         {
@@ -186,13 +208,17 @@ namespace Business.UnitTest.Tests
 
         #region SetAccountObsolete
 
+        /// <summary>
+        /// Tests the good flow of the SetAccountObsolete method.
+        /// </summary>
         [Fact]
         public void SetAccountObsolete()
         {
             var account = this.GenerateAccount();
 
             // Set as default and obsolete.
-            this.AccountManager.UpdateAccount(account.Id,
+            this.AccountManager.UpdateAccount(
+                account.Id,
                 account.Description,
                 true,
                 account.Icon.Pack,
@@ -214,11 +240,14 @@ namespace Business.UnitTest.Tests
             Assert.False(updated.IsDefault);
         }
 
+        /// <summary>
+        /// Tests the exceptional flow of the SetAccountObsolete method.
+        /// </summary>
         [Fact]
         public void SetAccountObsolete_Exceptions()
         {
             var account = this.GenerateAccount("Description");
-            
+
             this.AccountManager.SetAccountObsolete(account.Id, true);
 
             // Create account with same description as inactive account.

@@ -31,6 +31,11 @@
         public DbSet<CategoryEntity> Categories { get; set; }
 
         /// <summary>
+        /// The set of budgets.
+        /// </summary>
+        public DbSet<BudgetEntity> Budgets { get; set; }
+
+        /// <summary>
         /// The set of icons.
         /// </summary>
         public DbSet<IconEntity> Icons { get; set; }

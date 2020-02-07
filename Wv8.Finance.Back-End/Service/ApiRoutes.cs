@@ -84,5 +84,47 @@
             /// </summary>
             public const string SetCategoryObsolete = "/categories/obsolete/{id}";
         }
+
+        /// <summary>
+        /// A class containing all routes for the budget service.
+        /// </summary>
+        public static class Budget
+        {
+            /// <summary>
+            /// The GET route for GetBudget.
+            /// Identifier is expected.
+            /// </summary>
+            public const string GetBudget = "/budgets/{id}";
+
+            /// <summary>
+            /// The GET route for GetBudgets.
+            /// </summary>
+            public const string GetBudgets = "/budgets";
+
+            /// <summary>
+            /// The GET route for GetBudgetsByFilter.
+            /// Multiple query parameters are expected.
+            /// </summary>
+            public const string GetBudgetsByFilter = "/budgets/filter";
+
+            /// <summary>
+            /// The PUT route for UpdateBudget.
+            /// Identifier is expected.
+            /// Multiple query parameters are expected.
+            /// </summary>
+            public const string UpdateBudget = "/budgets/{id}";
+
+            /// <summary>
+            /// The POST route for CreateBudget.
+            /// Multiple query parameters are expected.
+            /// </summary>
+            public const string CreateBudget = "/budgets";
+
+            /// <summary>
+            /// The DELETE route for DeleteBudget.
+            /// Identifier is expected.
+            /// </summary>
+            public const string DeleteBudget = "/budgets/{id}";
+        }
     }
 }

@@ -1,18 +1,23 @@
 ﻿namespace Business.UnitTest.Tests
 {
-    using System.Linq;
     using System.Collections.Generic;
+    using System.Linq;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;
     using Wv8.Core.Exceptions;
     using Xunit;
 
+    /// <summary>
+    /// A class containing tests for the category manager.
+    /// </summary>
     public class CategoryTests : BaseTest
     {
-
         #region GetCategory
 
+        /// <summary>
+        /// Tests the good flow of the GetCategory method.
+        /// </summary>
         [Fact]
         public void GetCategory()
         {
@@ -22,6 +27,9 @@
             this.AssertEqual(savedCategory, retrievedCategory);
         }
 
+        /// <summary>
+        /// Tests the exceptional flow of the GetCategory method.
+        /// </summary>
         [Fact]
         public void GetCategory_Exceptions()
         {
@@ -32,6 +40,9 @@
 
         #region GetCategories
 
+        /// <summary>
+        /// Tests the good flow of the GetCategories method.
+        /// </summary>
         [Fact]
         public void GetCategories()
         {
@@ -107,6 +118,9 @@
 
         #region GetCategoriesByFilter
 
+        /// <summary>
+        /// Tests the good flow of the GetCategoriesByFilter method.
+        /// </summary>
         [Fact]
         public void GetCategoriesByFilter()
         {
@@ -131,6 +145,9 @@
 
         #region UpdateCategory
 
+        /// <summary>
+        /// Tests the good flow of the UpdateCategory method.
+        /// </summary>
         [Fact]
         public void UpdateCategory()
         {
@@ -153,6 +170,9 @@
             Assert.Equal(updated.Icon.Color, newIconColor);
         }
 
+        /// <summary>
+        /// Tests the exceptional flow of the UpdateCategory method.
+        /// </summary>
         [Fact]
         public void UpdateCategory_Exceptions()
         {
@@ -196,6 +216,9 @@
 
         #region CreateCategory
 
+        /// <summary>
+        /// Tests the good flow of the CreateCategory method.
+        /// </summary>
         [Fact]
         public void CreateCategory()
         {
@@ -226,6 +249,9 @@
             Assert.Equal(parent.Id, child.ParentCategoryId.Value);
         }
 
+        /// <summary>
+        /// Tests the exceptional flow of the CreateCategory method.
+        /// </summary>
         [Fact]
         public void CreateCategory_Exceptions()
         {
@@ -258,6 +284,9 @@
 
         #region SetCategoryObsolete
 
+        /// <summary>
+        /// Tests the good flow of the SetCategoryObsolete method.
+        /// </summary>
         [Fact]
         public void SetCategoryObsolete()
         {
@@ -294,12 +323,15 @@
             Assert.True(updatedGrandChild.IsObsolete);
         }
 
+        /// <summary>
+        /// Tests the exceptional flow of the SetCategoryObsolete method.
+        /// </summary>
         [Fact]
         public void SetCategoryObsolete_Exceptions()
         {
             // Create category.
             var category = this.GenerateCategory(description: "Description");
-            
+
             // Mark category obsolete.
             this.CategoryManager.SetCategoryObsolete(category.Id, true);
 

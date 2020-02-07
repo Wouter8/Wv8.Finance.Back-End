@@ -17,7 +17,8 @@
             builder
                 .BuildIconEntity()
                 .BuildAccountEntity()
-                .BuildCategoryEntity();
+                .BuildCategoryEntity()
+                .BuildBudgetEntity();
         }
 
         /// <summary>
@@ -62,6 +63,25 @@
             var entity = builder.Entity<CategoryEntity>();
 
             entity.Property(e => e.Description).IsRequired();
+
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds the required properties to the fields of the budget entity.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        /// <returns>The updated builder.</returns>
+        private static ModelBuilder BuildBudgetEntity(this ModelBuilder builder)
+        {
+            var entity = builder.Entity<BudgetEntity>();
+
+            entity.Property(e => e.Description).IsRequired();
+            entity.Property(e => e.StartDate).IsRequired();
+            entity.Property(e => e.EndDate).IsRequired();
+
+            entity.Property(e => e.Amount).HasPrecision(12, 2);
+            entity.Property(e => e.Spent).HasPrecision(12, 2);
 
             return builder;
         }
