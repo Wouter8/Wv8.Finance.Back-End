@@ -105,6 +105,30 @@
 
         #endregion GetCategories
 
+        #region GetCategoriesByFilter
+
+        [Fact]
+        public void GetCategoriesByFilter()
+        {
+            var category1 = this.GenerateCategory();
+            var category2 = this.GenerateCategory();
+            var category3 = this.GenerateCategory(CategoryType.Income);
+
+            this.CategoryManager.SetCategoryObsolete(category2.Id, true);
+
+            var retrievedCategories = this.CategoryManager.GetCategoriesByFilter(true, CategoryType.Expense);
+            Assert.Equal(2, retrievedCategories.Count);
+            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(false, CategoryType.Expense);
+            Assert.Single(retrievedCategories);
+
+            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(true, CategoryType.Income);
+            Assert.Single(retrievedCategories);
+            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(false, CategoryType.Income);
+            Assert.Single(retrievedCategories);
+        }
+
+        #endregion GetCategoriesByFilter
+
         #region UpdateCategory
 
         [Fact]
