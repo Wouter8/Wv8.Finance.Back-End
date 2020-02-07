@@ -129,6 +129,9 @@
                 if (category.IsObsolete)
                     throw new ValidationException("Category is obsolete. No budgets can be created for obsolete categories.");
 
+                if (category.Type != CategoryType.Expense)
+                    throw new ValidationException("Budgets can only be created for expense categories.");
+
                 var entity = new BudgetEntity
                 {
                     Description = description,

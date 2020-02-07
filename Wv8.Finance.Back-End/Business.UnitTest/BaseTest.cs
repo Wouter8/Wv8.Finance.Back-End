@@ -137,6 +137,37 @@ namespace Business.UnitTest
                 iconColor ?? this.GetRandomString(7));
         }
 
+        /// <summary>
+        /// Creates an account with specified, or random values.
+        /// </summary>
+        /// <param name="categoryId">The identifier of a category.</param>
+        /// <param name="description">The description.</param>
+        /// <param name="amount">The amount.</param>
+        /// <param name="startDate">The start date.</param>
+        /// <param name="endDate">The end date.</param>
+        /// <returns>The created budget.</returns>
+        protected Budget GenerateBudget(
+            int? categoryId = null,
+            string description = null,
+            decimal? amount = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null)
+        {
+            if (!categoryId.HasValue)
+                categoryId = this.GenerateCategory().Id;
+            if (!startDate.HasValue)
+                startDate = DateTime.Today;
+            if (!endDate.HasValue)
+                endDate = DateTime.Today.AddMonths(1);
+
+            return this.BudgetManager.CreateBudget(
+                description ?? this.GetRandomString(),
+                categoryId.Value,
+                amount ?? 100,
+                startDate.Value.ToString("O"),
+                endDate.Value.ToString("O"));
+        }
+
         #endregion CreateHelpers
 
         #region AssertHelpers
@@ -206,6 +237,23 @@ namespace Business.UnitTest
                 return;
 
             this.AssertEqual(a.Value, b.Value);
+        }
+
+        /// <summary>
+        /// Asserts that two budgets are the same.
+        /// </summary>
+        /// <param name="a">Budget a.</param>
+        /// <param name="b">Budget b.</param>
+        protected void AssertEqual(Budget a, Budget b)
+        {
+            Assert.Equal(a.Id, b.Id);
+            Assert.Equal(a.Description, b.Description);
+            Assert.Equal(a.Amount, b.Amount);
+            Assert.Equal(a.Spent, b.Spent);
+            Assert.Equal(a.StartDate, b.EndDate);
+            Assert.Equal(a.EndDate, b.EndDate);
+            Assert.Equal(a.CategoryId, b.CategoryId);
+            this.AssertEqual(a.Category, b.Category);
         }
 
         #endregion AssertHelpers
