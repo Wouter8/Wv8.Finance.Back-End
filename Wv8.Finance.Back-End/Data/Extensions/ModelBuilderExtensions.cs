@@ -16,7 +16,8 @@
         {
             builder
                 .BuildIconEntity()
-                .BuildAccountEntity();
+                .BuildAccountEntity()
+                .BuildCategoryEntity();
         }
 
         /// <summary>
@@ -47,6 +48,20 @@
             entity.Property(e => e.Description).IsRequired();
             entity.Property(e => e.IsDefault).HasDefaultValue(false);
             entity.Property(e => e.CurrentBalance).HasPrecision(12, 2);
+
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds the required properties to the fields of the category entity.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        /// <returns>The updated builder.</returns>
+        private static ModelBuilder BuildCategoryEntity(this ModelBuilder builder)
+        {
+            var entity = builder.Entity<CategoryEntity>();
+
+            entity.Property(e => e.Description).IsRequired();
 
             return builder;
         }

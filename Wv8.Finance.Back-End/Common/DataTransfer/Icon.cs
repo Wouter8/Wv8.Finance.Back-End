@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Common
+﻿namespace PersonalFinance.Common.DataTransfer
 {
     /// <summary>
     /// Data transfer object for an icon.

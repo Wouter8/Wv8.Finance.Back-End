@@ -26,6 +26,11 @@
         public DbSet<AccountEntity> Accounts { get; set; }
 
         /// <summary>
+        /// The set of categories.
+        /// </summary>
+        public DbSet<CategoryEntity> Categories { get; set; }
+
+        /// <summary>
         /// The set of icons.
         /// </summary>
         public DbSet<IconEntity> Icons { get; set; }

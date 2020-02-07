@@ -4,6 +4,7 @@
     using Microsoft.AspNetCore.Mvc;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Common;
+    using PersonalFinance.Common.DataTransfer;
 
     /// <summary>
     /// Service endpoint for actions related to accounts.

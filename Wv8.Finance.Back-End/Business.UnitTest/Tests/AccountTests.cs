@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Business.UnitTest
+namespace Business.UnitTest.Tests
 {
     using System.Linq;
     using PersonalFinance.Common;
+    using PersonalFinance.Common.DataTransfer;
     using Wv8.Core.Exceptions;
     using Xunit;
 

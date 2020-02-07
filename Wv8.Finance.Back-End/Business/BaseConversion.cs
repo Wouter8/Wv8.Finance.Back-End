@@ -1,6 +1,6 @@
 ﻿namespace PersonalFinance.Business
 {
-    using PersonalFinance.Common;
+    using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Data.Models;
 
     /// <summary>
