@@ -57,7 +57,7 @@
         /// <remarks>Note that both start and end date have to be filled to filter on period.</remarks>
         /// <returns>The list of filtered budgets.</returns>
         [HttpGet("filter")]
-        public List<Budget> GetBudgetsByFilter(Maybe<int> categoryId, Maybe<string> startDate, Maybe<string> endDate)
+        public List<Budget> GetBudgetsByFilter([FromQuery] Maybe<int> categoryId, [FromQuery] Maybe<string> startDate, [FromQuery] Maybe<string> endDate)
         {
             return this.manager.GetBudgetsByFilter(categoryId, startDate, endDate);
         }
