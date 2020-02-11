@@ -45,6 +45,7 @@
         {
             return this.Context.Budgets
                 .Include(b => b.Category)
+                .Where(b => !b.Category.IsObsolete)
                 .OrderBy(b => b.Description)
                 .Select(b => b.AsBudget())
                 .ToList();
@@ -55,6 +56,7 @@
         {
             var periodStart = startDate.Select(DateTime.Parse);
             var periodEnd = endDate.Select(DateTime.Parse);
+
             return this.Context.Budgets
                 .Include(b => b.Category)
                 .WhereIf(categoryId.IsSome, b => b.CategoryId == categoryId.Value)
@@ -93,6 +95,7 @@
                     .Any(b => b.Id != id && b.Description == description && !b.Category.IsObsolete))
                     throw new ValidationException($"A budget for an active category with description \"{description}\" already exists.");
 
+                // TODO: Set spent if dates changed
                 entity.Description = description;
                 entity.Amount = amount;
                 entity.StartDate = periodStart;

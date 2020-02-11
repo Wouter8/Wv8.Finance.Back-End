@@ -29,8 +29,8 @@
                 Description = entity.Description,
                 Amount = entity.Amount,
                 Spent = entity.Spent,
-                StartDate = entity.StartDate,
-                EndDate = entity.EndDate,
+                StartDate = entity.StartDate.ToString("O"),
+                EndDate = entity.EndDate.ToString("O"),
                 CategoryId = entity.CategoryId,
                 Category = entity.Category.AsCategory(),
             };

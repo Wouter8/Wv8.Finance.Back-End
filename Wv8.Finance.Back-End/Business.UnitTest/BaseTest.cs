@@ -250,7 +250,7 @@ namespace Business.UnitTest
             Assert.Equal(a.Description, b.Description);
             Assert.Equal(a.Amount, b.Amount);
             Assert.Equal(a.Spent, b.Spent);
-            Assert.Equal(a.StartDate, b.EndDate);
+            Assert.Equal(a.StartDate, b.StartDate);
             Assert.Equal(a.EndDate, b.EndDate);
             Assert.Equal(a.CategoryId, b.CategoryId);
             this.AssertEqual(a.Category, b.Category);

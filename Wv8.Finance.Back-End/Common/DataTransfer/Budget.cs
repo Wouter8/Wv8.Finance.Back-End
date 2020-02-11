@@ -29,12 +29,12 @@
         /// <summary>
         /// The date from which transactions in the category are tracked.
         /// </summary>
-        public DateTime StartDate { get; set; }
+        public string StartDate { get; set; }
 
         /// <summary>
         /// The date till which transactions in the category are tracked.
         /// </summary>
-        public DateTime EndDate { get; set; }
+        public string EndDate { get; set; }
 
         /// <summary>
         /// The amount currently spent.
