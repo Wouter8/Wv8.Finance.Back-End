@@ -35,7 +35,9 @@
             return this.Context.Categories
                 .Include(c => c.Icon)
                 .Include(c => c.ParentCategory)
+                .ThenInclude(c => c.Icon)
                 .Include(c => c.Children)
+                .ThenInclude(c => c.Icon)
                 .SingleOrNone(c => c.Id == id)
                 .ValueOrThrow(() => new DoesNotExistException($"Category with identifier {id} does not exist."))
                 .AsCategory();
@@ -47,6 +49,7 @@
             return this.Context.Categories
                 .Include(c => c.Icon)
                 .Include(c => c.Children)
+                .ThenInclude(c => c.Icon)
                 .WhereIf(!includeObsolete, c => !c.IsObsolete)
                 .Where(c => !c.ParentCategoryId.HasValue)
                 .OrderBy(c => c.Description)
@@ -60,6 +63,7 @@
             return this.Context.Categories
                 .Include(c => c.Icon)
                 .Include(c => c.Children)
+                .ThenInclude(c => c.Icon)
                 .WhereIf(!includeObsolete, c => !c.IsObsolete)
                 .Where(c => c.Type == type)
                 .Where(c => !c.ParentCategoryId.HasValue)
@@ -79,7 +83,9 @@
                 var entity = this.Context.Categories
                     .Include(c => c.Icon)
                     .Include(c => c.ParentCategory)
+                    .ThenInclude(c => c.Icon)
                     .Include(c => c.Children)
+                    .ThenInclude(c => c.Icon)
                     .SingleOrNone(c => c.Id == id)
                     .ValueOrThrow(() => new DoesNotExistException($"Category with identifier {id} does not exist."));
 
@@ -90,6 +96,7 @@
                 if (parentCategoryId.IsSome)
                 {
                     parentCategory = this.Context.Categories
+                        .Include(c => c.Icon)
                         .SingleOrNone(c => c.Id == parentCategoryId.Value)
                         .ValueOrThrow(() => new DoesNotExistException($"Parent category with identifier {parentCategoryId.Value} does not exist."));
 
@@ -130,6 +137,7 @@
                 if (parentCategoryId.IsSome)
                 {
                     parentCategory = this.Context.Categories
+                        .Include(c => c.Icon)
                         .SingleOrNone(c => c.Id == parentCategoryId.Value)
                         .ValueOrThrow(() => new DoesNotExistException($"Parent category with identifier {parentCategoryId.Value} does not exist."));
 
@@ -168,8 +176,12 @@
             this.ConcurrentInvoke(() =>
             {
                 var entity = this.Context.Categories
+                    .Include(c => c.ParentCategory)
                     .SingleOrNone(c => c.Id == id)
                     .ValueOrThrow(() => new DoesNotExistException($"Category with identifier {id} does not exist."));
+
+                if (entity.ParentCategoryId.HasValue && entity.ParentCategory.IsObsolete)
+                    throw new ValidationException("Parent category is obsolete."); // TODO: Add test
 
                 if (obsolete)
                 {
