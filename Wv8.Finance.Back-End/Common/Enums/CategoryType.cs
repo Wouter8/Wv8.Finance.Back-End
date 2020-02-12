@@ -8,11 +8,11 @@
         /// <summary>
         /// Transactions in this category are expenses.
         /// </summary>
-        Expense = 0,
+        Expense = 1,
 
         /// <summary>
         /// Transactions in this category are income.
         /// </summary>
-        Income = 1,
+        Income = 2,
     }
 }
