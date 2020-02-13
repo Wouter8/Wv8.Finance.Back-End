@@ -35,6 +35,7 @@
         {
             return this.Context.Budgets
                 .Include(b => b.Category)
+                .ThenInclude(c => c.Icon)
                 .SingleOrNone(b => b.Id == id)
                 .ValueOrThrow(() => new DoesNotExistException($"Budget with identifier {id} does not exist."))
                 .AsBudget();
@@ -45,8 +46,8 @@
         {
             return this.Context.Budgets
                 .Include(b => b.Category)
+                .ThenInclude(c => c.Icon)
                 .Where(b => !b.Category.IsObsolete)
-                .OrderBy(b => b.Description)
                 .Select(b => b.AsBudget())
                 .ToList();
         }
@@ -59,6 +60,9 @@
 
             return this.Context.Budgets
                 .Include(b => b.Category)
+                .ThenInclude(c => c.Icon)
+                .Include(b => b.Category)
+                .ThenInclude(c => c.Children)
                 .WhereIf(categoryId.IsSome, b => b.CategoryId == categoryId.Value)
                 .WhereIf(
                     startDate.IsSome && endDate.IsSome,
@@ -66,15 +70,13 @@
                                   (b.EndDate >= periodStart.Value && b.StartDate <= periodEnd.Value) ||
                                   (b.StartDate <= periodStart.Value && b.EndDate >= periodEnd.Value))
                 .Where(b => !b.Category.IsObsolete)
-                .OrderBy(b => b.Description)
                 .Select(b => b.AsBudget())
                 .ToList();
         }
 
         /// <inheritdoc />
-        public Budget UpdateBudget(int id, string description, decimal amount, string startDate, string endDate)
+        public Budget UpdateBudget(int id, decimal amount, string startDate, string endDate)
         {
-            description = this.validator.Description(description);
             var periodStart = DateTime.Parse(startDate);
             var periodEnd = DateTime.Parse(endDate);
             this.validator.Period(periodStart, periodEnd);
@@ -84,19 +86,14 @@
             {
                 var entity = this.Context.Budgets
                     .Include(b => b.Category)
+                    .ThenInclude(c => c.Icon)
                     .SingleOrNone(b => b.Id == id)
                     .ValueOrThrow(() => new DoesNotExistException($"Budget with identifier {id} does not exist."));
 
                 if (entity.Category.IsObsolete)
                     throw new ValidationException("The budget can not be updated since it is linked to an obsolete category.");
 
-                if (this.Context.Budgets
-                    .Include(b => b.Category)
-                    .Any(b => b.Id != id && b.Description == description && !b.Category.IsObsolete))
-                    throw new ValidationException($"A budget for an active category with description \"{description}\" already exists.");
-
                 // TODO: Set spent if dates changed
-                entity.Description = description;
                 entity.Amount = amount;
                 entity.StartDate = periodStart;
                 entity.EndDate = periodEnd;
@@ -108,9 +105,8 @@
         }
 
         /// <inheritdoc />
-        public Budget CreateBudget(string description, int categoryId, decimal amount, string startDate, string endDate)
+        public Budget CreateBudget(int categoryId, decimal amount, string startDate, string endDate)
         {
-            description = this.validator.Description(description);
             var periodStart = DateTime.Parse(startDate);
             var periodEnd = DateTime.Parse(endDate);
             this.validator.Period(periodStart, periodEnd);
@@ -118,14 +114,9 @@
 
             return this.ConcurrentInvoke(() =>
             {
-                if (this.Context.Budgets
-                    .Include(b => b.Category)
-                    .Any(b => b.Description == description && !b.Category.IsObsolete))
-                    throw new ValidationException($"An active budget with description \"{description}\" already exists.");
-
                 var category = this.Context.Categories
+                    .Include(c => c.Icon)
                     .Include(c => c.Children)
-                    .Include(c => c.ParentCategory)
                     .SingleOrNone(c => c.Id == categoryId)
                     .ValueOrThrow(() => new DoesNotExistException($"Category with identifier {categoryId} does not exist."));
 
@@ -137,7 +128,6 @@
 
                 var entity = new BudgetEntity
                 {
-                    Description = description,
                     CategoryId = categoryId,
                     Amount = amount,
                     Spent = 0, // TODO: Get all transactions and set sum

@@ -12,14 +12,9 @@
     public class Budget
     {
         /// <summary>
-        /// The identifier of this account.
+        /// The identifier of this budget.
         /// </summary>
         public int Id { get; set; }
-
-        /// <summary>
-        /// The description of this account.
-        /// </summary>
-        public string Description { get; set; }
 
         /// <summary>
         /// The amount of this budget.

@@ -15,7 +15,6 @@ namespace PersonalFinance.Data.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Description = table.Column<string>(nullable: false),
                     Amount = table.Column<decimal>(type: "decimal(12,2)", nullable: false),
                     StartDate = table.Column<DateTime>(nullable: false),
                     EndDate = table.Column<DateTime>(nullable: false),

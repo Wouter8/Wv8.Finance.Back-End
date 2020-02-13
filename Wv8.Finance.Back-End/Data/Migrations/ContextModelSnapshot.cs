@@ -64,10 +64,6 @@ namespace PersonalFinance.Data.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 

@@ -122,16 +122,14 @@
         {
             var budget = this.GenerateBudget();
 
-            const string newDescription = "Description";
             const decimal newAmount = 5;
             var newStartDate = new DateTime(2019, 12, 01).ToString("O");
             var newEndDate = new DateTime(2019, 12, 30).ToString("O");
 
             var updated =
-                this.BudgetManager.UpdateBudget(budget.Id, newDescription, newAmount, newStartDate, newEndDate);
+                this.BudgetManager.UpdateBudget(budget.Id, newAmount, newStartDate, newEndDate);
 
             Assert.Equal(budget.Id, updated.Id);
-            Assert.Equal(newDescription, updated.Description);
             Assert.Equal(newAmount, updated.Amount);
             Assert.Equal(newStartDate, updated.StartDate);
             Assert.Equal(newEndDate, updated.EndDate);
@@ -146,22 +144,12 @@
             var category = this.GenerateCategory();
             var category2 = this.GenerateCategory();
 
-            var budget = this.GenerateBudget(category.Id, "Description");
-            var budget2 = this.GenerateBudget(category2.Id, "Description2");
-
-            // Description already exists.
-            Assert.Throws<ValidationException>(() =>
-                this.BudgetManager.UpdateBudget(
-                    budget2.Id,
-                    "Description",
-                    budget2.Amount,
-                    budget2.StartDate,
-                    budget2.EndDate));
+            var budget = this.GenerateBudget(category.Id);
+            var budget2 = this.GenerateBudget(category2.Id);
 
             this.CategoryManager.SetCategoryObsolete(category.Id, true);
             this.BudgetManager.UpdateBudget(
                 budget2.Id,
-                "Description",
                 budget2.Amount,
                 budget2.StartDate,
                 budget2.EndDate);
@@ -171,7 +159,6 @@
             Assert.Throws<ValidationException>(() =>
                 this.BudgetManager.UpdateBudget(
                     budget2.Id,
-                    "Description",
                     budget2.Amount,
                     budget2.StartDate,
                     budget2.EndDate));
@@ -180,7 +167,6 @@
             Assert.Throws<DoesNotExistException>(() =>
                 this.BudgetManager.UpdateBudget(
                     100,
-                    "Description",
                     100,
                     DateTime.Today.ToString("O"),
                     DateTime.Today.AddDays(1).ToString("O")));
@@ -199,14 +185,12 @@
         {
             var category = this.GenerateCategory();
 
-            const string description = "Description";
             const decimal amount = 5;
             var startDate = new DateTime(2019, 12, 01).ToString("O");
             var endDate = new DateTime(2019, 12, 15).ToString("O");
 
-            var budget = this.BudgetManager.CreateBudget(description, category.Id, amount, startDate, endDate);
+            var budget = this.BudgetManager.CreateBudget(category.Id, amount, startDate, endDate);
 
-            Assert.Equal(description, budget.Description);
             Assert.Equal(amount, budget.Amount);
             Assert.Equal(startDate, budget.StartDate);
             Assert.Equal(endDate, budget.EndDate);
@@ -222,29 +206,21 @@
             var category = this.GenerateCategory();
             var categoryIncome = this.GenerateCategory(CategoryType.Income);
 
-            const string description = "Description";
             const decimal amount = 5;
             var startDate = new DateTime(2019, 12, 01).ToString("O");
             var endDate = new DateTime(2019, 12, 15).ToString("O");
 
             // Category does not exist.
             Assert.Throws<DoesNotExistException>(() =>
-                this.BudgetManager.CreateBudget(description, 100, amount, startDate, endDate));
+                this.BudgetManager.CreateBudget(100, amount, startDate, endDate));
             // Category is not expense type.
             Assert.Throws<ValidationException>(() =>
-                this.BudgetManager.CreateBudget(description, categoryIncome.Id, amount, startDate, endDate));
+                this.BudgetManager.CreateBudget(categoryIncome.Id, amount, startDate, endDate));
 
             this.CategoryManager.SetCategoryObsolete(category.Id, true);
             // Category is obsolete.
             Assert.Throws<ValidationException>(() =>
-                this.BudgetManager.CreateBudget(description, category.Id, amount, startDate, endDate));
-
-            this.CategoryManager.SetCategoryObsolete(category.Id, false);
-            this.BudgetManager.CreateBudget(description, category.Id, amount, startDate, endDate);
-
-            // Category with same description already exists.
-            Assert.Throws<ValidationException>(() =>
-                this.BudgetManager.CreateBudget(description, category.Id, amount, startDate, endDate));
+                this.BudgetManager.CreateBudget(category.Id, amount, startDate, endDate));
         }
 
         #endregion CreateBudget

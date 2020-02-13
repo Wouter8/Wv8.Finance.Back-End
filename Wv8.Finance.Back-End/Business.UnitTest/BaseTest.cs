@@ -141,14 +141,12 @@ namespace Business.UnitTest
         /// Creates an account with specified, or random values.
         /// </summary>
         /// <param name="categoryId">The identifier of a category.</param>
-        /// <param name="description">The description.</param>
         /// <param name="amount">The amount.</param>
         /// <param name="startDate">The start date.</param>
         /// <param name="endDate">The end date.</param>
         /// <returns>The created budget.</returns>
         protected Budget GenerateBudget(
             int? categoryId = null,
-            string description = null,
             decimal? amount = null,
             DateTime? startDate = null,
             DateTime? endDate = null)
@@ -161,7 +159,6 @@ namespace Business.UnitTest
                 endDate = DateTime.Today.AddMonths(1);
 
             return this.BudgetManager.CreateBudget(
-                description ?? this.GetRandomString(),
                 categoryId.Value,
                 amount ?? 100,
                 startDate.Value.ToString("O"),
@@ -247,7 +244,6 @@ namespace Business.UnitTest
         protected void AssertEqual(Budget a, Budget b)
         {
             Assert.Equal(a.Id, b.Id);
-            Assert.Equal(a.Description, b.Description);
             Assert.Equal(a.Amount, b.Amount);
             Assert.Equal(a.Spent, b.Spent);
             Assert.Equal(a.StartDate, b.StartDate);

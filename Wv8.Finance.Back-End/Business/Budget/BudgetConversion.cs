@@ -26,7 +26,6 @@
             return new Budget
             {
                 Id = entity.Id,
-                Description = entity.Description,
                 Amount = entity.Amount,
                 Spent = entity.Spent,
                 StartDate = entity.StartDate.ToString("O"),

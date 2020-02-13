@@ -76,7 +76,6 @@
         {
             var entity = builder.Entity<BudgetEntity>();
 
-            entity.Property(e => e.Description).IsRequired();
             entity.Property(e => e.StartDate).IsRequired();
             entity.Property(e => e.EndDate).IsRequired();
 

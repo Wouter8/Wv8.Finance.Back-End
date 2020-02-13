@@ -10,7 +10,7 @@ using PersonalFinance.Data;
 namespace PersonalFinance.Data.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20200212182825_Budgets")]
+    [Migration("20200213192532_Budgets")]
     partial class Budgets
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -65,10 +65,6 @@ namespace PersonalFinance.Data.Migrations
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");

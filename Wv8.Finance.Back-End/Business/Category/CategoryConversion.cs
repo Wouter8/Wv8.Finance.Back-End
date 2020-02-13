@@ -19,11 +19,6 @@
         /// <returns>The data transfer object.</returns>
         public static Category AsCategory(this CategoryEntity entity)
         {
-            if (entity.Icon == null)
-                throw new ArgumentNullException(nameof(entity.Icon));
-            if (entity.ParentCategoryId.HasValue && entity.ParentCategory == null)
-                throw new ArgumentNullException(nameof(entity.ParentCategory));
-
             return new Category
             {
                 Id = entity.Id,
@@ -33,7 +28,7 @@
                 ParentCategory = entity.ParentCategory.ToMaybe().Select(pc => pc.AsCategory()),
                 IsObsolete = entity.IsObsolete,
                 IconId = entity.IconId,
-                Icon = entity.Icon.AsIcon(),
+                Icon = entity.Icon?.AsIcon(),
                 Children = entity.Children.Select(c => c.AsChildCategory()).ToList(),
             };
         }
@@ -45,11 +40,6 @@
         /// <returns>The data transfer object.</returns>
         private static Category AsParentCategory(this CategoryEntity entity)
         {
-            if (entity.Icon == null)
-                throw new ArgumentNullException(nameof(entity.Icon));
-            if (entity.ParentCategoryId.HasValue && entity.ParentCategory == null)
-                throw new ArgumentNullException(nameof(entity.ParentCategory));
-
             return new Category
             {
                 Id = entity.Id,
@@ -59,7 +49,7 @@
                 ParentCategory = entity.ParentCategory.ToMaybe().Select(pc => pc.AsParentCategory()),
                 IsObsolete = entity.IsObsolete,
                 IconId = entity.IconId,
-                Icon = entity.Icon.AsIcon(),
+                Icon = entity.Icon?.AsIcon(),
                 Children = new List<Category>(), // Set to empty to prevent infinite loop.
             };
         }
@@ -71,11 +61,6 @@
         /// <returns>The data transfer object.</returns>
         private static Category AsChildCategory(this CategoryEntity entity)
         {
-            if (entity.Icon == null)
-                throw new ArgumentNullException(nameof(entity.Icon));
-            if (entity.ParentCategoryId.HasValue && entity.ParentCategory == null)
-                throw new ArgumentNullException(nameof(entity.ParentCategory));
-
             return new Category
             {
                 Id = entity.Id,
@@ -85,7 +70,7 @@
                 ParentCategory = entity.ParentCategory.ToMaybe().Select(pc => pc.AsParentCategory()),
                 IsObsolete = entity.IsObsolete,
                 IconId = entity.IconId,
-                Icon = entity.Icon.AsIcon(),
+                Icon = entity.Icon?.AsIcon(),
                 Children = entity.Children.Select(c => c.AsChildCategory()).ToList(),
             };
         }

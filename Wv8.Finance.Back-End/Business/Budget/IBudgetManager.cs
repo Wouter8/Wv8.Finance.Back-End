@@ -38,23 +38,21 @@
         /// Updates an budget.
         /// </summary>
         /// <param name="id">The identifier of the budget.</param>
-        /// <param name="description">The new description of the budget.</param>
         /// <param name="amount">The new amount of the budget.</param>
         /// <param name="startDate">The new start date of the budget.</param>
         /// <param name="endDate">The new end date of the budget.</param>
         /// <returns>The updated budget.</returns>
-        Budget UpdateBudget(int id, string description, decimal amount, string startDate, string endDate);
+        Budget UpdateBudget(int id, decimal amount, string startDate, string endDate);
 
         /// <summary>
         /// Creates a new budget.
         /// </summary>
-        /// <param name="description">The description of the budget.</param>
         /// <param name="categoryId">The identifier of the category the budget has to track transactions for.</param>
         /// <param name="amount">The amount of the budget.</param>
         /// <param name="startDate">The start date of the budget.</param>
         /// <param name="endDate">The end date of the budget.</param>
         /// <returns>The created budget.</returns>
-        Budget CreateBudget(string description, int categoryId, decimal amount, string startDate, string endDate);
+        Budget CreateBudget(int categoryId, decimal amount, string startDate, string endDate);
 
         /// <summary>
         /// Removes a budget.
