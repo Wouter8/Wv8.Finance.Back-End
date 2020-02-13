@@ -49,7 +49,8 @@
                 .ThenInclude(c => c.Icon)
                 .Where(b => !b.Category.IsObsolete)
                 .Select(b => b.AsBudget())
-                .ToList();
+                .ToList()
+                .OrderBudgets();
         }
 
         /// <inheritdoc />
@@ -71,7 +72,8 @@
                                   (b.StartDate <= periodStart.Value && b.EndDate >= periodEnd.Value))
                 .Where(b => !b.Category.IsObsolete)
                 .Select(b => b.AsBudget())
-                .ToList();
+                .ToList()
+                .OrderBudgets();
         }
 
         /// <inheritdoc />
