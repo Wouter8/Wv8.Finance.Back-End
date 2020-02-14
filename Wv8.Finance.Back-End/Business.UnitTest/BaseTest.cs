@@ -42,9 +42,14 @@ namespace Business.UnitTest
         protected readonly IBudgetManager BudgetManager;
 
         /// <summary>
-        /// The budget manager.
+        /// The transaction manager.
         /// </summary>
         protected readonly ITransactionManager TransactionManager;
+
+        /// <summary>
+        /// The periodic settler.
+        /// </summary>
+        protected readonly IPeriodicSettler PeriodicSettler;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTest"/> class.
@@ -59,6 +64,7 @@ namespace Business.UnitTest
             services.AddTransient<ICategoryManager, CategoryManager>();
             services.AddTransient<IBudgetManager, BudgetManager>();
             services.AddTransient<ITransactionManager, TransactionManager>();
+            services.AddTransient<IPeriodicSettler, PeriodicSettler>();
 
             var serviceProvider = services.BuildServiceProvider();
 
@@ -67,6 +73,7 @@ namespace Business.UnitTest
             this.CategoryManager = serviceProvider.GetService<ICategoryManager>();
             this.BudgetManager = serviceProvider.GetService<IBudgetManager>();
             this.TransactionManager = serviceProvider.GetService<ITransactionManager>();
+            this.PeriodicSettler = serviceProvider.GetService<IPeriodicSettler>();
         }
 
         #region CreateHelpers

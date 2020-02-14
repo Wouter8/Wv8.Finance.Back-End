@@ -19,6 +19,7 @@ namespace PersonalFinance.Service
     using PersonalFinance.Business.Category;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Data;
+    using PersonalFinance.Service.Services;
     using Wv8.Core.ModelBinding;
 
     /// <summary>
@@ -78,6 +79,10 @@ namespace PersonalFinance.Service
             services.AddTransient<ICategoryManager, CategoryManager>();
             services.AddTransient<IBudgetManager, BudgetManager>();
             services.AddTransient<ITransactionManager, TransactionManager>();
+            services.AddTransient<IPeriodicSettler, PeriodicSettler>();
+
+            // Services
+            services.AddHostedService<PeriodicSettleService>();
         }
 
         /// <summary>
@@ -116,6 +121,7 @@ namespace PersonalFinance.Service
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
             using var context = serviceScope.ServiceProvider.GetService<Context>();
+
             context.Database.Migrate();
         }
     }
