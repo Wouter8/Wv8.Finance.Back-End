@@ -37,7 +37,6 @@
         /// </summary>
         private void SettleTransactions()
         {
-            var allTransactions = this.Context.Transactions.ToList();
             var transactionsToBeSettled = this.Context.Transactions
                 .IncludeAll()
                 .Where(t => !t.Settled && t.Date <= DateTime.Today)
