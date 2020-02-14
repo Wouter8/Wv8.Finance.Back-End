@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Common.DataTransfer
+namespace PersonalFinance.Common.DataTransfer
 {
     using System;
     using System.Collections.Generic;
@@ -6,7 +6,7 @@
     using Wv8.Core;
 
     /// <summary>
-    /// An entity representing a budget. The amount of the budget is the goal sum of all
+    /// A data transfer object representing a budget. The amount of the budget is the goal sum of all
     /// transactions of the category in the period of the budget.
     /// </summary>
     public class Budget

@@ -331,9 +331,13 @@
         {
             // Create category.
             var category = this.GenerateCategory(description: "Description");
+            var child = this.GenerateCategory(parentCategoryId: category.Id);
 
-            // Mark category obsolete.
+            // Mark category (and child) obsolete.
             this.CategoryManager.SetCategoryObsolete(category.Id, true);
+
+            // Try to set child active.
+            Assert.Throws<ValidationException>(() => this.CategoryManager.SetCategoryObsolete(child.Id, false));
 
             // Create category with same description as inactive category.
             var category2 = this.GenerateCategory(description: "Description");

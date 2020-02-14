@@ -5,7 +5,7 @@
     using Wv8.Core;
 
     /// <summary>
-    /// An entity representing a category. A transaction belongs to a category.
+    /// An data transfer object representing a category. A transaction belongs to a category.
     /// </summary>
     public class Category
     {

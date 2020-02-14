@@ -1,9 +1,6 @@
 ﻿namespace PersonalFinance.Data.Models
 {
     using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using PersonalFinance.Common.Enums;
 
     /// <summary>
     /// An entity representing a budget. The amount of the budget is the goal sum of all

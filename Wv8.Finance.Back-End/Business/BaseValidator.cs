@@ -1,5 +1,6 @@
 ﻿namespace PersonalFinance.Business
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Wv8.Core;
@@ -25,6 +26,35 @@
 
             this.InRange(iconPack, 1, 3, nameof(iconPack));
             this.InRange(iconColor, 7, 7, nameof(iconColor));
+        }
+
+        /// <summary>
+        /// Validates that a string can be converted to a DateTime and returns the converted value.
+        /// </summary>
+        /// <param name="input">The input.</param>
+        /// <param name="parameterName">The name of the parameter.</param>
+        /// <returns>The converted DateTime.</returns>
+        public DateTime IsoString(string input, string parameterName)
+        {
+            var success = DateTime.TryParse(input, out var dateTime);
+            if (!success)
+                throw new ValidationException($"ISO-string for {parameterName} could not be converted to a date/time");
+
+            return dateTime;
+        }
+
+        /// <summary>
+        /// Validates that the pagination parameters are properly filled.
+        /// </summary>
+        /// <param name="skip">The skip value.</param>
+        /// <param name="take">The take value.</param>
+        public void Pagination(int skip, int take)
+        {
+            if (skip < 0)
+                throw new ValidationException($"The value for skip can not be less than zero.");
+
+            if (skip <= 0)
+                throw new ValidationException($"The value for take can not be less than or equal to zero.");
         }
 
         /// <summary>

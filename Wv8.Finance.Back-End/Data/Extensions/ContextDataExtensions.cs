@@ -58,6 +58,24 @@
                 .ThenInclude(c => c.Icon);
         }
 
+        /// <summary>
+        /// Generates a query with all includes.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <returns>The base query.</returns>
+        public static IQueryable<TransactionEntity> IncludeAll(this DbSet<TransactionEntity> set)
+        {
+            return set
+                .Include(t => t.Category)
+                .ThenInclude(c => c.Icon)
+                .Include(t => t.Category)
+                .ThenInclude(c => c.ParentCategory)
+                .ThenInclude(c => c.Icon)
+                .Include(t => t.Category)
+                .ThenInclude(c => c.Children)
+                .ThenInclude(c => c.Icon);
+        }
+
         #endregion Query Extensions
 
         #region Retrieve Extensions
@@ -102,6 +120,20 @@
                 .IncludeAll()
                 .SingleOrNone(c => c.Id == id)
                 .ValueOrThrow(() => new DoesNotExistException($"Category with identifier {id} does not exist."));
+        }
+
+        /// <summary>
+        /// Retrieves a transaction entity.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <param name="id">The identifier of the transaction to be retrieved..</param>
+        /// <returns>The transaction.</returns>
+        public static TransactionEntity GetEntity(this DbSet<TransactionEntity> set, int id)
+        {
+            return set
+                .IncludeAll()
+                .SingleOrNone(c => c.Id == id)
+                .ValueOrThrow(() => new DoesNotExistException($"Transaction with identifier {id} does not exist."));
         }
 
         #endregion Retrieve Extensions
