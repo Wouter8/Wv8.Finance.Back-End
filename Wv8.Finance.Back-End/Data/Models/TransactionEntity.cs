@@ -46,6 +46,28 @@
         public CategoryEntity Category { get; set; }
 
         /// <summary>
+        /// The identifier of the account this transaction belongs to.
+        /// </summary>
+        public int AccountId { get; set; }
+
+        /// <summary>
+        /// The account this transaction belongs to.
+        /// </summary>
+        public AccountEntity Account { get; set; }
+
+        /// <summary>
+        /// The identifier of the account that is the receiver.
+        /// Only has a value when this transaction is a transfer transaction.
+        /// </summary>
+        public int? ReceivingAccountId { get; set; }
+
+        /// <summary>
+        /// The account that is the receiver.
+        /// Only has a value when this transaction is a transfer transaction.
+        /// </summary>
+        public AccountEntity ReceivingAccount { get; set; }
+
+        /// <summary>
         /// A value indicating if this transaction has been settled.
         /// This value will be false for transactions in the future, and true for transactions in the past.
         /// </summary>

@@ -9,17 +9,6 @@
     public class BudgetValidator : BaseValidator
     {
         /// <summary>
-        /// Validates the period of a budget.
-        /// </summary>
-        /// <param name="start">The start date.</param>
-        /// <param name="end">The end date.</param>
-        public void Period(DateTime start, DateTime end)
-        {
-            if (start >= end)
-                throw new ValidationException("Start date has to be before the end date.");
-        }
-
-        /// <summary>
         /// Validates the amount of a budget.
         /// </summary>
         /// <param name="amount">input.</param>

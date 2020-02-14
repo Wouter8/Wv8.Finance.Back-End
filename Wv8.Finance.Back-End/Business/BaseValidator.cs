@@ -44,6 +44,54 @@
         }
 
         /// <summary>
+        /// Validates a period.
+        /// </summary>
+        /// <param name="start">The start date.</param>
+        /// <param name="end">The end date.</param>
+        /// <param name="canBeEqual">A value indicating if the start and end can be equal.</param>
+        public void Period(DateTime start, DateTime end, bool canBeEqual = false)
+        {
+            if (canBeEqual)
+            {
+                if (start > end)
+                    throw new ValidationException("Start date has to be equal to or before the end date.");
+            }
+            else
+            {
+                if (start >= end)
+                    throw new ValidationException("Start date has to be before the end date.");
+            }
+
+        }
+
+        /// <summary>
+        /// Validates a period.
+        /// </summary>
+        /// <param name="start">The start date.</param>
+        /// <param name="end">The end date.</param>
+        /// <param name="canBeEqual">A value indicating if the start and end can be equal.</param>
+        public void Period(Maybe<DateTime> start, Maybe<DateTime> end, bool canBeEqual = false)
+        {
+            if (start.IsSome != end.IsSome)
+                throw new ValidationException($"Both start and end of the period have to be specified.");
+
+            if (start.IsNone && end.IsNone)
+                return;
+
+            if (canBeEqual)
+            {
+                if (start.Value > end.Value)
+                    throw new ValidationException("Start date has to be equal to or before the end date.");
+            }
+            else
+            {
+                if (start.Value >= end.Value)
+                    throw new ValidationException("Start date has to be before the end date.");
+            }
+
+        }
+
+        /// <summary>
         /// Validates that the pagination parameters are properly filled.
         /// </summary>
         /// <param name="skip">The skip value.</param>
@@ -53,7 +101,7 @@
             if (skip < 0)
                 throw new ValidationException($"The value for skip can not be less than zero.");
 
-            if (skip <= 0)
+            if (take <= 0)
                 throw new ValidationException($"The value for take can not be less than or equal to zero.");
         }
 

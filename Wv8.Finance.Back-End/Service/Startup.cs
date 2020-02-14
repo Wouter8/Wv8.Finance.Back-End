@@ -17,6 +17,7 @@ namespace PersonalFinance.Service
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Business.Category;
+    using PersonalFinance.Business.Transaction;
     using PersonalFinance.Data;
     using Wv8.Core.ModelBinding;
 
@@ -76,6 +77,7 @@ namespace PersonalFinance.Service
             services.AddTransient<IAccountManager, AccountManager>();
             services.AddTransient<ICategoryManager, CategoryManager>();
             services.AddTransient<IBudgetManager, BudgetManager>();
+            services.AddTransient<ITransactionManager, TransactionManager>();
         }
 
         /// <summary>

@@ -30,30 +30,33 @@
         }
 
         /// <summary>
-        /// Validates the amount of a budget.
-        /// </summary>
-        /// <param name="amount">input.</param>
-        public void Amount(decimal amount)
-        {
-            if (amount <= 0)
-                throw new ValidationException("The amount of the transaction has to be greater than zero.");
-        }
-
-        /// <summary>
         /// Validates that the correct fields are provided for each transaction type.
         /// </summary>
         /// <param name="type">The transaction type.</param>
+        /// <param name="amount">The amount of the transaction.</param>
         /// <param name="categoryId">The category identifier.</param>
-        public void Type(TransactionType type, Maybe<int> categoryId)
+        /// <param name="receivingAccountId">The receiving account identifier.</param>
+        public void Type(TransactionType type, decimal amount, Maybe<int> categoryId, Maybe<int> receivingAccountId)
         {
             switch (type)
             {
                 case TransactionType.Expense:
+                    if (amount > 0)
+                        throw new ValidationException($"The amount has to be negative.");
+                    if (categoryId.IsNone)
+                        throw new ValidationException($"A category has to be specified for an income or expense transaction.");
+                    break;
                 case TransactionType.Income:
+                    if (amount <= 0)
+                        throw new ValidationException($"The amount has to be greater than 0.");
                     if (categoryId.IsNone)
                         throw new ValidationException($"A category has to be specified for an income or expense transaction.");
                     break;
                 case TransactionType.Transfer:
+                    if (amount <= 0)
+                        throw new ValidationException($"The amount has to be greater than 0.");
+                    if (receivingAccountId.IsNone)
+                        throw new ValidationException($"A receiving account has to be specified for a transfer transaction.");
                     break;
                 default:
                     throw new InvalidOperationException($"Unknown transaction type.");

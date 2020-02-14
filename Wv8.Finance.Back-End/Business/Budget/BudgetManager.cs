@@ -134,9 +134,7 @@
         {
             this.ConcurrentInvoke(() =>
             {
-                var entity = this.Context.Budgets
-                    .SingleOrNone(b => b.Id == id)
-                    .ValueOrThrow(() => new DoesNotExistException($"Budget with identifier {id} does not exist."));
+                var entity = this.Context.Budgets.GetEntity(id);
 
                 this.Context.Budgets.Remove(entity);
 

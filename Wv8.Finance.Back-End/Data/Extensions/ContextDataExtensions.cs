@@ -1,5 +1,7 @@
 ﻿namespace PersonalFinance.Data.Extensions
 {
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
     using PersonalFinance.Data.Models;
@@ -66,6 +68,8 @@
         public static IQueryable<TransactionEntity> IncludeAll(this DbSet<TransactionEntity> set)
         {
             return set
+                .Include(t => t.Account)
+                .ThenInclude(t => t.Icon)
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Icon)
                 .Include(t => t.Category)
@@ -134,6 +138,25 @@
                 .IncludeAll()
                 .SingleOrNone(c => c.Id == id)
                 .ValueOrThrow(() => new DoesNotExistException($"Transaction with identifier {id} does not exist."));
+        }
+
+        /// <summary>
+        /// Retrieves a list of budgets based on some filters.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <param name="categoryId">The category identifier.</param>
+        /// <param name="date">The date.</param>
+        /// <returns>The list of budgets.</returns>
+        public static List<BudgetEntity> GetBudgets(
+            this DbSet<BudgetEntity> set,
+            int categoryId,
+            DateTime date)
+        {
+            return set
+                .IncludeAll()
+                .Where(b => b.CategoryId == categoryId)
+                .Where(b => b.StartDate <= date && b.EndDate >= date)
+                .ToList();
         }
 
         #endregion Retrieve Extensions
