@@ -5,6 +5,7 @@
     using Microsoft.EntityFrameworkCore;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Data;
+    using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
@@ -31,18 +32,14 @@
         /// <inheritdoc />
         public Account GetAccount(int id)
         {
-            return this.Context.Accounts
-                .Include(a => a.Icon)
-                .SingleOrNone(a => a.Id == id)
-                .ValueOrThrow(() => new DoesNotExistException($"Account with identifier {id} does not exist."))
-                .AsAccount();
+            return this.Context.Accounts.GetEntity(id).AsAccount();
         }
 
         /// <inheritdoc />
         public List<Account> GetAccounts(bool includeObsolete)
         {
             return this.Context.Accounts
-                .Include(a => a.Icon)
+                .IncludeAll()
                 .WhereIf(!includeObsolete, a => !a.IsObsolete)
                 .OrderByDescending(a => a.IsDefault)
                 .ThenBy(a => a.Description)
@@ -58,10 +55,7 @@
 
             return this.ConcurrentInvoke(() =>
             {
-                var entity = this.Context.Accounts
-                    .Include(a => a.Icon)
-                    .SingleOrNone(a => a.Id == id)
-                    .ValueOrThrow(() => new DoesNotExistException($"Account with identifier {id} does not exist."));
+                var entity = this.Context.Accounts.GetEntity(id);
 
                 if (this.Context.Accounts.Any(a => a.Id != id && a.Description == description && !a.IsObsolete))
                 {
@@ -128,7 +122,6 @@
             this.ConcurrentInvoke(() =>
             {
                 var entity = this.Context.Accounts
-                    .Include(a => a.Icon)
                     .SingleOrNone(a => a.Id == id)
                     .ValueOrThrow(() => new DoesNotExistException($"Account with identifier {id} does not exist."));
 

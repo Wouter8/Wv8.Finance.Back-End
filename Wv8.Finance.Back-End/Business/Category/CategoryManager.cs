@@ -6,6 +6,7 @@
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
+    using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
@@ -32,24 +33,14 @@
         /// <inheritdoc />
         public Category GetCategory(int id)
         {
-            return this.Context.Categories
-                .Include(c => c.Icon)
-                .Include(c => c.ParentCategory)
-                .ThenInclude(c => c.Icon)
-                .Include(c => c.Children)
-                .ThenInclude(c => c.Icon)
-                .SingleOrNone(c => c.Id == id)
-                .ValueOrThrow(() => new DoesNotExistException($"Category with identifier {id} does not exist."))
-                .AsCategory();
+            return this.Context.Categories.GetEntity(id).AsCategory();
         }
 
         /// <inheritdoc />
         public List<Category> GetCategories(bool includeObsolete)
         {
             return this.Context.Categories
-                .Include(c => c.Icon)
-                .Include(c => c.Children)
-                .ThenInclude(c => c.Icon)
+                .IncludeAll()
                 .WhereIf(!includeObsolete, c => !c.IsObsolete)
                 .Where(c => !c.ParentCategoryId.HasValue)
                 .OrderBy(c => c.Description)
@@ -61,9 +52,7 @@
         public List<Category> GetCategoriesByFilter(bool includeObsolete, CategoryType type)
         {
             return this.Context.Categories
-                .Include(c => c.Icon)
-                .Include(c => c.Children)
-                .ThenInclude(c => c.Icon)
+                .IncludeAll()
                 .WhereIf(!includeObsolete, c => !c.IsObsolete)
                 .Where(c => c.Type == type)
                 .Where(c => !c.ParentCategoryId.HasValue)
@@ -80,14 +69,7 @@
 
             return this.ConcurrentInvoke(() =>
             {
-                var entity = this.Context.Categories
-                    .Include(c => c.Icon)
-                    .Include(c => c.ParentCategory)
-                    .ThenInclude(c => c.Icon)
-                    .Include(c => c.Children)
-                    .ThenInclude(c => c.Icon)
-                    .SingleOrNone(c => c.Id == id)
-                    .ValueOrThrow(() => new DoesNotExistException($"Category with identifier {id} does not exist."));
+                var entity = this.Context.Categories.GetEntity(id);
 
                 if (this.Context.Categories.Any(c => c.Id != id && c.Description == description && !c.IsObsolete))
                     throw new ValidationException($"An active category with description \"{description}\" already exists.");
@@ -95,10 +77,7 @@
                 CategoryEntity parentCategory = null;
                 if (parentCategoryId.IsSome)
                 {
-                    parentCategory = this.Context.Categories
-                        .Include(c => c.Icon)
-                        .SingleOrNone(c => c.Id == parentCategoryId.Value)
-                        .ValueOrThrow(() => new DoesNotExistException($"Parent category with identifier {parentCategoryId.Value} does not exist."));
+                    parentCategory = this.Context.Categories.GetEntity(parentCategoryId.Value);
 
                     if (parentCategory.IsObsolete)
                         throw new ValidationException($"Parent category \"{parentCategory.Description}\" is obsolete.");
@@ -136,10 +115,7 @@
                 CategoryEntity parentCategory = null;
                 if (parentCategoryId.IsSome)
                 {
-                    parentCategory = this.Context.Categories
-                        .Include(c => c.Icon)
-                        .SingleOrNone(c => c.Id == parentCategoryId.Value)
-                        .ValueOrThrow(() => new DoesNotExistException($"Parent category with identifier {parentCategoryId.Value} does not exist."));
+                    parentCategory = this.Context.Categories.GetEntity(parentCategoryId.Value);
 
                     if (parentCategory.IsObsolete)
                         throw new ValidationException($"Parent category \"{parentCategory.Description}\" is obsolete.");
@@ -175,10 +151,7 @@
         {
             this.ConcurrentInvoke(() =>
             {
-                var entity = this.Context.Categories
-                    .Include(c => c.ParentCategory)
-                    .SingleOrNone(c => c.Id == id)
-                    .ValueOrThrow(() => new DoesNotExistException($"Category with identifier {id} does not exist."));
+                var entity = this.Context.Categories.GetEntity(id);
 
                 if (entity.ParentCategoryId.HasValue && entity.ParentCategory.IsObsolete)
                     throw new ValidationException("Parent category is obsolete."); // TODO: Add test

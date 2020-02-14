@@ -7,6 +7,7 @@
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
+    using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
@@ -33,20 +34,14 @@
         /// <inheritdoc />
         public Budget GetBudget(int id)
         {
-            return this.Context.Budgets
-                .Include(b => b.Category)
-                .ThenInclude(c => c.Icon)
-                .SingleOrNone(b => b.Id == id)
-                .ValueOrThrow(() => new DoesNotExistException($"Budget with identifier {id} does not exist."))
-                .AsBudget();
+            return this.Context.Budgets.GetEntity(id).AsBudget();
         }
 
         /// <inheritdoc />
         public List<Budget> GetBudgets()
         {
             return this.Context.Budgets
-                .Include(b => b.Category)
-                .ThenInclude(c => c.Icon)
+                .IncludeAll()
                 .Where(b => !b.Category.IsObsolete)
                 .Select(b => b.AsBudget())
                 .ToList()
@@ -60,10 +55,7 @@
             var periodEnd = endDate.Select(DateTime.Parse);
 
             return this.Context.Budgets
-                .Include(b => b.Category)
-                .ThenInclude(c => c.Icon)
-                .Include(b => b.Category)
-                .ThenInclude(c => c.Children)
+                .IncludeAll()
                 .WhereIf(categoryId.IsSome, b => b.CategoryId == categoryId.Value)
                 .WhereIf(
                     startDate.IsSome && endDate.IsSome,
@@ -86,11 +78,7 @@
 
             return this.ConcurrentInvoke(() =>
             {
-                var entity = this.Context.Budgets
-                    .Include(b => b.Category)
-                    .ThenInclude(c => c.Icon)
-                    .SingleOrNone(b => b.Id == id)
-                    .ValueOrThrow(() => new DoesNotExistException($"Budget with identifier {id} does not exist."));
+                var entity = this.Context.Budgets.GetEntity(id);
 
                 if (entity.Category.IsObsolete)
                     throw new ValidationException("The budget can not be updated since it is linked to an obsolete category.");
@@ -116,11 +104,7 @@
 
             return this.ConcurrentInvoke(() =>
             {
-                var category = this.Context.Categories
-                    .Include(c => c.Icon)
-                    .Include(c => c.Children)
-                    .SingleOrNone(c => c.Id == categoryId)
-                    .ValueOrThrow(() => new DoesNotExistException($"Category with identifier {categoryId} does not exist."));
+                var category = this.Context.Categories.GetEntity(categoryId);
 
                 if (category.IsObsolete)
                     throw new ValidationException("Category is obsolete. No budgets can be created for obsolete categories.");
