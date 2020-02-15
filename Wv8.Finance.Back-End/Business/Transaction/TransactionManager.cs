@@ -37,6 +37,7 @@
         /// <inheritdoc />
         public TransactionGroup GetTransactionsByFilter(
             Maybe<TransactionType> type,
+            Maybe<int> accountId,
             Maybe<string> description,
             Maybe<int> categoryId,
             Maybe<string> startDate,
@@ -53,15 +54,20 @@
             return this.Context.Transactions
                 .IncludeAll()
                 .WhereIf(type.IsSome, t => t.Type == type.Value)
+                .WhereIf(accountId.IsSome, t => t.AccountId == accountId.Value || t.ReceivingAccountId == accountId.Value)
                 .WhereIf(
+                    categoryId.IsSome,
+                    t => t.CategoryId.HasValue && (t.CategoryId.Value == categoryId.Value ||
+                                                   (t.Category.ParentCategoryId.HasValue &&
+                                                    t.Category.ParentCategoryId.Value == categoryId.Value)))
+                .WhereIf(startPeriod.IsSome, t => startPeriod.Value <= t.Date && endPeriod.Value >= t.Date)
+                .ToList()
+                .WhereIf( // Not translatable
                     description.IsSome,
                     t => t.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase) ||
                          t.Account.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase) ||
-                         (t.CategoryId.HasValue &&
-                          t.Category.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase)))
-                .WhereIf(categoryId.IsSome, t => t.CategoryId.HasValue && t.CategoryId.Value == categoryId.Value)
-                .WhereIf(startPeriod.IsSome, t => startPeriod.Value <= t.Date && endPeriod.Value >= t.Date)
-                .ToList()
+                         (t.CategoryId.HasValue && t.Category.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase)) ||
+                         (t.ReceivingAccountId.HasValue && t.ReceivingAccount.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase)))
                 .Skip(skip)
                 .Take(take)
                 .ToList()

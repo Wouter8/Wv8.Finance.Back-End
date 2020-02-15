@@ -71,9 +71,6 @@
             {
                 var entity = this.Context.Categories.GetEntity(id);
 
-                if (this.Context.Categories.Any(c => c.Id != id && c.Description == description && !c.IsObsolete))
-                    throw new ValidationException($"An active category with description \"{description}\" already exists.");
-
                 CategoryEntity parentCategory = null;
                 if (parentCategoryId.IsSome)
                 {
@@ -84,6 +81,17 @@
 
                     if (parentCategory.Type != type)
                         throw new ValidationException($"Parent category has different category type.");
+
+                    if (parentCategory.Description == description)
+                        throw new ValidationException($"The same description as parent \"{parentCategory.Description}\" is not allowed.");
+
+                    if (parentCategory.Children.Any(c => c.Description == description && !c.IsObsolete))
+                        throw new ValidationException($"An active category with description \"{description}\" already exists under \"{parentCategory.Description}\".");
+                }
+                else
+                {
+                    if (this.Context.Categories.Any(c => c.Id != id && !c.ParentCategoryId.HasValue && c.Description == description && !c.IsObsolete))
+                        throw new ValidationException($"An active category with description \"{description}\" already exists.");
                 }
 
                 entity.Description = description;
@@ -109,9 +117,6 @@
 
             return this.ConcurrentInvoke(() =>
             {
-                if (this.Context.Categories.Any(c => c.Description == description && !c.IsObsolete))
-                    throw new ValidationException($"An active category with description \"{description}\" already exists.");
-
                 CategoryEntity parentCategory = null;
                 if (parentCategoryId.IsSome)
                 {
@@ -122,6 +127,17 @@
 
                     if (parentCategory.Type != type)
                         throw new ValidationException($"Parent category has different category type.");
+
+                    if (parentCategory.Description == description)
+                        throw new ValidationException($"The same description as parent \"{parentCategory.Description}\" is not allowed.");
+
+                    if (parentCategory.Children.Any(c => c.Description == description && !c.IsObsolete))
+                        throw new ValidationException($"An active category with description \"{description}\" already exists under \"{parentCategory.Description}\".");
+                }
+                else
+                {
+                    if (this.Context.Categories.Any(c => !c.ParentCategoryId.HasValue && c.Description == description && !c.IsObsolete))
+                        throw new ValidationException($"An active category with description \"{description}\" already exists.");
                 }
 
                 var entity = new CategoryEntity
@@ -164,8 +180,23 @@
                 else
                 {
                     // Validate that no other active category exists with the same description.
-                    if (this.Context.Categories.Any(c => c.Description == entity.Description && !c.IsObsolete && c.Id != entity.Id))
-                        throw new ValidationException($"An active category with description \"{entity.Description}\" already exists. Change the description of that category first.");
+                    if (entity.ParentCategoryId.HasValue && entity.ParentCategory.Description == entity.Description)
+                    {
+                        throw new ValidationException(
+                            $"The same description as parent \"{entity.ParentCategory.Description}\" is not allowed.");
+                    }
+
+                    if (this.Context.Categories.Any(c =>
+                        c.Id != entity.Id &&
+                        c.ParentCategoryId == entity.ParentCategoryId &&
+                        c.Description == entity.Description &&
+                        !c.IsObsolete))
+                    {
+                        throw new ValidationException(
+                            entity.ParentCategoryId.HasValue
+                            ? $"An active category with description \"{entity.Description}\" already exists under \"{entity.ParentCategory.Description}\"."
+                            : $"An active category with description \"{entity.Description}\" already exists.");
+                    }
                 }
 
                 entity.IsObsolete = obsolete;

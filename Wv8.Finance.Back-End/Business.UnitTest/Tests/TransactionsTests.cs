@@ -48,12 +48,13 @@
         public void GetTransactionsByFilter()
         {
             // Generate objects.
-            var account1 = this.GenerateAccount();
-            var account2 = this.GenerateAccount();
+            var account1 = this.GenerateAccount("AAA");
+            var account2 = this.GenerateAccount("BBB");
 
-            var categoryIncome = this.GenerateCategory(CategoryType.Income);
-            var categoryExpense = this.GenerateCategory();
-            var categoryChild = this.GenerateCategory(parentCategoryId: categoryExpense.Id);
+            var categoryIncome = this.GenerateCategory(CategoryType.Income, "CCC");
+            var categoryExpense = this.GenerateCategory(CategoryType.Expense, "DDD");
+            var categoryChild = this.GenerateCategory(
+                description: "FFF", parentCategoryId: categoryExpense.Id);
 
             // Create income transactions.
             var transaction1 = this.GenerateTransaction(
@@ -74,6 +75,7 @@
             // Retrieve.
             var result = this.TransactionManager.GetTransactionsByFilter(
                 Maybe<TransactionType>.None,
+                Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
                 Maybe<string>.None,
@@ -89,6 +91,7 @@
             // Retrieve by date.
             result = this.TransactionManager.GetTransactionsByFilter(
                 Maybe<TransactionType>.None,
+                Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
                 DateTime.Today.AddDays(1).ToString("O"),
@@ -103,21 +106,24 @@
 
             // Create expense transactions.
             var transaction3 = this.GenerateTransaction(
-                accountId: account1.Id,
-                type: TransactionType.Expense,
-                date: DateTime.Today.AddDays(2),
-                amount: -200,
-                categoryId: categoryExpense.Id);
+                account1.Id,
+                TransactionType.Expense,
+                "DDD",
+                DateTime.Today.AddDays(2),
+                -200,
+                categoryExpense.Id);
             var transaction4 = this.GenerateTransaction(
-                accountId: account1.Id,
-                type: TransactionType.Expense,
-                date: DateTime.Today.AddDays(3),
-                amount: -20,
-                categoryId: categoryChild.Id);
+                account1.Id,
+                TransactionType.Expense,
+                "FFF",
+                DateTime.Today.AddDays(3),
+                -20,
+                categoryChild.Id);
 
             // Retrieve by date.
             result = this.TransactionManager.GetTransactionsByFilter(
                 Maybe<TransactionType>.None,
+                Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
                 DateTime.Today.AddDays(2).ToString("O"),
@@ -137,6 +143,7 @@
             // Retrieve by type.
             result = this.TransactionManager.GetTransactionsByFilter(
                 TransactionType.Expense,
+                Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
                 Maybe<string>.None,
@@ -148,6 +155,7 @@
             // Retrieve with pagination.
             result = this.TransactionManager.GetTransactionsByFilter(
                 TransactionType.Expense,
+                Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
                 Maybe<string>.None,
@@ -159,6 +167,7 @@
             // Retrieve by description.
             result = this.TransactionManager.GetTransactionsByFilter(
                 Maybe<TransactionType>.None,
+                Maybe<int>.None,
                 "   e   ",
                 Maybe<int>.None,
                 Maybe<string>.None,
@@ -170,6 +179,7 @@
             // Retrieve by description.
             result = this.TransactionManager.GetTransactionsByFilter(
                 Maybe<TransactionType>.None,
+                Maybe<int>.None,
                 "   ex   ",
                 Maybe<int>.None,
                 Maybe<string>.None,
@@ -177,6 +187,26 @@
                 0,
                 100);
             Assert.Single(result.Transactions);
+
+            // Create transfer transaction.
+            var transaction5 = this.GenerateTransaction(
+                accountId: account1.Id,
+                type: TransactionType.Transfer,
+                date: DateTime.Today,
+                amount: 200,
+                receivingAccountId: account2.Id);
+
+            // Retrieve by account.
+            result = this.TransactionManager.GetTransactionsByFilter(
+                Maybe<TransactionType>.None,
+                account2.Id,
+                Maybe<string>.None,
+                Maybe<int>.None,
+                Maybe<string>.None,
+                Maybe<string>.None,
+                0,
+                100);
+            Assert.Equal(2, result.Transactions.Count);
         }
 
         #endregion GetTransaction

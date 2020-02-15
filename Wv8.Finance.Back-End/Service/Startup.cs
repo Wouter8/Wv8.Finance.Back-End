@@ -111,6 +111,9 @@ namespace PersonalFinance.Service
 
             if (env.IsProduction())
                 this.UpdateDatabase(app);
+
+            // Settle everything on startup
+            this.SettleAll(app);
         }
 
         /// <summary>
@@ -125,6 +128,16 @@ namespace PersonalFinance.Service
             using var context = serviceScope.ServiceProvider.GetService<Context>();
 
             context.Database.Migrate();
+        }
+
+        private void SettleAll(IApplicationBuilder app)
+        {
+            using var serviceScope = app.ApplicationServices
+                .GetRequiredService<IServiceScopeFactory>()
+                .CreateScope();
+            var service = serviceScope.ServiceProvider.GetService<IPeriodicSettler>();
+
+            service.Run();
         }
     }
 }

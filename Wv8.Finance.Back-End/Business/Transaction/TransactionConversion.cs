@@ -55,7 +55,7 @@
         /// <returns>The data transfer object.</returns>
         public static TransactionGroup AsTransactionGroup(this List<TransactionEntity> entities)
         {
-            var transactions = entities.Select(e => e.AsTransaction()).ToList();
+            var transactions = entities.OrderByDescending(t => t.Date).Select(e => e.AsTransaction()).ToList();
             var transactionsWithCategory = transactions.Where(t => t.CategoryId.IsSome).ToList();
 
             var categories = transactionsWithCategory

@@ -23,6 +23,7 @@
         /// Retrieves transactions from the database with a specified filter.
         /// </summary>
         /// <param name="type">Optionally, the transaction type filter.</param>
+        /// <param name="accountId">Optionally, identifier of the account the transaction belongs to.</param>
         /// <param name="description">Optionally, the description filter.</param>
         /// <param name="categoryId">Optionally, identifier of the category the transaction belongs to.</param>
         /// <param name="startDate">Optionally, the start of the period on which to filter.</param>
@@ -32,7 +33,7 @@
         /// <param name="take">Specifies the number of items to be included into the returned collection.</param>
         /// <remarks>Note that both start and end date have to be filled to filter on period.</remarks>
         /// <returns>The list of filtered transactions.</returns>
-        TransactionGroup GetTransactionsByFilter(Maybe<TransactionType> type, Maybe<string> description, Maybe<int> categoryId, Maybe<string> startDate, Maybe<string> endDate, int skip, int take);
+        TransactionGroup GetTransactionsByFilter(Maybe<TransactionType> type, Maybe<int> accountId, Maybe<string> description, Maybe<int> categoryId, Maybe<string> startDate, Maybe<string> endDate, int skip, int take);
 
         /// <summary>
         /// Updates an transaction.

@@ -154,7 +154,7 @@
         {
             return set
                 .IncludeAll()
-                .Where(b => b.CategoryId == categoryId)
+                .Where(b => b.CategoryId == categoryId || b.Category.Children.Select(c => c.Id).Contains(categoryId))
                 .Where(b => b.StartDate <= date && b.EndDate >= date)
                 .ToList();
         }
