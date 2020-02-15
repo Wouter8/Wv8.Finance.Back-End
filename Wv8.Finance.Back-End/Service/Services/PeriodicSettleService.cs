@@ -40,17 +40,6 @@
             return Task.CompletedTask;
         }
 
-        private void DoWork(object state)
-        {
-            using var scope = this.Services.CreateScope();
-            using var serviceScope = scope.ServiceProvider
-                    .GetRequiredService<IServiceScopeFactory>()
-                    .CreateScope();
-
-            var service = serviceScope.ServiceProvider.GetService<IPeriodicSettler>();
-            service.Run();
-        }
-
         /// <inheritdoc />
         public Task StopAsync(CancellationToken cancellationToken)
         {
@@ -63,6 +52,21 @@
         public void Dispose()
         {
             this.timer?.Dispose();
+        }
+
+        /// <summary>
+        /// This method retrieves the settle service and runs it.
+        /// </summary>
+        /// <param name="state">The state. This is not used.</param>
+        private void DoWork(object state)
+        {
+            using var scope = this.Services.CreateScope();
+            using var serviceScope = scope.ServiceProvider
+                .GetRequiredService<IServiceScopeFactory>()
+                .CreateScope();
+
+            var service = serviceScope.ServiceProvider.GetService<IPeriodicSettler>();
+            service.Run();
         }
     }
 }

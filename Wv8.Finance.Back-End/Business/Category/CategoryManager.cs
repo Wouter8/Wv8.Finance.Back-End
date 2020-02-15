@@ -37,25 +37,25 @@
         }
 
         /// <inheritdoc />
-        public List<Category> GetCategories(bool includeObsolete)
+        public List<Category> GetCategories(bool includeObsolete, bool group)
         {
             return this.Context.Categories
                 .IncludeAll()
                 .WhereIf(!includeObsolete, c => !c.IsObsolete)
-                .Where(c => !c.ParentCategoryId.HasValue)
+                .WhereIf(group, c => !c.ParentCategoryId.HasValue)
                 .OrderBy(c => c.Description)
                 .Select(c => c.AsCategory())
                 .ToList();
         }
 
         /// <inheritdoc />
-        public List<Category> GetCategoriesByFilter(bool includeObsolete, CategoryType type)
+        public List<Category> GetCategoriesByFilter(bool includeObsolete, CategoryType type, bool group)
         {
             return this.Context.Categories
                 .IncludeAll()
                 .WhereIf(!includeObsolete, c => !c.IsObsolete)
                 .Where(c => c.Type == type)
-                .Where(c => !c.ParentCategoryId.HasValue)
+                .WhereIf(group, c => !c.ParentCategoryId.HasValue)
                 .OrderBy(c => c.Description)
                 .Select(c => c.AsCategory())
                 .ToList();

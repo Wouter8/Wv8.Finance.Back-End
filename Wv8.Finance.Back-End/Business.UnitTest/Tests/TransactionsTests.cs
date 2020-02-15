@@ -83,8 +83,7 @@
 
             // Assert.
             Assert.Equal(300, result.TotalSum);
-            var correspondingCategory = result.SumPerIncomeCategory.Keys.Single(c => c.Id == categoryIncome.Id);
-            Assert.Equal(300, result.SumPerIncomeCategory[correspondingCategory]);
+            Assert.Equal(300, result.SumPerIncomeCategory[categoryIncome.Id]);
             Assert.Equal(2, result.TransactionsPerType[TransactionType.Income].Count);
 
             // Retrieve by date.
@@ -99,8 +98,7 @@
 
             // Assert.
             Assert.Equal(100, result.TotalSum);
-            correspondingCategory = result.SumPerIncomeCategory.Keys.Single(c => c.Id == categoryIncome.Id);
-            Assert.Equal(100, result.SumPerIncomeCategory[correspondingCategory]);
+            Assert.Equal(100, result.SumPerIncomeCategory[categoryIncome.Id]);
             Assert.Single(result.TransactionsPerType[TransactionType.Income]);
 
             // Create expense transactions.
@@ -129,12 +127,10 @@
 
             // Assert.
             Assert.Equal(-220, result.TotalSum);
-            correspondingCategory = result.SumPerExpenseCategory.Keys.Single(c => c.Id == categoryExpense.Id);
-            Assert.Equal(-200, result.SumPerExpenseCategory[correspondingCategory]);
-            Assert.Single(result.TransactionsPerCategory[correspondingCategory]);
-            correspondingCategory = result.SumPerExpenseCategory.Keys.Single(c => c.Id == categoryChild.Id);
-            Assert.Equal(-20, result.SumPerExpenseCategory[correspondingCategory]);
-            Assert.Single(result.TransactionsPerCategory[correspondingCategory]);
+            Assert.Equal(-200, result.SumPerExpenseCategory[categoryExpense.Id]);
+            Assert.Single(result.TransactionsPerCategory[categoryExpense.Id]);
+            Assert.Equal(-20, result.SumPerExpenseCategory[categoryChild.Id]);
+            Assert.Single(result.TransactionsPerCategory[categoryChild.Id]);
             Assert.Equal(2, result.TransactionsPerType[TransactionType.Expense].Count);
             Assert.Equal(2, result.Transactions.Count);
 

@@ -61,7 +61,6 @@
                 if (start >= end)
                     throw new ValidationException("Start date has to be before the end date.");
             }
-
         }
 
         /// <summary>
@@ -88,7 +87,6 @@
                 if (start.Value >= end.Value)
                     throw new ValidationException("Start date has to be before the end date.");
             }
-
         }
 
         /// <summary>

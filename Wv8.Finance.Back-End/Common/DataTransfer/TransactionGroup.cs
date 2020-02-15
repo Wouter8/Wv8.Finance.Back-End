@@ -17,17 +17,17 @@
         /// <summary>
         /// The sum of the transactions grouped by category for all income categories.
         /// </summary>
-        public Dictionary<Category, decimal> SumPerIncomeCategory { get; set; }
+        public Dictionary<int, decimal> SumPerIncomeCategory { get; set; }
 
         /// <summary>
         /// The sum of the transactions grouped by category for all expense categories.
         /// </summary>
-        public Dictionary<Category, decimal> SumPerExpenseCategory { get; set; }
+        public Dictionary<int, decimal> SumPerExpenseCategory { get; set; }
 
         /// <summary>
         /// The transactions grouped by category.
         /// </summary>
-        public Dictionary<Category, List<Transaction>> TransactionsPerCategory { get; set; }
+        public Dictionary<int, List<Transaction>> TransactionsPerCategory { get; set; }
 
         /// <summary>
         /// The transactions grouped by type.
@@ -35,8 +35,13 @@
         public Dictionary<TransactionType, List<Transaction>> TransactionsPerType { get; set; }
 
         /// <summary>
-        /// All transactions
+        /// All transactions.
         /// </summary>
         public List<Transaction> Transactions { get; set; }
+
+        /// <summary>
+        /// The list of all categories of the transactions.
+        /// </summary>
+        public Dictionary<int, Category> Categories { get; set; }
     }
 }

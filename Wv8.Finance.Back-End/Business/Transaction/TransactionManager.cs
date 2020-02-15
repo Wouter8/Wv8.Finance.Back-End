@@ -53,7 +53,12 @@
             return this.Context.Transactions
                 .IncludeAll()
                 .WhereIf(type.IsSome, t => t.Type == type.Value)
-                .WhereIf(description.IsSome, t => t.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase))
+                .WhereIf(
+                    description.IsSome,
+                    t => t.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase) ||
+                         t.Account.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase) ||
+                         (t.CategoryId.HasValue &&
+                          t.Category.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase)))
                 .WhereIf(categoryId.IsSome, t => t.CategoryId.HasValue && t.CategoryId.Value == categoryId.Value)
                 .WhereIf(startPeriod.IsSome, t => startPeriod.Value <= t.Date && endPeriod.Value >= t.Date)
                 .ToList()

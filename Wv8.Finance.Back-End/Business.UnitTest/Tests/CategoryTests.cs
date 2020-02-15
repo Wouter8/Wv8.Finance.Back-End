@@ -44,17 +44,15 @@
         /// Tests the good flow of the GetCategories method.
         /// </summary>
         [Fact]
-        public void GetCategories()
+        public void GetCategories_Group()
         {
             // Empty database.
-            var retrievedCategories = this.CategoryManager.GetCategories(true);
+            var retrievedCategories = this.CategoryManager.GetCategories(true, true);
             Assert.Empty(retrievedCategories);
 
             // Create categories.
             const int categoryCount = 5;
             const int childrenCount = 3;
-            const int grandChildrenCount = 2;
-            const int grandGrandChildrenCount = 1;
             var parentCategories = new List<Category>();
             for (int i = 0; i < categoryCount; i++)
             {
@@ -62,23 +60,13 @@
                 for (int j = 0; j < childrenCount; j++)
                 {
                     var child = this.GenerateCategory(parentCategoryId: parent.Id);
-                    for (int k = 0; k < grandChildrenCount; k++)
-                    {
-                        var grandChild = this.GenerateCategory(parentCategoryId: child.Id);
-                        for (int l = 0; l < grandGrandChildrenCount; l++)
-                        {
-                            var grandGrandChild = this.GenerateCategory(parentCategoryId: grandChild.Id);
-                            grandChild.Children.Add(grandGrandChild);
-                        }
-                        child.Children.Add(grandChild);
-                    }
                     parent.Children.Add(child);
                 }
                 parentCategories.Add(parent);
             }
 
             // Load all active categories (all active).
-            retrievedCategories = this.CategoryManager.GetCategories(false);
+            retrievedCategories = this.CategoryManager.GetCategories(false, true);
             Assert.Equal(categoryCount, retrievedCategories.Count);
 
             // Verify categories.
@@ -86,32 +74,84 @@
             {
                 var retrievedCategory = retrievedCategories.Single(a => a.Id == savedCategory.Id);
                 Assert.Equal(retrievedCategory.Children.Count, childrenCount);
-
-                foreach (var child in retrievedCategory.Children)
-                {
-                    Assert.Equal(child.Children.Count, grandChildrenCount);
-                    foreach (var grandChild in child.Children)
-                    {
-                        Assert.Equal(grandChild.Children.Count, grandGrandChildrenCount);
-                    }
-                }
             }
 
             // Load active and inactive categories (all active).
-            retrievedCategories = this.CategoryManager.GetCategories(true);
+            retrievedCategories = this.CategoryManager.GetCategories(true, true);
             Assert.Equal(categoryCount, retrievedCategories.Count);
 
             // Set category obsolete
             this.CategoryManager.SetCategoryObsolete(parentCategories.Last().Id, true);
 
             // Load all active categories (all except 1)
-            retrievedCategories = this.CategoryManager.GetCategories(false);
+            retrievedCategories = this.CategoryManager.GetCategories(false, true);
             Assert.Equal(categoryCount - 1, retrievedCategories.Count);
             Assert.True(retrievedCategories.All(c => c.Id != parentCategories.Last().Id));
 
             // Load active and inactive categories (should return all again).
-            retrievedCategories = this.CategoryManager.GetCategories(true);
+            retrievedCategories = this.CategoryManager.GetCategories(true, true);
             Assert.Equal(categoryCount, retrievedCategories.Count);
+        }
+
+        /// <summary>
+        /// Tests the good flow of the GetCategories method.
+        /// </summary>
+        [Fact]
+        public void GetCategories_NoGroup()
+        {
+            // Empty database.
+            var retrievedCategories = this.CategoryManager.GetCategories(true, false);
+            Assert.Empty(retrievedCategories);
+
+            // Create categories.
+            const int categoryCount = 5;
+            const int childrenCount = 3;
+            const int totalCategoryCount = 20;
+            var parentCategories = new List<Category>();
+            var childCategories = new List<Category>();
+            for (int i = 0; i < categoryCount; i++)
+            {
+                var parent = this.GenerateCategory();
+                for (int j = 0; j < childrenCount; j++)
+                {
+                    var child = this.GenerateCategory(parentCategoryId: parent.Id);
+                    childCategories.Add(child);
+                    parent.Children.Add(child);
+                }
+                parentCategories.Add(parent);
+            }
+
+            // Load all active categories (all active).
+            retrievedCategories = this.CategoryManager.GetCategories(false, false);
+            Assert.Equal(totalCategoryCount, retrievedCategories.Count);
+
+            // Verify categories.
+            foreach (var savedCategory in parentCategories)
+            {
+                var retrievedCategory = retrievedCategories.Single(a => a.Id == savedCategory.Id);
+                Assert.Equal(retrievedCategory.Children.Count, childrenCount);
+            }
+            foreach (var savedCategory in childCategories)
+            {
+                var retrievedCategory = retrievedCategories.Single(a => a.Id == savedCategory.Id);
+                Assert.True(retrievedCategory.ParentCategory.IsSome);
+            }
+
+            // Load active and inactive categories (all active).
+            retrievedCategories = this.CategoryManager.GetCategories(true, false);
+            Assert.Equal(totalCategoryCount, retrievedCategories.Count);
+
+            // Set category obsolete
+            this.CategoryManager.SetCategoryObsolete(parentCategories.Last().Id, true);
+
+            // Load all active categories (all except 4)
+            retrievedCategories = this.CategoryManager.GetCategories(false, false);
+            Assert.Equal(totalCategoryCount - 4, retrievedCategories.Count);
+            Assert.True(retrievedCategories.All(c => c.Id != parentCategories.Last().Id));
+
+            // Load active and inactive categories (should return all again).
+            retrievedCategories = this.CategoryManager.GetCategories(true, false);
+            Assert.Equal(totalCategoryCount, retrievedCategories.Count);
         }
 
         #endregion GetCategories
@@ -127,17 +167,20 @@
             var category1 = this.GenerateCategory();
             var category2 = this.GenerateCategory();
             var category3 = this.GenerateCategory(CategoryType.Income);
+            var child = this.GenerateCategory(parentCategoryId: category1.Id);
 
             this.CategoryManager.SetCategoryObsolete(category2.Id, true);
 
-            var retrievedCategories = this.CategoryManager.GetCategoriesByFilter(true, CategoryType.Expense);
+            var retrievedCategories = this.CategoryManager.GetCategoriesByFilter(true, CategoryType.Expense, true);
             Assert.Equal(2, retrievedCategories.Count);
-            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(false, CategoryType.Expense);
+            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(true, CategoryType.Expense, false);
+            Assert.Equal(3, retrievedCategories.Count);
+            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(false, CategoryType.Expense, true);
             Assert.Single(retrievedCategories);
 
-            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(true, CategoryType.Income);
+            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(true, CategoryType.Income, true);
             Assert.Single(retrievedCategories);
-            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(false, CategoryType.Income);
+            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(false, CategoryType.Income, true);
             Assert.Single(retrievedCategories);
         }
 

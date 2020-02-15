@@ -51,12 +51,17 @@
         /// <summary>
         /// Converts the entity to a data transfer object.
         /// </summary>
-        /// <param name="entity">The entity.</param>
+        /// <param name="entities">The entity.</param>
         /// <returns>The data transfer object.</returns>
-        public static TransactionGroup AsTransactionGroup(this List<TransactionEntity> entity)
+        public static TransactionGroup AsTransactionGroup(this List<TransactionEntity> entities)
         {
-            var transactions = entity.Select(e => e.AsTransaction()).ToList();
+            var transactions = entities.Select(e => e.AsTransaction()).ToList();
             var transactionsWithCategory = transactions.Where(t => t.CategoryId.IsSome).ToList();
+
+            var categories = transactionsWithCategory
+                .Select(t => t.Category.Value)
+                .Distinct(new CategoryComparer())
+                .ToDictionary(c => c.Id);
 
             return new TransactionGroup
             {
@@ -65,18 +70,19 @@
                 // Not using .ToLookup() as this will need a special JSON-converter.
                 SumPerExpenseCategory = transactionsWithCategory
                     .Where(t => t.Category.Value.Type == CategoryType.Expense)
-                    .GroupBy(t => t.Category.Value, t => t, new CategoryComparer())
+                    .GroupBy(t => t.Category.Value.Id, t => t)
                     .ToDictionary(g => g.Key, g => g.Sum(t => t.Amount)),
                 SumPerIncomeCategory = transactionsWithCategory
                     .Where(t => t.Category.Value.Type == CategoryType.Income)
-                    .GroupBy(t => t.Category.Value, t => t, new CategoryComparer())
+                    .GroupBy(t => t.Category.Value.Id, t => t)
                     .ToDictionary(g => g.Key, g => g.Sum(t => t.Amount)),
                 TransactionsPerCategory = transactionsWithCategory
-                    .GroupBy(t => t.Category.Value, t => t, new CategoryComparer())
+                    .GroupBy(t => t.Category.Value.Id, t => t)
                     .ToDictionary(g => g.Key, g => g.ToList()),
                 TransactionsPerType = transactions
                     .GroupBy(t => t.Type)
                     .ToDictionary(g => g.Key, g => g.ToList()),
+                Categories = categories,
             };
         }
     }

@@ -21,16 +21,18 @@
         /// Retrieves categories from the database.
         /// </summary>
         /// <param name="includeObsolete">Value indicating if obsolete categories should also be retrieved.</param>
+        /// <param name="group">A value indicating if the categories have to be grouped by parent category.</param>
         /// <returns>The list of categories.</returns>
-        List<Category> GetCategories(bool includeObsolete);
+        List<Category> GetCategories(bool includeObsolete, bool group);
 
         /// <summary>
         /// Retrieves categories from the database with a specified filter.
         /// </summary>
         /// <param name="includeObsolete">Value indicating if obsolete categories should also be retrieved.</param>
         /// <param name="type">The type of categories to retrieve.</param>
+        /// <param name="group">A value indicating if the categories have to be grouped by parent category.</param>
         /// <returns>The list of filtered categories.</returns>
-        List<Category> GetCategoriesByFilter(bool includeObsolete, CategoryType type);
+        List<Category> GetCategoriesByFilter(bool includeObsolete, CategoryType type, bool group);
 
         /// <summary>
         /// Updates an category.
