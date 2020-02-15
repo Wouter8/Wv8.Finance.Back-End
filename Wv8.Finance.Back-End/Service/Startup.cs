@@ -14,6 +14,7 @@ namespace PersonalFinance.Service
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Serialization;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Business.Category;
@@ -56,6 +57,7 @@ namespace PersonalFinance.Service
                 {
                     options.SerializerSettings.Converters.Add(new MaybeJsonConverter());
                     options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                 })
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 

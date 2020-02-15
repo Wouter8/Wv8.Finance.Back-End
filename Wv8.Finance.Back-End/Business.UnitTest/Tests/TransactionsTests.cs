@@ -57,20 +57,24 @@
 
             // Create income transactions.
             var transaction1 = this.GenerateTransaction(
-                accountId: account1.Id,
-                type: TransactionType.Income,
-                date: DateTime.Today.AddDays(1),
-                amount: 100,
-                categoryId: categoryIncome.Id);
+                account1.Id,
+                TransactionType.Income,
+                "Income",
+                DateTime.Today.AddDays(1),
+                100,
+                categoryIncome.Id);
             var transaction2 = this.GenerateTransaction(
-                accountId: account2.Id,
-                type: TransactionType.Income,
-                amount: 200,
-                categoryId: categoryIncome.Id);
+                account2.Id,
+                TransactionType.Income,
+                "Expense",
+                DateTime.Today,
+                200,
+                categoryIncome.Id);
 
             // Retrieve.
             var result = this.TransactionManager.GetTransactionsByFilter(
                 Maybe<TransactionType>.None,
+                Maybe<string>.None,
                 Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<string>.None,
@@ -86,6 +90,7 @@
             // Retrieve by date.
             result = this.TransactionManager.GetTransactionsByFilter(
                 Maybe<TransactionType>.None,
+                Maybe<string>.None,
                 Maybe<int>.None,
                 DateTime.Today.AddDays(1).ToString("O"),
                 DateTime.Today.AddDays(1).ToString("O"),
@@ -115,6 +120,7 @@
             // Retrieve by date.
             result = this.TransactionManager.GetTransactionsByFilter(
                 Maybe<TransactionType>.None,
+                Maybe<string>.None,
                 Maybe<int>.None,
                 DateTime.Today.AddDays(2).ToString("O"),
                 DateTime.Today.AddDays(5).ToString("O"),
@@ -135,6 +141,7 @@
             // Retrieve by type.
             result = this.TransactionManager.GetTransactionsByFilter(
                 TransactionType.Expense,
+                Maybe<string>.None,
                 Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<string>.None,
@@ -145,11 +152,34 @@
             // Retrieve with pagination.
             result = this.TransactionManager.GetTransactionsByFilter(
                 TransactionType.Expense,
+                Maybe<string>.None,
                 Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<string>.None,
                 0,
                 1);
+            Assert.Single(result.Transactions);
+
+            // Retrieve by description.
+            result = this.TransactionManager.GetTransactionsByFilter(
+                Maybe<TransactionType>.None,
+                "   e   ",
+                Maybe<int>.None,
+                Maybe<string>.None,
+                Maybe<string>.None,
+                0,
+                100);
+            Assert.Equal(2, result.Transactions.Count);
+
+            // Retrieve by description.
+            result = this.TransactionManager.GetTransactionsByFilter(
+                Maybe<TransactionType>.None,
+                "   ex   ",
+                Maybe<int>.None,
+                Maybe<string>.None,
+                Maybe<string>.None,
+                0,
+                100);
             Assert.Single(result.Transactions);
         }
 

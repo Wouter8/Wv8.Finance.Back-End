@@ -37,12 +37,14 @@
         /// <inheritdoc />
         public TransactionGroup GetTransactionsByFilter(
             Maybe<TransactionType> type,
+            Maybe<string> description,
             Maybe<int> categoryId,
             Maybe<string> startDate,
             Maybe<string> endDate,
             int skip,
             int take)
         {
+            description.Select(d => description = d.Trim());
             var startPeriod = startDate.Select(d => this.validator.IsoString(d, nameof(startDate)));
             var endPeriod = endDate.Select(d => this.validator.IsoString(d, nameof(endDate)));
             this.validator.Pagination(skip, take);
@@ -51,6 +53,7 @@
             return this.Context.Transactions
                 .IncludeAll()
                 .WhereIf(type.IsSome, t => t.Type == type.Value)
+                .WhereIf(description.IsSome, t => t.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase))
                 .WhereIf(categoryId.IsSome, t => t.CategoryId.HasValue && t.CategoryId.Value == categoryId.Value)
                 .WhereIf(startPeriod.IsSome, t => startPeriod.Value <= t.Date && endPeriod.Value >= t.Date)
                 .ToList()

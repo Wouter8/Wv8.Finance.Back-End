@@ -39,6 +39,7 @@
         /// Retrieves transactions from the database with a specified filter.
         /// </summary>
         /// <param name="type">Optionally, the transaction type filter.</param>
+        /// <param name="description">Optionally, the description filter.</param>
         /// <param name="categoryId">Optionally, identifier of the category the transaction belongs to.</param>
         /// <param name="startDate">Optionally, the start of the period on which to filter.</param>
         /// <param name="endDate">Optionally, the end of the period on which to filter.</param>
@@ -50,13 +51,14 @@
         [HttpGet("filter")]
         public TransactionGroup GetTransactionsByFilter(
             [FromQuery] Maybe<TransactionType> type,
+            [FromQuery] Maybe<string> description,
             [FromQuery] Maybe<int> categoryId,
             [FromQuery] Maybe<string> startDate,
-            Maybe<string> endDate,
+            [FromQuery] Maybe<string> endDate,
             int skip,
             int take)
         {
-            return this.manager.GetTransactionsByFilter(type, categoryId, startDate, endDate, skip, take);
+            return this.manager.GetTransactionsByFilter(type, description, categoryId, startDate, endDate, skip, take);
         }
 
         /// <summary>
