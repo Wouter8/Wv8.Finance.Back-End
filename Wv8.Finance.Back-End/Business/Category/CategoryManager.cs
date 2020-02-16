@@ -90,7 +90,7 @@
                 }
                 else
                 {
-                    if (this.Context.Categories.Any(c => c.Id != id && !c.ParentCategoryId.HasValue && c.Description == description && !c.IsObsolete))
+                    if (this.Context.Categories.Any(c => c.Id != id && !c.ParentCategoryId.HasValue && c.Description == description && !c.IsObsolete && c.Type == type))
                         throw new ValidationException($"An active category with description \"{description}\" already exists.");
                 }
 
@@ -136,7 +136,7 @@
                 }
                 else
                 {
-                    if (this.Context.Categories.Any(c => !c.ParentCategoryId.HasValue && c.Description == description && !c.IsObsolete))
+                    if (this.Context.Categories.Any(c => !c.ParentCategoryId.HasValue && c.Description == description && !c.IsObsolete && c.Type == type))
                         throw new ValidationException($"An active category with description \"{description}\" already exists.");
                 }
 
@@ -190,6 +190,7 @@
                         c.Id != entity.Id &&
                         c.ParentCategoryId == entity.ParentCategoryId &&
                         c.Description == entity.Description &&
+                        c.Type == entity.Type &&
                         !c.IsObsolete))
                     {
                         throw new ValidationException(

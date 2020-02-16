@@ -22,7 +22,7 @@ namespace PersonalFinance.Data.Migrations
                     CategoryId = table.Column<int>(nullable: true),
                     AccountId = table.Column<int>(nullable: false),
                     ReceivingAccountId = table.Column<int>(nullable: true),
-                    Settled = table.Column<bool>(nullable: false),
+                    Processed = table.Column<bool>(nullable: false),
                     RecurringTransactionId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>

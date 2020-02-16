@@ -51,7 +51,7 @@
             this.validator.Pagination(skip, take);
             this.validator.Period(startPeriod, endPeriod, true);
 
-            return this.Context.Transactions
+            var allTransactions = this.Context.Transactions
                 .IncludeAll()
                 .WhereIf(type.IsSome, t => t.Type == type.Value)
                 .WhereIf(accountId.IsSome, t => t.AccountId == accountId.Value || t.ReceivingAccountId == accountId.Value)
@@ -61,6 +61,7 @@
                                                    (t.Category.ParentCategoryId.HasValue &&
                                                     t.Category.ParentCategoryId.Value == categoryId.Value)))
                 .WhereIf(startPeriod.IsSome, t => startPeriod.Value <= t.Date && endPeriod.Value >= t.Date)
+                .OrderByDescending(t => t.Date)
                 .ToList()
                 .WhereIf( // Not translatable
                     description.IsSome,
@@ -68,10 +69,12 @@
                          t.Account.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase) ||
                          (t.CategoryId.HasValue && t.Category.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase)) ||
                          (t.ReceivingAccountId.HasValue && t.ReceivingAccount.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase)))
-                .Skip(skip)
+                .ToList();
+
+            return allTransactions.Skip(skip)
                 .Take(take)
                 .ToList()
-                .AsTransactionGroup();
+                .AsTransactionGroup(allTransactions.Count);
         }
 
         /// <inheritdoc />
@@ -89,8 +92,8 @@
                 if (account.IsObsolete)
                     throw new ValidationException("Account is obsolete.");
 
-                if (entity.Settled)
-                    entity.UnsettleTransaction(this.Context);
+                if (entity.Processed)
+                    entity.UnprocessTransaction(this.Context);
 
                 CategoryEntity category = null;
                 if (categoryId.IsSome)
@@ -126,7 +129,7 @@
                 entity.ReceivingAccount = receivingAccount;
 
                 if (date <= DateTime.Today)
-                    entity.SettleTransaction(this.Context);
+                    entity.ProcessTransaction(this.Context);
 
                 this.Context.SaveChanges();
 
@@ -178,7 +181,7 @@
                     Date = date,
                     AccountId = accountId,
                     Account = account,
-                    Settled = false,
+                    Processed = false,
                     CategoryId = categoryId.ToNullable(),
                     Category = category,
                     ReceivingAccountId = receivingAccountId.ToNullable(),
@@ -186,7 +189,7 @@
                 };
 
                 if (date <= DateTime.Today)
-                    entity.SettleTransaction(this.Context);
+                    entity.ProcessTransaction(this.Context);
 
                 this.Context.Transactions.Add(entity);
 
@@ -203,8 +206,8 @@
             {
                 var entity = this.Context.Transactions.GetEntity(id);
 
-                if (entity.Settled)
-                    entity.UnsettleTransaction(this.Context);
+                if (entity.Processed)
+                    entity.UnprocessTransaction(this.Context);
 
                 this.Context.Remove(entity);
 

@@ -19,7 +19,7 @@ namespace PersonalFinance.Business.Transaction
         /// <param name="context">The database context.</param>
         /// <remarks>Note that the context is not saved.</remarks>
         /// <returns>The updated transaction.</returns>
-        public static TransactionEntity SettleTransaction(this TransactionEntity transaction, Context context)
+        public static TransactionEntity ProcessTransaction(this TransactionEntity transaction, Context context)
         {
             // Update account balance.
             var account = context.Accounts.GetEntity(transaction.AccountId);
@@ -48,7 +48,7 @@ namespace PersonalFinance.Business.Transaction
                     break;
             }
 
-            transaction.Settled = true;
+            transaction.Processed = true;
 
             return transaction;
         }
@@ -60,7 +60,7 @@ namespace PersonalFinance.Business.Transaction
         /// <param name="context">The database context.</param>
         /// <remarks>Note that the context is not saved.</remarks>
         /// <returns>The updated transaction.</returns>
-        public static TransactionEntity UnsettleTransaction(this TransactionEntity transaction, Context context)
+        public static TransactionEntity UnprocessTransaction(this TransactionEntity transaction, Context context)
         {
             // Update account balance.
             var account = context.Accounts.GetEntity(transaction.AccountId);
@@ -89,7 +89,7 @@ namespace PersonalFinance.Business.Transaction
                     break;
             }
 
-            transaction.Settled = false;
+            transaction.Processed = false;
 
             return transaction;
         }

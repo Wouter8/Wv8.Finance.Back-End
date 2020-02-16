@@ -49,7 +49,7 @@ namespace Business.UnitTest
         /// <summary>
         /// The periodic settler.
         /// </summary>
-        protected readonly IPeriodicSettler PeriodicSettler;
+        protected readonly ITransactionProcessor PeriodicSettler;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTest"/> class.
@@ -64,7 +64,7 @@ namespace Business.UnitTest
             services.AddTransient<ICategoryManager, CategoryManager>();
             services.AddTransient<IBudgetManager, BudgetManager>();
             services.AddTransient<ITransactionManager, TransactionManager>();
-            services.AddTransient<IPeriodicSettler, PeriodicSettler>();
+            services.AddTransient<ITransactionProcessor, TransactionProcessor>();
 
             var serviceProvider = services.BuildServiceProvider();
 
@@ -73,7 +73,7 @@ namespace Business.UnitTest
             this.CategoryManager = serviceProvider.GetService<ICategoryManager>();
             this.BudgetManager = serviceProvider.GetService<IBudgetManager>();
             this.TransactionManager = serviceProvider.GetService<ITransactionManager>();
-            this.PeriodicSettler = serviceProvider.GetService<IPeriodicSettler>();
+            this.PeriodicSettler = serviceProvider.GetService<ITransactionProcessor>();
         }
 
         #region CreateHelpers

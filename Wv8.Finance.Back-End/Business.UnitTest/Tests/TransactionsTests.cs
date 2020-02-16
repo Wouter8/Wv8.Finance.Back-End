@@ -252,7 +252,7 @@
             Assert.Equal(newDate, DateTime.Parse(updated.Date));
             Assert.Equal(newAmount, updated.Amount);
             Assert.Equal(newCategoryId, updated.CategoryId.Value);
-            Assert.True(updated.Settled);
+            Assert.True(updated.Processed);
 
             var oldBudget = this.BudgetManager.GetBudget(budget.Id);
             var oldAccount = this.AccountManager.GetAccount(account.Id);
@@ -287,7 +287,7 @@
 
             // Assert
             Assert.Equal(newReceiver.Id, updated.ReceivingAccountId.Value);
-            Assert.False(updated.Settled);
+            Assert.False(updated.Processed);
 
             sender = this.AccountManager.GetAccount(sender.Id);
             receiver = this.AccountManager.GetAccount(receiver.Id);
@@ -487,7 +487,7 @@
             Assert.Equal(date, DateTime.Parse(created.Date));
             Assert.Equal(amount, created.Amount);
             Assert.Equal(categoryId, created.CategoryId.Value);
-            Assert.True(created.Settled);
+            Assert.True(created.Processed);
 
             budget = this.BudgetManager.GetBudget(budgetId);
             account = this.AccountManager.GetAccount(accountId);
@@ -510,7 +510,7 @@
 
             // Assert
             Assert.Equal(receiver.Id, created.ReceivingAccountId.Value);
-            Assert.False(created.Settled);
+            Assert.False(created.Processed);
 
             sender = this.AccountManager.GetAccount(sender.Id);
             receiver = this.AccountManager.GetAccount(receiver.Id);

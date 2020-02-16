@@ -43,7 +43,7 @@
                 Account = entity.Account.AsAccount(),
                 ReceivingAccountId = entity.ReceivingAccountId.ToMaybe(),
                 ReceivingAccount = entity.ReceivingAccount.ToMaybe().Select(a => a.AsAccount()),
-                Settled = entity.Settled,
+                Processed = entity.Processed,
                 RecurringTransactionId = entity.RecurringTransactionId.ToMaybe(),
             };
         }
@@ -52,10 +52,12 @@
         /// Converts the entity to a data transfer object.
         /// </summary>
         /// <param name="entities">The entity.</param>
+        /// <param name="totalSearchResults">The total search results retrieved. Might not be the same as the
+        /// length of the list because of pagination parameters.</param>
         /// <returns>The data transfer object.</returns>
-        public static TransactionGroup AsTransactionGroup(this List<TransactionEntity> entities)
+        public static TransactionGroup AsTransactionGroup(this List<TransactionEntity> entities, int totalSearchResults)
         {
-            var transactions = entities.OrderByDescending(t => t.Date).Select(e => e.AsTransaction()).ToList();
+            var transactions = entities.Select(e => e.AsTransaction()).ToList();
             var transactionsWithCategory = transactions.Where(t => t.CategoryId.IsSome).ToList();
 
             var categories = transactionsWithCategory
@@ -65,6 +67,7 @@
 
             return new TransactionGroup
             {
+                TotalSearchResults = totalSearchResults,
                 TotalSum = transactions.Sum(t => t.Amount),
                 Transactions = transactions,
                 // Not using .ToLookup() as this will need a special JSON-converter.

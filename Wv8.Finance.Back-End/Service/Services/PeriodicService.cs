@@ -11,7 +11,7 @@
     /// <summary>
     /// A class for a service which handles a periodic run to settle all needing objects.
     /// </summary>
-    public class PeriodicSettleService : IHostedService, IDisposable
+    public class PeriodicService : IHostedService, IDisposable
     {
         /// <summary>
         /// The timer.
@@ -19,10 +19,10 @@
         private Timer timer;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PeriodicSettleService"/> class.
+        /// Initializes a new instance of the <see cref="PeriodicService"/> class.
         /// </summary>
         /// <param name="services">The service provider.</param>
-        public PeriodicSettleService(IServiceProvider services)
+        public PeriodicService(IServiceProvider services)
         {
             this.Services = services;
         }
@@ -65,7 +65,7 @@
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
 
-            var service = serviceScope.ServiceProvider.GetService<IPeriodicSettler>();
+            var service = serviceScope.ServiceProvider.GetService<ITransactionProcessor>();
             service.Run();
         }
     }

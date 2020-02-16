@@ -83,7 +83,12 @@
                 if (entity.Category.IsObsolete)
                     throw new ValidationException("The budget can not be updated since it is linked to an obsolete category.");
 
-                // TODO: Set spent if dates changed
+                // Dates changed, so recalculate spent.
+                if (entity.StartDate != periodStart || entity.EndDate != periodEnd)
+                {
+                    entity.Spent = Math.Abs(this.Context.Transactions.GetTransactions(entity.CategoryId, periodStart, periodEnd).Sum(t => t.Amount));
+                }
+
                 entity.Amount = amount;
                 entity.StartDate = periodStart;
                 entity.EndDate = periodEnd;
@@ -116,7 +121,7 @@
                 {
                     CategoryId = categoryId,
                     Amount = amount,
-                    Spent = 0, // TODO: Get all transactions and set sum
+                    Spent = Math.Abs(this.Context.Transactions.GetTransactions(categoryId, periodStart, periodEnd).Sum(t => t.Amount)),
                     StartDate = periodStart,
                     EndDate = periodEnd,
                     Category = category,

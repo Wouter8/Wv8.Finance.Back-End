@@ -36,7 +36,7 @@
                     CategoryId = category.Id,
                     Date = DateTime.Today.AddDays(1),
                     Description = "Description",
-                    Settled = false,
+                    Processed = false,
                     Type = TransactionType.Expense,
                 });
             this.Context.SaveChanges();
@@ -60,7 +60,7 @@
                     CategoryId = category.Id,
                     Date = DateTime.Today,
                     Description = "Description",
-                    Settled = false,
+                    Processed = false,
                     Type = TransactionType.Expense,
                 });
             this.Context.SaveChanges();
@@ -84,7 +84,7 @@
                     CategoryId = category2.Id,
                     Date = DateTime.Today,
                     Description = "Description",
-                    Settled = false,
+                    Processed = false,
                     Type = TransactionType.Income,
                 });
             this.Context.SaveChanges();
@@ -108,7 +108,7 @@
                     ReceivingAccountId = account2.Id,
                     Date = DateTime.Today,
                     Description = "Description",
-                    Settled = false,
+                    Processed = false,
                     Type = TransactionType.Transfer,
                 });
             this.Context.SaveChanges();

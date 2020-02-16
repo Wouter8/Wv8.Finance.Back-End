@@ -10,6 +10,12 @@
     public class TransactionGroup
     {
         /// <summary>
+        /// The total amount of transactions that could be retrieved. Not all might have been retrieved
+        /// because of pagination parameters.
+        /// </summary>
+        public int TotalSearchResults { get; set; }
+
+        /// <summary>
         /// The total sum of all the transactions.
         /// </summary>
         public decimal TotalSum { get; set; }

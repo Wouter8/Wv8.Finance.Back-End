@@ -68,10 +68,11 @@
         public AccountEntity ReceivingAccount { get; set; }
 
         /// <summary>
-        /// A value indicating if this transaction has been settled.
+        /// A value indicating if this transaction has been processed.
         /// This value will be false for transactions in the future, and true for transactions in the past.
+        /// It can be either for transactions on the current date, depending if the process timer has already ticked.
         /// </summary>
-        public bool Settled { get; set; }
+        public bool Processed { get; set; }
 
         /// <summary>
         /// Optionally, the identifier of the recurring transaction this transaction descended from.

@@ -70,6 +70,8 @@
             return set
                 .Include(t => t.Account)
                 .ThenInclude(t => t.Icon)
+                .Include(t => t.ReceivingAccount)
+                .ThenInclude(t => t.Icon)
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Icon)
                 .Include(t => t.Category)
@@ -156,6 +158,23 @@
                 .IncludeAll()
                 .Where(b => b.CategoryId == categoryId || b.Category.Children.Select(c => c.Id).Contains(categoryId))
                 .Where(b => b.StartDate <= date && b.EndDate >= date)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Retrieves a list of transactions based on some filters.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <param name="categoryId">The category identifier.</param>
+        /// <param name="start">The start date of the period to search for.</param>
+        /// <param name="end">The end date of the period to search for.</param>
+        /// <returns>The list of transactions.</returns>
+        public static List<TransactionEntity> GetTransactions(this DbSet<TransactionEntity> set, int categoryId, DateTime start, DateTime end)
+        {
+            return set
+                .IncludeAll()
+                .Where(t => t.CategoryId == categoryId || (t.CategoryId.HasValue && t.Category.ParentCategoryId == categoryId))
+                .Where(t => start <= t.Date && end >= t.Date)
                 .ToList();
         }
 

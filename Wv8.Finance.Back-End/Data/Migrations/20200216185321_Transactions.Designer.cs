@@ -10,7 +10,7 @@ using PersonalFinance.Data;
 namespace PersonalFinance.Data.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20200214205658_Transactions")]
+    [Migration("20200216185321_Transactions")]
     partial class Transactions
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -161,14 +161,14 @@ namespace PersonalFinance.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Processed")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("ReceivingAccountId")
                         .HasColumnType("int");
 
                     b.Property<int?>("RecurringTransactionId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("Settled")
-                        .HasColumnType("bit");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");

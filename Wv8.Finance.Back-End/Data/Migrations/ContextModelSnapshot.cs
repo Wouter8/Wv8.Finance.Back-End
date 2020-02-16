@@ -159,14 +159,14 @@ namespace PersonalFinance.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Processed")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("ReceivingAccountId")
                         .HasColumnType("int");
 
                     b.Property<int?>("RecurringTransactionId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("Settled")
-                        .HasColumnType("bit");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");

@@ -8,13 +8,13 @@
     /// <summary>
     /// A class which handles transactions and recurring objects.
     /// </summary>
-    public class PeriodicSettler : BaseManager, IPeriodicSettler
+    public class TransactionProcessor : BaseManager, ITransactionProcessor
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="PeriodicSettler"/> class.
+        /// Initializes a new instance of the <see cref="TransactionProcessor"/> class.
         /// </summary>
         /// <param name="context">The database context.</param>
-        public PeriodicSettler(Context context)
+        public TransactionProcessor(Context context)
             : base(context)
         {
         }
@@ -24,9 +24,9 @@
         {
             this.ConcurrentInvoke(() =>
             {
-                this.SettleTransactions();
-                this.SettleRecurringBudgets();
-                this.SettleRecurringTransactions();
+                this.ProcessTransactions();
+                this.ProcessRecurringBudgets();
+                this.ProcessRecurringTransactions();
 
                 this.Context.SaveChanges();
             });
@@ -35,23 +35,23 @@
         /// <summary>
         /// Settles the transactions that are in the past.
         /// </summary>
-        private void SettleTransactions()
+        private void ProcessTransactions()
         {
             var transactionsToBeSettled = this.Context.Transactions
                 .IncludeAll()
-                .Where(t => !t.Settled && t.Date <= DateTime.Today)
+                .Where(t => !t.Processed && t.Date <= DateTime.Today)
                 .ToList();
 
             foreach (var transaction in transactionsToBeSettled)
             {
-                transaction.SettleTransaction(this.Context);
+                transaction.ProcessTransaction(this.Context);
             }
         }
 
         /// <summary>
         /// Settles the recurring transactions that have to be created.
         /// </summary>
-        private void SettleRecurringTransactions()
+        private void ProcessRecurringTransactions()
         {
             // TODO: Implement
         }
@@ -59,7 +59,7 @@
         /// <summary>
         /// Settles the recurring budgets that have to be created.
         /// </summary>
-        private void SettleRecurringBudgets()
+        private void ProcessRecurringBudgets()
         {
             // TODO: Implement
         }

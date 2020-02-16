@@ -81,10 +81,10 @@ namespace PersonalFinance.Service
             services.AddTransient<ICategoryManager, CategoryManager>();
             services.AddTransient<IBudgetManager, BudgetManager>();
             services.AddTransient<ITransactionManager, TransactionManager>();
-            services.AddTransient<IPeriodicSettler, PeriodicSettler>();
+            services.AddTransient<ITransactionProcessor, TransactionProcessor>();
 
             // Services
-            services.AddHostedService<PeriodicSettleService>();
+            services.AddHostedService<PeriodicService>();
         }
 
         /// <summary>
@@ -112,8 +112,8 @@ namespace PersonalFinance.Service
             if (env.IsProduction())
                 this.UpdateDatabase(app);
 
-            // Settle everything on startup
-            this.SettleAll(app);
+            // Process everything on startup
+            this.ProcessAll(app);
         }
 
         /// <summary>
@@ -130,12 +130,16 @@ namespace PersonalFinance.Service
             context.Database.Migrate();
         }
 
-        private void SettleAll(IApplicationBuilder app)
+        /// <summary>
+        /// Processes all unprocessed transactions in the past.
+        /// </summary>
+        /// <param name="app">The application builder.</param>
+        private void ProcessAll(IApplicationBuilder app)
         {
             using var serviceScope = app.ApplicationServices
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
-            var service = serviceScope.ServiceProvider.GetService<IPeriodicSettler>();
+            var service = serviceScope.ServiceProvider.GetService<ITransactionProcessor>();
 
             service.Run();
         }
