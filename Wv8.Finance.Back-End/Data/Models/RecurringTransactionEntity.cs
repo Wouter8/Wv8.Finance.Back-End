@@ -1,40 +1,47 @@
 ﻿namespace PersonalFinance.Data.Models
 {
     using System;
+    using System.Collections.Generic;
     using PersonalFinance.Common.Enums;
 
     /// <summary>
-    /// An entity representing a transaction. This can be an income, expense or transfer.
+    /// An entity representing a blue print for a transaction which get created based on an interval.
     /// </summary>
-    public class TransactionEntity
+    public class RecurringTransactionEntity
     {
         /// <summary>
-        /// The identifier of this transaction.
+        /// The identifier of the transaction to be created.
         /// </summary>
         public int Id { get; set; }
 
         /// <summary>
-        /// The description of this transaction.
+        /// The description of the transaction to be created.
         /// </summary>
         public string Description { get; set; }
 
         /// <summary>
-        /// The date this transaction occured. Note that this can be in the future.
+        /// The date from which transactions should be created.
+        /// If this is a date in the past, transactions will be created retroactively.
         /// </summary>
-        public DateTime Date { get; set; }
+        public DateTime StartDate { get; set; }
 
         /// <summary>
-        /// The type of this transaction.
+        /// The date till which transactions should be created. A (final) transaction can be created on this date.
+        /// </summary>
+        public DateTime EndDate { get; set; }
+
+        /// <summary>
+        /// The type of the transaction to be created.
         /// </summary>
         public TransactionType Type { get; set; }
 
         /// <summary>
-        /// The amount of this transaction.
+        /// The amount of the transaction to be created.
         /// </summary>
         public decimal Amount { get; set; }
 
         /// <summary>
-        /// The identifier of the category this transaction belongs to.
+        /// The identifier of the category the transaction to be created belongs to.
         /// This value is not set for transfer transactions.
         /// </summary>
         public int? CategoryId { get; set; }
@@ -46,12 +53,12 @@
         public CategoryEntity Category { get; set; }
 
         /// <summary>
-        /// The identifier of the account this transaction belongs to.
+        /// The identifier of the account the transaction to be created belongs to.
         /// </summary>
         public int AccountId { get; set; }
 
         /// <summary>
-        /// The account this transaction belongs to.
+        /// The account the transaction to be created belongs to.
         /// </summary>
         public AccountEntity Account { get; set; }
 
@@ -68,23 +75,25 @@
         public AccountEntity ReceivingAccount { get; set; }
 
         /// <summary>
-        /// A value indicating if this transaction has been processed.
-        /// This value will be false for transactions in the future, and true for transactions in the past.
-        /// It can be either for transactions on the current date, depending if the process timer has already ticked.
+        /// The date for the next transaction that will be created from this blueprint.
         /// </summary>
-        public bool Processed { get; set; }
+        public DateTime? NextOccurence { get; set; }
 
         /// <summary>
-        /// Optionally, the identifier of the recurring transaction this transaction descended from.
+        /// A value indicating if the end date has passed. No more transactions will be created.
         /// </summary>
-        public int? RecurringTransactionId { get; set; }
+        public bool Finished { get; set; }
 
         /// <summary>
-        /// Optionally, the recurring transaction this transaction descended from.
+        /// The unit in: '<see cref="Interval"/> units.
         /// </summary>
-        public RecurringTransactionEntity RecurringTransaction { get; set; }
+        public IntervalUnit IntervalUnit { get; set; }
 
-        // TODO: Add ReccuringTransaction object.
+        /// <summary>
+        /// The x in: 'x <see cref="IntervalUnit"/>.
+        /// </summary>
+        public int Interval { get; set; }
+
         // TODO: Add Savings
     }
 }

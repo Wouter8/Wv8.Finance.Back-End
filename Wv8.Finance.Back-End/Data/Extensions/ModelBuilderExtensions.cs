@@ -19,6 +19,7 @@
             builder.BuildCategoryEntity();
             builder.BuildBudgetEntity();
             builder.BuildTransactionEntity();
+            builder.BuildRecurringTransactionEntity();
         }
 
         /// <summary>
@@ -43,7 +44,6 @@
             var entity = builder.Entity<AccountEntity>();
 
             entity.Property(e => e.Description).IsRequired();
-            entity.Property(e => e.IsDefault).HasDefaultValue(false);
             entity.Property(e => e.CurrentBalance).HasPrecision(12, 2);
         }
 
@@ -66,9 +66,6 @@
         {
             var entity = builder.Entity<BudgetEntity>();
 
-            entity.Property(e => e.StartDate).IsRequired();
-            entity.Property(e => e.EndDate).IsRequired();
-
             entity.Property(e => e.Amount).HasPrecision(12, 2);
             entity.Property(e => e.Spent).HasPrecision(12, 2);
         }
@@ -78,6 +75,19 @@
         /// </summary>
         /// <param name="builder">The builder.</param>
         private static void BuildTransactionEntity(this ModelBuilder builder)
+        {
+            var entity = builder.Entity<TransactionEntity>();
+
+            entity.Property(e => e.Description).IsRequired();
+
+            entity.Property(e => e.Amount).HasPrecision(12, 2);
+        }
+
+        /// <summary>
+        /// Adds the required properties to the fields of the transaction entity.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        private static void BuildRecurringTransactionEntity(this ModelBuilder builder)
         {
             var entity = builder.Entity<TransactionEntity>();
 

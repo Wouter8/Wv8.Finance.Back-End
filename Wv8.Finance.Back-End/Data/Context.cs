@@ -41,6 +41,11 @@
         public DbSet<TransactionEntity> Transactions { get; set; }
 
         /// <summary>
+        /// The set of transactions.
+        /// </summary>
+        public DbSet<RecurringTransactionEntity> RecurringTransactions { get; set; }
+
+        /// <summary>
         /// The set of icons.
         /// </summary>
         public DbSet<IconEntity> Icons { get; set; }
