@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
+    using PersonalFinance.Common.Exceptions;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
@@ -82,6 +83,28 @@
                 .ThenInclude(c => c.Icon);
         }
 
+        /// <summary>
+        /// Generates a query with all includes.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <returns>The base query.</returns>
+        public static IQueryable<RecurringTransactionEntity> IncludeAll(this DbSet<RecurringTransactionEntity> set)
+        {
+            return set
+                .Include(t => t.Account)
+                .ThenInclude(t => t.Icon)
+                .Include(t => t.ReceivingAccount)
+                .ThenInclude(t => t.Icon)
+                .Include(t => t.Category)
+                .ThenInclude(c => c.Icon)
+                .Include(t => t.Category)
+                .ThenInclude(c => c.ParentCategory)
+                .ThenInclude(c => c.Icon)
+                .Include(t => t.Category)
+                .ThenInclude(c => c.Children)
+                .ThenInclude(c => c.Icon);
+        }
+
         #endregion Query Extensions
 
         #region Retrieve Extensions
@@ -91,13 +114,19 @@
         /// </summary>
         /// <param name="set">The database set.</param>
         /// <param name="id">The identifier of the account to be retrieved..</param>
+        /// <param name="allowObsolete">A value indicating if the retrieved entity can be obsolete.</param>
         /// <returns>The account.</returns>
-        public static AccountEntity GetEntity(this DbSet<AccountEntity> set, int id)
+        public static AccountEntity GetEntity(this DbSet<AccountEntity> set, int id, bool allowObsolete = true)
         {
-            return set
+            var entity = set
                 .IncludeAll()
                 .SingleOrNone(a => a.Id == id)
                 .ValueOrThrow(() => new DoesNotExistException($"Account with identifier {id} does not exist."));
+
+            if (!allowObsolete && entity.IsObsolete)
+                throw new IsObsoleteException("Account is obsolete.");
+
+            return entity;
         }
 
         /// <summary>
@@ -119,13 +148,19 @@
         /// </summary>
         /// <param name="set">The database set.</param>
         /// <param name="id">The identifier of the category to be retrieved..</param>
+        /// <param name="allowObsolete">A value indicating if the retrieved entity can be obsolete.</param>
         /// <returns>The category.</returns>
-        public static CategoryEntity GetEntity(this DbSet<CategoryEntity> set, int id)
+        public static CategoryEntity GetEntity(this DbSet<CategoryEntity> set, int id, bool allowObsolete = true)
         {
-            return set
+            var entity = set
                 .IncludeAll()
-                .SingleOrNone(c => c.Id == id)
+                .SingleOrNone(a => a.Id == id)
                 .ValueOrThrow(() => new DoesNotExistException($"Category with identifier {id} does not exist."));
+
+            if (!allowObsolete && entity.IsObsolete)
+                throw new IsObsoleteException("Category is obsolete.");
+
+            return entity;
         }
 
         /// <summary>
@@ -140,6 +175,20 @@
                 .IncludeAll()
                 .SingleOrNone(c => c.Id == id)
                 .ValueOrThrow(() => new DoesNotExistException($"Transaction with identifier {id} does not exist."));
+        }
+
+        /// <summary>
+        /// Retrieves a transaction entity.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <param name="id">The identifier of the transaction to be retrieved..</param>
+        /// <returns>The transaction.</returns>
+        public static RecurringTransactionEntity GetEntity(this DbSet<RecurringTransactionEntity> set, int id)
+        {
+            return set
+                .IncludeAll()
+                .SingleOrNone(c => c.Id == id)
+                .ValueOrThrow(() => new DoesNotExistException($"Recurring transaction with identifier {id} does not exist."));
         }
 
         /// <summary>
@@ -175,6 +224,20 @@
                 .IncludeAll()
                 .Where(t => t.CategoryId == categoryId || (t.CategoryId.HasValue && t.Category.ParentCategoryId == categoryId))
                 .Where(t => start <= t.Date && end >= t.Date)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Retrieves a list of transactions based on some filters.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <param name="recurringTransactionId">The recurring transaction identifier.</param>
+        /// <returns>The list of transactions.</returns>
+        public static List<TransactionEntity> GetTransactionsFromRecurring(this DbSet<TransactionEntity> set, int recurringTransactionId)
+        {
+            return set
+                .IncludeAll()
+                .Where(t => t.RecurringTransactionId == recurringTransactionId)
                 .ToList();
         }
 

@@ -93,7 +93,7 @@
                     throw new ValidationException("Account is obsolete.");
 
                 if (entity.Processed)
-                    entity.UnprocessTransaction(this.Context);
+                    entity.RevertProcessedTransaction(this.Context);
 
                 CategoryEntity category = null;
                 if (categoryId.IsSome)
@@ -108,7 +108,7 @@
                 }
 
                 AccountEntity receivingAccount = null;
-                if (receivingAccountId.IsSome && receivingAccountId.Value == entity.AccountId)
+                if (receivingAccountId.IsSome)
                 {
                     receivingAccount = this.Context.Accounts.GetEntity(receivingAccountId.Value);
                     if (receivingAccount.IsObsolete)
@@ -163,7 +163,7 @@
                 }
 
                 AccountEntity receivingAccount = null;
-                if (receivingAccountId.IsSome && receivingAccountId.Value == accountId)
+                if (receivingAccountId.IsSome)
                 {
                     receivingAccount = this.Context.Accounts.GetEntity(receivingAccountId.Value);
                     if (receivingAccount.IsObsolete)
@@ -207,7 +207,7 @@
                 var entity = this.Context.Transactions.GetEntity(id);
 
                 if (entity.Processed)
-                    entity.UnprocessTransaction(this.Context);
+                    entity.RevertProcessedTransaction(this.Context);
 
                 this.Context.Remove(entity);
 

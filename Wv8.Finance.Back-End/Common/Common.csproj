@@ -14,8 +14,4 @@
     <PackageReference Include="Wv8.Core" Version="1.1.4" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Exceptions\" />
-  </ItemGroup>
-
 </Project>

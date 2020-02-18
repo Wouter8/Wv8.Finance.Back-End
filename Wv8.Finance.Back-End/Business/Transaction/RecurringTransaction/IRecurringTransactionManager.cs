@@ -21,10 +21,14 @@
         /// Retrieves recurring transactions from the database with a specified filter.
         /// </summary>
         /// <param name="type">Optionally, the recurring transaction type filter.</param>
+        /// <param name="accountId">Optionally, identifier of the account the transaction belongs to.</param>
         /// <param name="categoryId">Optionally, identifier of the category the recurring transaction belongs to.</param>
         /// <remarks>Note that both start and end date have to be filled to filter on period.</remarks>
         /// <returns>The list of filtered recurring transactions.</returns>
-        List<RecurringTransaction> GetRecurringTransactionsByFilter(Maybe<TransactionType> type, Maybe<int> categoryId);
+        List<RecurringTransaction> GetRecurringTransactionsByFilter(
+            Maybe<TransactionType> type,
+            Maybe<int> accountId,
+            Maybe<int> categoryId);
 
         /// <summary>
         /// Updates an recurring transaction.
@@ -37,8 +41,24 @@
         /// <param name="amount">The new amount of the recurring transaction.</param>
         /// <param name="categoryId">The new identifier of the category the recurring transaction belongs to.</param>
         /// <param name="receivingAccountId">The new identifier of the receiving account.</param>
+        /// <param name="interval">The new interval of the recurring transaction.</param>
+        /// <param name="intervalUnit">The new unit of the interval of the recurring transaction.</param>
+        /// <param name="needsConfirmation">A value indicating if created transactions need to be manually confirmed.</param>
+        /// <param name="updateInstances">A value indicating if already created instances should be updated as well.</param>
         /// <returns>The updated recurring transaction.</returns>
-        RecurringTransaction UpdateRecurringTransaction(int id, int accountId, string description, string startDate, string endDate, decimal amount, Maybe<int> categoryId, Maybe<int> receivingAccountId);
+        RecurringTransaction UpdateRecurringTransaction(
+            int id,
+            int accountId,
+            string description,
+            string startDate,
+            string endDate,
+            decimal amount,
+            Maybe<int> categoryId,
+            Maybe<int> receivingAccountId,
+            int interval,
+            IntervalUnit intervalUnit,
+            bool needsConfirmation,
+            bool updateInstances);
 
         /// <summary>
         /// Creates a new recurring transaction.
@@ -51,8 +71,22 @@
         /// <param name="amount">The amount of the recurring transaction.</param>
         /// <param name="categoryId">The identifier of the category the recurring transaction belongs to.</param>
         /// <param name="receivingAccountId">The identifier of the receiving account.</param>
+        /// <param name="interval">The interval of the recurring transaction.</param>
+        /// <param name="intervalUnit">The unit of the interval of the recurring transaction.</param>
+        /// <param name="needsConfirmation">A value indicating if created transactions need to be manually confirmed.</param>
         /// <returns>The created recurring transaction.</returns>
-        RecurringTransaction CreateRecurringTransaction(int accountId, TransactionType type, string description, string startDate, string endDate, decimal amount, Maybe<int> categoryId, Maybe<int> receivingAccountId);
+        RecurringTransaction CreateRecurringTransaction(
+            int accountId,
+            TransactionType type,
+            string description,
+            string startDate,
+            string endDate,
+            decimal amount,
+            Maybe<int> categoryId,
+            Maybe<int> receivingAccountId,
+            int interval,
+            IntervalUnit intervalUnit,
+            bool needsConfirmation);
 
         /// <summary>
         /// Removes a recurring transaction.

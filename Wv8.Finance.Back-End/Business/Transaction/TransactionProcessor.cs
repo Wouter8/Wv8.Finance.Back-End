@@ -33,31 +33,39 @@
         }
 
         /// <summary>
-        /// Settles the transactions that are in the past.
+        /// Processes the transactions that are in the past.
         /// </summary>
         private void ProcessTransactions()
         {
-            var transactionsToBeSettled = this.Context.Transactions
+            var transactionsToBeProcessed = this.Context.Transactions
                 .IncludeAll()
                 .Where(t => !t.Processed && t.Date <= DateTime.Today)
                 .ToList();
 
-            foreach (var transaction in transactionsToBeSettled)
+            foreach (var transaction in transactionsToBeProcessed)
             {
                 transaction.ProcessTransaction(this.Context);
             }
         }
 
         /// <summary>
-        /// Settles the recurring transactions that have to be created.
+        /// Processes the recurring transactions that have to be created.
         /// </summary>
         private void ProcessRecurringTransactions()
         {
-            // TODO: Implement
+            var recurringTransactions = this.Context.RecurringTransactions
+                .IncludeAll()
+                .Where(rt => !rt.Finished && rt.StartDate >= DateTime.Today)
+                .ToList();
+
+            foreach (var recurringTransaction in recurringTransactions)
+            {
+                recurringTransaction.ProcessRecurringTransaction(this.Context);
+            }
         }
 
         /// <summary>
-        /// Settles the recurring budgets that have to be created.
+        /// Processes the recurring budgets that have to be created.
         /// </summary>
         private void ProcessRecurringBudgets()
         {

@@ -293,7 +293,7 @@
             receiver = this.AccountManager.GetAccount(receiver.Id);
             newReceiver = this.AccountManager.GetAccount(newReceiver.Id);
 
-            // Shouldn't be settled because update is in future.
+            // Shouldn't be processed because update is in future.
             Assert.Equal(0, sender.CurrentBalance);
             Assert.Equal(0, receiver.CurrentBalance);
             Assert.Equal(0, newReceiver.CurrentBalance);
@@ -515,7 +515,7 @@
             sender = this.AccountManager.GetAccount(sender.Id);
             receiver = this.AccountManager.GetAccount(receiver.Id);
 
-            // Shouldn't be settled because update is in future.
+            // Shouldn't be processed because update is in future.
             Assert.Equal(0, sender.CurrentBalance);
             Assert.Equal(0, receiver.CurrentBalance);
         }

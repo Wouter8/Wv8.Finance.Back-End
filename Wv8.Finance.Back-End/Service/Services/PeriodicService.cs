@@ -9,7 +9,7 @@
     using PersonalFinance.Data;
 
     /// <summary>
-    /// A class for a service which handles a periodic run to settle all needing objects.
+    /// A class for a service which handles a periodic run to process all needing objects.
     /// </summary>
     public class PeriodicService : IHostedService, IDisposable
     {
@@ -55,7 +55,7 @@
         }
 
         /// <summary>
-        /// This method retrieves the settle service and runs it.
+        /// This method retrieves the process service and runs it.
         /// </summary>
         /// <param name="state">The state. This is not used.</param>
         private void DoWork(object state)

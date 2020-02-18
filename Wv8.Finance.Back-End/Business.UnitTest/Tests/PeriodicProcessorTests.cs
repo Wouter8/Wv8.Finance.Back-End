@@ -1,19 +1,18 @@
 ﻿namespace Business.UnitTest.Tests
 {
     using System;
-    using System.Collections.Generic;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Models;
     using Xunit;
 
     /// <summary>
-    /// A test class testing the functionality of <see cref="PeriodicSettler"/>.
+    /// A test class testing the functionality of <see cref="ITransactionProcessor"/>.
     /// </summary>
-    public class PeriodicSettlerTests : BaseTest
+    public class PeriodicProcessorTests : BaseTest
     {
         /// <summary>
-        /// Tests that transactions in the past get properly settled.
+        /// Tests that transactions in the past get properly processed.
         /// </summary>
         [Fact]
         public void Transactions()
@@ -27,7 +26,7 @@
             var account = this.GenerateAccount();
             var account2 = this.GenerateAccount();
 
-            // Expense - not to be settled
+            // Expense - not to be processed
             this.Context.Transactions.Add(
                 new TransactionEntity
                 {
@@ -41,7 +40,7 @@
                 });
             this.Context.SaveChanges();
 
-            this.PeriodicSettler.Run();
+            this.PeriodicProcessor.Run();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -51,7 +50,7 @@
             Assert.Equal(0, account2.CurrentBalance);
             Assert.Equal(0, budget.Spent);
 
-            // Expense - to be settled
+            // Expense - to be processed
             this.Context.Transactions.Add(
                 new TransactionEntity
                 {
@@ -65,7 +64,7 @@
                 });
             this.Context.SaveChanges();
 
-            this.PeriodicSettler.Run();
+            this.PeriodicProcessor.Run();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -75,7 +74,7 @@
             Assert.Equal(0, account2.CurrentBalance);
             Assert.Equal(20, budget.Spent);
 
-            // Income - to be settled
+            // Income - to be processed
             this.Context.Transactions.Add(
                 new TransactionEntity
                 {
@@ -89,7 +88,7 @@
                 });
             this.Context.SaveChanges();
 
-            this.PeriodicSettler.Run();
+            this.PeriodicProcessor.Run();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -99,7 +98,7 @@
             Assert.Equal(0, account2.CurrentBalance);
             Assert.Equal(20, budget.Spent);
 
-            // Transfer - to be settled
+            // Transfer - to be processed
             this.Context.Transactions.Add(
                 new TransactionEntity
                 {
@@ -113,7 +112,7 @@
                 });
             this.Context.SaveChanges();
 
-            this.PeriodicSettler.Run();
+            this.PeriodicProcessor.Run();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -125,7 +124,7 @@
         }
 
         /// <summary>
-        /// Tests that recurring transactions get properly settled.
+        /// Tests that recurring transactions get properly processed.
         /// </summary>
         [Fact]
         public void RecurringTransactions()
@@ -134,7 +133,7 @@
         }
 
         /// <summary>
-        /// Tests that recurring budgets get properly settled.
+        /// Tests that recurring budgets get properly processed.
         /// </summary>
         [Fact]
         public void RecurringBudgets()

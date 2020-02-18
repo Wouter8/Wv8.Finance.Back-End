@@ -30,6 +30,16 @@
         }
 
         /// <summary>
+        /// Validates that the interval provided is in the correct range.
+        /// </summary>
+        /// <param name="input">The input.</param>
+        public void Interval(int input)
+        {
+            if (input <= 0)
+                throw new ValidationException("The interval must be greater than 0.");
+        }
+
+        /// <summary>
         /// Validates that the correct fields are provided for each transaction type.
         /// </summary>
         /// <param name="type">The transaction type.</param>

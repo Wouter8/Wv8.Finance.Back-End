@@ -80,6 +80,11 @@
         public DateTime? NextOccurence { get; set; }
 
         /// <summary>
+        /// The date of the latest transaction that was created from this blueprint.
+        /// </summary>
+        public DateTime? LastOccurence { get; set; }
+
+        /// <summary>
         /// A value indicating if the end date has passed. No more transactions will be created.
         /// </summary>
         public bool Finished { get; set; }
@@ -93,6 +98,12 @@
         /// The x in: 'x <see cref="IntervalUnit"/>.
         /// </summary>
         public int Interval { get; set; }
+
+        /// <summary>
+        /// A value indicating if transactions created by this blueprint need to be manually confirmed before being processed.
+        /// This can be useful when the exact date or amount is not known.
+        /// </summary>
+        public bool NeedsConfirmation { get; set; }
 
         // TODO: Add Savings
     }
