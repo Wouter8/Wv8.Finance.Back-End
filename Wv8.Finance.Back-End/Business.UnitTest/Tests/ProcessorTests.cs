@@ -124,6 +124,33 @@
             Assert.Equal(0, account.CurrentBalance);
             Assert.Equal(30, account2.CurrentBalance);
             Assert.Equal(20, budget.Spent);
+
+            // Unconfirmed transaction - not to be processed
+            this.Context.Transactions.Add(
+                new TransactionEntity
+                {
+                    AccountId = account.Id,
+                    Amount = -30,
+                    ReceivingAccountId = account2.Id,
+                    Date = DateTime.Today,
+                    Description = "Description",
+                    Processed = false,
+                    CategoryId = category.Id,
+                    Type = TransactionType.Expense,
+                    NeedsConfirmation = true,
+                    IsConfirmed = false,
+                });
+            this.Context.SaveChanges();
+
+            this.TransactionProcessor.Run();
+
+            budget = this.BudgetManager.GetBudget(budget.Id);
+            account = this.AccountManager.GetAccount(account.Id);
+            account2 = this.AccountManager.GetAccount(account2.Id);
+
+            Assert.Equal(0, account.CurrentBalance);
+            Assert.Equal(30, account2.CurrentBalance);
+            Assert.Equal(20, budget.Spent);
         }
 
         /// <summary>
@@ -139,7 +166,7 @@
             var startDate = DateTime.Today.AddDays(-7);
             var endDate = DateTime.Today; // 2 instances should be created, and finished
             var interval = 1;
-            var intervalUnit = IntervalUnit.Week;
+            var intervalUnit = IntervalUnit.Weeks;
 
             var rTransaction = new RecurringTransactionEntity
             {

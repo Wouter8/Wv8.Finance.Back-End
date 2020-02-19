@@ -250,7 +250,7 @@
             // Verify recurring transactions are removed.
             var rTransactions =
                 this.RecurringTransactionManager.GetRecurringTransactionsByFilter(
-                    Maybe<TransactionType>.None, account.Id, Maybe<int>.None);
+                    Maybe<TransactionType>.None, account.Id, Maybe<int>.None, true);
             Assert.Empty(rTransactions);
 
             this.AccountManager.SetAccountObsolete(account.Id, false);

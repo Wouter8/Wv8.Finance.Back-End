@@ -8,21 +8,21 @@
         /// <summary>
         /// Happens every x days.
         /// </summary>
-        Day = 1,
+        Days = 1,
 
         /// <summary>
         /// Happens every x weeks.
         /// </summary>
-        Week = 2,
+        Weeks = 2,
 
         /// <summary>
         /// Happens every x months.
         /// </summary>
-        Month = 3,
+        Months = 3,
 
         /// <summary>
         /// Happens every x years.
         /// </summary>
-        Year = 4,
+        Years = 4,
     }
 }

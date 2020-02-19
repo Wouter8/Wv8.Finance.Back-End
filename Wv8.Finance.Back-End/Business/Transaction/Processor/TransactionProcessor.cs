@@ -39,7 +39,8 @@
         {
             var transactionsToBeProcessed = this.Context.Transactions
                 .IncludeAll()
-                .Where(t => !t.Processed && t.Date <= DateTime.Today)
+                .Where(t => !t.Processed && t.Date <= DateTime.Today &&
+                            (!t.NeedsConfirmation || (t.NeedsConfirmation && t.IsConfirmed.Value)))
                 .ToList();
 
             foreach (var transaction in transactionsToBeProcessed)

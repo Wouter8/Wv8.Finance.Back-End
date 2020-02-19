@@ -257,7 +257,7 @@ namespace Business.UnitTest
             int? receivingAccountId = null,
             bool needsConfirmation = false,
             int interval = 3,
-            IntervalUnit intervalUnit = IntervalUnit.Month)
+            IntervalUnit intervalUnit = IntervalUnit.Months)
         {
             if (type == TransactionType.Expense && !categoryId.HasValue)
                 categoryId = this.GenerateCategory().Id;

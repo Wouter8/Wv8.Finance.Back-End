@@ -1,21 +1,41 @@
-﻿namespace PersonalFinance.Business.Transaction.RecurringTransaction
+﻿namespace PersonalFinance.Service.Controllers
 {
     using System.Collections.Generic;
+    using Microsoft.AspNetCore.Mvc;
+    using PersonalFinance.Business.Transaction;
+    using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;
 
     /// <summary>
-    /// Interface for the manager providing functionality related to recurring transactions.
+    /// Service endpoint for actions related to categories.
     /// </summary>
-    public interface IRecurringTransactionManager
+    [ApiController]
+    [Route("api/transactions/recurring")]
+    public class RecurringTransactionController : ControllerBase
     {
+        private readonly IRecurringTransactionManager manager;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RecurringTransactionController"/> class.
+        /// </summary>
+        /// <param name="manager">The manager.</param>
+        public RecurringTransactionController(IRecurringTransactionManager manager)
+        {
+            this.manager = manager;
+        }
+
         /// <summary>
         /// Retrieves a recurring transaction based on an identifier.
         /// </summary>
         /// <param name="id">The identifier of the recurring transaction.</param>
         /// <returns>The recurring transaction.</returns>
-        RecurringTransaction GetRecurringTransaction(int id);
+        [HttpGet("{id}")]
+        public RecurringTransaction GetRecurringTransaction(int id)
+        {
+            return this.manager.GetRecurringTransaction(id);
+        }
 
         /// <summary>
         /// Retrieves recurring transactions from the database with a specified filter.
@@ -26,11 +46,19 @@
         /// <param name="includeFinished">A value indicating if the finished recurring transactions should also be retrieved.</param>
         /// <remarks>Note that both start and end date have to be filled to filter on period.</remarks>
         /// <returns>The list of filtered recurring transactions.</returns>
-        List<RecurringTransaction> GetRecurringTransactionsByFilter(
-            Maybe<TransactionType> type,
-            Maybe<int> accountId,
-            Maybe<int> categoryId,
-            bool includeFinished);
+        [HttpGet("filter")]
+        public List<RecurringTransaction> GetRecurringTransactionsByFilter(
+            [FromQuery] Maybe<TransactionType> type,
+            [FromQuery] Maybe<int> accountId,
+            [FromQuery] Maybe<int> categoryId,
+            bool includeFinished)
+        {
+            return this.manager.GetRecurringTransactionsByFilter(
+                type,
+                accountId,
+                categoryId,
+                includeFinished);
+        }
 
         /// <summary>
         /// Updates an recurring transaction.
@@ -48,19 +76,35 @@
         /// <param name="needsConfirmation">A value indicating if created transactions need to be manually confirmed.</param>
         /// <param name="updateInstances">A value indicating if already created instances should be updated as well.</param>
         /// <returns>The updated recurring transaction.</returns>
-        RecurringTransaction UpdateRecurringTransaction(
+        [HttpPut("{id}")]
+        public RecurringTransaction UpdateRecurringTransaction(
             int id,
             int accountId,
             string description,
             string startDate,
             string endDate,
             decimal amount,
-            Maybe<int> categoryId,
-            Maybe<int> receivingAccountId,
+            [FromQuery] Maybe<int> categoryId,
+            [FromQuery] Maybe<int> receivingAccountId,
             int interval,
             IntervalUnit intervalUnit,
             bool needsConfirmation,
-            bool updateInstances);
+            bool updateInstances)
+        {
+            return this.manager.UpdateRecurringTransaction(
+                id,
+                accountId,
+                description,
+                startDate,
+                endDate,
+                amount,
+                categoryId,
+                receivingAccountId,
+                interval,
+                intervalUnit,
+                needsConfirmation,
+                updateInstances);
+        }
 
         /// <summary>
         /// Creates a new recurring transaction.
@@ -77,24 +121,43 @@
         /// <param name="intervalUnit">The unit of the interval of the recurring transaction.</param>
         /// <param name="needsConfirmation">A value indicating if created transactions need to be manually confirmed.</param>
         /// <returns>The created recurring transaction.</returns>
-        RecurringTransaction CreateRecurringTransaction(
+        [HttpPost]
+        public RecurringTransaction CreateRecurringTransaction(
             int accountId,
             TransactionType type,
             string description,
             string startDate,
             string endDate,
             decimal amount,
-            Maybe<int> categoryId,
-            Maybe<int> receivingAccountId,
+            [FromQuery] Maybe<int> categoryId,
+            [FromQuery] Maybe<int> receivingAccountId,
             int interval,
             IntervalUnit intervalUnit,
-            bool needsConfirmation);
+            bool needsConfirmation)
+        {
+            return this.manager.CreateRecurringTransaction(
+                accountId,
+                type,
+                description,
+                startDate,
+                endDate,
+                amount,
+                categoryId,
+                receivingAccountId,
+                interval,
+                intervalUnit,
+                needsConfirmation);
+        }
 
         /// <summary>
         /// Removes a recurring transaction.
         /// </summary>
         /// <param name="id">The identifier of the recurring transaction.</param>
         /// <param name="deleteInstances">If true, all instances derived from the recurring transaction are deleted.</param>
-        void DeleteRecurringTransaction(int id, bool deleteInstances);
+        [HttpDelete("{id}")]
+        public void DeleteRecurringTransaction(int id, bool deleteInstances)
+        {
+            this.manager.DeleteRecurringTransaction(id, deleteInstances);
+        }
     }
 }

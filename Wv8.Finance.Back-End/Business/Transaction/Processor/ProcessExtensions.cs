@@ -138,16 +138,16 @@ namespace PersonalFinance.Business.Transaction.Processor
             var next = DateTime.MinValue;
             switch (transaction.IntervalUnit)
             {
-                case IntervalUnit.Day:
+                case IntervalUnit.Days:
                     next = start.AddDays(transaction.Interval);
                     break;
-                case IntervalUnit.Week:
+                case IntervalUnit.Weeks:
                     next = start.AddDays(7 * transaction.Interval);
                     break;
-                case IntervalUnit.Month:
+                case IntervalUnit.Months:
                     next = start.AddMonths(transaction.Interval);
                     break;
-                case IntervalUnit.Year:
+                case IntervalUnit.Years:
                     next = start.AddYears(transaction.Interval);
                     break;
             }

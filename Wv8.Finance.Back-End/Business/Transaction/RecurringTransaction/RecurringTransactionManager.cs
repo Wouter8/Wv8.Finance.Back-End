@@ -45,7 +45,8 @@
         public List<RecurringTransaction> GetRecurringTransactionsByFilter(
             Maybe<TransactionType> type,
             Maybe<int> accountId,
-            Maybe<int> categoryId)
+            Maybe<int> categoryId,
+            bool includeFinished)
         {
             return this.Context.RecurringTransactions
                 .IncludeAll()
@@ -56,7 +57,9 @@
                     t => t.CategoryId.HasValue && (t.CategoryId.Value == categoryId.Value ||
                                                    (t.Category.ParentCategoryId.HasValue &&
                                                     t.Category.ParentCategoryId.Value == categoryId.Value)))
-                .OrderBy(t => t.NextOccurence)
+                .WhereIf(!includeFinished, rt => !rt.Finished)
+                .OrderByDescending(t => t.StartDate)
+                .ThenByDescending(t => t.EndDate)
                 .ToList()
                 .Select(t => t.AsRecurringTransaction())
                 .ToList();
