@@ -4,6 +4,7 @@
     using System.Linq;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Common.Enums;
+    using PersonalFinance.Common.Exceptions;
     using Wv8.Core;
     using Wv8.Core.Exceptions;
     using Xunit;
@@ -378,8 +379,13 @@
                 Maybe<int>.None));
 
             /* Account obsolete */
+            // Fix current balance to 0 with new transaction
+            var fixTransaction = this.GenerateTransaction(
+                accountId: account.Id,
+                type: TransactionType.Income,
+                categoryId: incomeCategory.Id);
             this.AccountManager.SetAccountObsolete(account.Id, true);
-            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(
+            Assert.Throws<IsObsoleteException>(() => this.TransactionManager.UpdateTransaction(
                 expenseTransaction.Id,
                 account.Id,
                 description,
@@ -388,6 +394,7 @@
                 expenseCategory.Id,
                 Maybe<int>.None));
             this.AccountManager.SetAccountObsolete(account.Id, false);
+            this.TransactionManager.DeleteTransaction(fixTransaction.Id);
 
             /* Category mismatch */
             // Income category on expense transaction.
@@ -412,7 +419,7 @@
             /* Category obsolete */
             // Income category on expense transaction.
             this.CategoryManager.SetCategoryObsolete(expenseCategory.Id, true);
-            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(
+            Assert.Throws<IsObsoleteException>(() => this.TransactionManager.UpdateTransaction(
                 expenseTransaction.Id,
                 account.Id,
                 description,
@@ -424,12 +431,12 @@
 
             /* Receiving account obsolete. */
             this.AccountManager.SetAccountObsolete(account2.Id, true);
-            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(
+            Assert.Throws<IsObsoleteException>(() => this.TransactionManager.UpdateTransaction(
                 transferTransaction.Id,
                 account.Id,
                 description,
                 date,
-                -amount,
+                amount,
                 Maybe<int>.None,
                 account2.Id));
             this.AccountManager.SetAccountObsolete(account2.Id, false);
@@ -593,7 +600,7 @@
 
             /* Account obsolete */
             this.AccountManager.SetAccountObsolete(account.Id, true);
-            Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
+            Assert.Throws<IsObsoleteException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
                 TransactionType.Expense,
                 description,
@@ -626,7 +633,7 @@
             /* Category obsolete */
             // Income category on expense transaction.
             this.CategoryManager.SetCategoryObsolete(expenseCategory.Id, true);
-            Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
+            Assert.Throws<IsObsoleteException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
                 TransactionType.Expense,
                 description,
@@ -638,12 +645,12 @@
 
             /* Receiving account obsolete. */
             this.AccountManager.SetAccountObsolete(account2.Id, true);
-            Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
+            Assert.Throws<IsObsoleteException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
                 TransactionType.Transfer,
                 description,
                 date,
-                -amount,
+                amount,
                 Maybe<int>.None,
                 account2.Id));
             this.AccountManager.SetAccountObsolete(account2.Id, false);

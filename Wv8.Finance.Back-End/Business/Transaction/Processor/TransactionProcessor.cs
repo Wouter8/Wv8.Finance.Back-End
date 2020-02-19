@@ -55,7 +55,7 @@
         {
             var recurringTransactions = this.Context.RecurringTransactions
                 .IncludeAll()
-                .Where(rt => !rt.Finished && rt.StartDate >= DateTime.Today)
+                .Where(rt => !rt.Finished && rt.StartDate <= DateTime.Today)
                 .ToList();
 
             foreach (var recurringTransaction in recurringTransactions)

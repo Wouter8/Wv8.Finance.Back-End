@@ -9,6 +9,7 @@ namespace Business.UnitTest
     using PersonalFinance.Business.Category;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.Processor;
+    using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
@@ -48,6 +49,11 @@ namespace Business.UnitTest
         protected readonly ITransactionManager TransactionManager;
 
         /// <summary>
+        /// The transaction manager.
+        /// </summary>
+        protected readonly IRecurringTransactionManager RecurringTransactionManager;
+
+        /// <summary>
         /// The periodic processor.
         /// </summary>
         protected readonly ITransactionProcessor TransactionProcessor;
@@ -65,6 +71,7 @@ namespace Business.UnitTest
             services.AddTransient<ICategoryManager, CategoryManager>();
             services.AddTransient<IBudgetManager, BudgetManager>();
             services.AddTransient<ITransactionManager, TransactionManager>();
+            services.AddTransient<IRecurringTransactionManager, RecurringTransactionManager>();
             services.AddTransient<ITransactionProcessor, TransactionProcessor>();
 
             var serviceProvider = services.BuildServiceProvider();
@@ -74,6 +81,7 @@ namespace Business.UnitTest
             this.CategoryManager = serviceProvider.GetService<ICategoryManager>();
             this.BudgetManager = serviceProvider.GetService<IBudgetManager>();
             this.TransactionManager = serviceProvider.GetService<ITransactionManager>();
+            this.RecurringTransactionManager = serviceProvider.GetService<IRecurringTransactionManager>();
             this.TransactionProcessor = serviceProvider.GetService<ITransactionProcessor>();
         }
 
@@ -223,6 +231,62 @@ namespace Business.UnitTest
                 receivingAccountId.ToMaybe());
         }
 
+        /// <summary>
+        /// Creates an recurring transaction with specified, or random values.
+        /// </summary>
+        /// <param name="accountId">The identifier of the account.</param>
+        /// <param name="type">The type of the recurring transaction.</param>
+        /// <param name="description">The description of the recurring transaction.</param>
+        /// <param name="startDate">The start date of the recurring transaction.</param>
+        /// <param name="endDate">The end date of the recurring transaction.</param>
+        /// <param name="amount">The amount.</param>
+        /// <param name="categoryId">The identifier of the category.</param>
+        /// <param name="receivingAccountId">The identifier of the receiving account.</param>
+        /// <param name="needsConfirmation">The value for needs confirmation.</param>
+        /// <param name="interval">The interval.</param>
+        /// <param name="intervalUnit">The interval unit.</param>
+        /// <returns>The created recurring transaction.</returns>
+        protected RecurringTransaction GenerateRecurringTransaction(
+            int? accountId = null,
+            TransactionType type = TransactionType.Expense,
+            string description = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            decimal? amount = null,
+            int? categoryId = null,
+            int? receivingAccountId = null,
+            bool needsConfirmation = false,
+            int interval = 3,
+            IntervalUnit intervalUnit = IntervalUnit.Month)
+        {
+            if (type == TransactionType.Expense && !categoryId.HasValue)
+                categoryId = this.GenerateCategory().Id;
+            if (type == TransactionType.Income && !categoryId.HasValue)
+                categoryId = this.GenerateCategory(CategoryType.Income).Id;
+            if (type == TransactionType.Transfer && !receivingAccountId.HasValue)
+                receivingAccountId = this.GenerateAccount().Id;
+
+            if (!accountId.HasValue)
+                accountId = this.GenerateAccount().Id;
+            if (!startDate.HasValue)
+                startDate = DateTime.Today;
+            if (!endDate.HasValue)
+                endDate = startDate.Value.AddMonths(3);
+
+            return this.RecurringTransactionManager.CreateRecurringTransaction(
+                accountId.Value,
+                type,
+                description ?? this.GetRandomString(),
+                startDate.Value.ToString("O"),
+                endDate.Value.ToString("O"),
+                amount ?? (type == TransactionType.Expense ? -50 : 50),
+                categoryId.ToMaybe(),
+                receivingAccountId.ToMaybe(),
+                interval,
+                intervalUnit,
+                needsConfirmation);
+        }
+
         #endregion CreateHelpers
 
         #region AssertHelpers
@@ -325,6 +389,28 @@ namespace Business.UnitTest
             Assert.Equal(a.Date, b.Date);
             Assert.Equal(a.ReceivingAccountId, b.ReceivingAccountId);
             Assert.Equal(a.RecurringTransactionId, b.RecurringTransactionId);
+        }
+
+        /// <summary>
+        /// Asserts that two transactions are the same.
+        /// </summary>
+        /// <param name="a">Transaction a.</param>
+        /// <param name="b">Transaction b.</param>
+        protected void AssertEqual(RecurringTransaction a, RecurringTransaction b)
+        {
+            Assert.Equal(a.Id, b.Id);
+            Assert.Equal(a.Amount, b.Amount);
+            Assert.Equal(a.Description, b.Description);
+            Assert.Equal(a.CategoryId, b.CategoryId);
+            Assert.Equal(a.AccountId, b.AccountId);
+            Assert.Equal(a.StartDate, b.StartDate);
+            Assert.Equal(a.EndDate, b.EndDate);
+            Assert.Equal(a.ReceivingAccountId, b.ReceivingAccountId);
+            Assert.Equal(a.Interval, b.Interval);
+            Assert.Equal(a.IntervalUnit, b.IntervalUnit);
+            Assert.Equal(a.NextOccurence, b.NextOccurence);
+            Assert.Equal(a.Finished, b.Finished);
+            Assert.Equal(a.NeedsConfirmation, b.NeedsConfirmation);
         }
 
         #endregion AssertHelpers

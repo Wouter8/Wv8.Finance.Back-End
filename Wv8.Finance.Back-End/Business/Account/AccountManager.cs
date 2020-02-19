@@ -55,7 +55,7 @@
 
             return this.ConcurrentInvoke(() =>
             {
-                var entity = this.Context.Accounts.GetEntity(id);
+                var entity = this.Context.Accounts.GetEntity(id, false);
 
                 if (this.Context.Accounts.Any(a => a.Id != id && a.Description == description && !a.IsObsolete))
                 {
@@ -129,6 +129,14 @@
                 {
                     if (entity.CurrentBalance != 0)
                         throw new ValidationException("This account has a current balance which is not 0.");
+
+                    // Delete any existing recurring transaction for this account
+                    var recurringTransactions = this.Context.RecurringTransactions
+                        .Where(rt => rt.AccountId == entity.Id || rt.ReceivingAccountId == entity.Id)
+                        .ToList();
+                    this.Context.RecurringTransactions.RemoveRange(recurringTransactions);
+
+                    // Obsolete account can not be the default
                     entity.IsDefault = false;
                 }
                 else

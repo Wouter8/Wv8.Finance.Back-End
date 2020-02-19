@@ -7,6 +7,7 @@
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
+    using Wv8.Core;
     using Wv8.Core.Exceptions;
     using Xunit;
 
@@ -30,7 +31,6 @@
 
             Assert.Equal(savedAccount.Id, retrievedAccount.Id);
             Assert.Equal(savedAccount.Description, retrievedAccount.Description);
-            Assert.Equal(savedAccount.CurrentBalance, retrievedAccount.CurrentBalance);
             Assert.Equal(-50, retrievedAccount.CurrentBalance);
             Assert.Equal(savedAccount.IsDefault, retrievedAccount.IsDefault);
             Assert.Equal(savedAccount.IsObsolete, retrievedAccount.IsObsolete);
@@ -224,6 +224,12 @@
         public void SetAccountObsolete()
         {
             var account = this.GenerateAccount();
+            var account2 = this.GenerateAccount();
+
+            // Create 2 recurring transactions for account.
+            var rTransaction1 = this.GenerateRecurringTransaction(account.Id);
+            var rTransaction2 = this.GenerateRecurringTransaction(
+                accountId: account2.Id, type: TransactionType.Transfer, receivingAccountId: account.Id);
 
             // Set as default and obsolete.
             this.AccountManager.UpdateAccount(
@@ -240,6 +246,12 @@
             // Verify account is no longer default and is obsolete.
             Assert.True(updated.IsObsolete);
             Assert.False(updated.IsDefault);
+
+            // Verify recurring transactions are removed.
+            var rTransactions =
+                this.RecurringTransactionManager.GetRecurringTransactionsByFilter(
+                    Maybe<TransactionType>.None, account.Id, Maybe<int>.None);
+            Assert.Empty(rTransactions);
 
             this.AccountManager.SetAccountObsolete(account.Id, false);
             updated = this.AccountManager.GetAccount(account.Id);

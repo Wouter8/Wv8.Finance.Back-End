@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Business.Transaction.Processor
+namespace PersonalFinance.Business.Transaction.Processor
 {
     using System;
     using System.Collections.Generic;
@@ -113,7 +113,7 @@
             while (!transaction.Finished)
             {
                 // No more transactions need to be created.
-                if (transaction.NextOccurence.Value > DateTime.Today)
+                if (transaction.NextOccurence > DateTime.Today)
                     break;
 
                 var instance = transaction.CreateOccurence();

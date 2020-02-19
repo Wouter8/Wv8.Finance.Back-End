@@ -89,9 +89,7 @@
                 var entity = this.Context.Transactions.GetEntity(id);
                 this.validator.Type(entity.Type, amount, categoryId, receivingAccountId);
 
-                var account = this.Context.Accounts.GetEntity(accountId);
-                if (account.IsObsolete)
-                    throw new ValidationException("Account is obsolete.");
+                var account = this.Context.Accounts.GetEntity(accountId, false);
 
                 if (entity.Processed)
                     entity.RevertProcessedTransaction(this.Context);
@@ -99,9 +97,7 @@
                 CategoryEntity category = null;
                 if (categoryId.IsSome)
                 {
-                    category = this.Context.Categories.GetEntity(categoryId.Value);
-                    if (category.IsObsolete)
-                        throw new ValidationException("Category is obsolete.");
+                    category = this.Context.Categories.GetEntity(categoryId.Value, false);
                     if (entity.Type == TransactionType.Expense && category.Type != CategoryType.Expense)
                         throw new ValidationException($"Category \"{category.Description}\" is not an expense category.");
                     if (entity.Type == TransactionType.Income && category.Type != CategoryType.Income)
@@ -111,9 +107,7 @@
                 AccountEntity receivingAccount = null;
                 if (receivingAccountId.IsSome)
                 {
-                    receivingAccount = this.Context.Accounts.GetEntity(receivingAccountId.Value);
-                    if (receivingAccount.IsObsolete)
-                        throw new ValidationException("Receiving account is obsolete.");
+                    receivingAccount = this.Context.Accounts.GetEntity(receivingAccountId.Value, false);
 
                     if (receivingAccount.Id == account.Id)
                         throw new ValidationException("Sender account can not be the same as receiver account.");
@@ -147,16 +141,12 @@
 
             return this.ConcurrentInvoke(() =>
             {
-                var account = this.Context.Accounts.GetEntity(accountId);
-                if (account.IsObsolete)
-                    throw new ValidationException("Account is obsolete.");
+                var account = this.Context.Accounts.GetEntity(accountId, false);
 
                 CategoryEntity category = null;
                 if (categoryId.IsSome)
                 {
-                    category = this.Context.Categories.GetEntity(categoryId.Value);
-                    if (category.IsObsolete)
-                        throw new ValidationException("Category is obsolete.");
+                    category = this.Context.Categories.GetEntity(categoryId.Value, false);
                     if (type == TransactionType.Expense && category.Type != CategoryType.Expense)
                         throw new ValidationException($"Category \"{category.Description}\" is not an expense category.");
                     if (type == TransactionType.Income && category.Type != CategoryType.Income)
@@ -166,9 +156,7 @@
                 AccountEntity receivingAccount = null;
                 if (receivingAccountId.IsSome)
                 {
-                    receivingAccount = this.Context.Accounts.GetEntity(receivingAccountId.Value);
-                    if (receivingAccount.IsObsolete)
-                        throw new ValidationException("Receiving account is obsolete.");
+                    receivingAccount = this.Context.Accounts.GetEntity(receivingAccountId.Value, false);
 
                     if (receivingAccount.Id == account.Id)
                         throw new ValidationException("Sender account can not be the same as receiver account.");

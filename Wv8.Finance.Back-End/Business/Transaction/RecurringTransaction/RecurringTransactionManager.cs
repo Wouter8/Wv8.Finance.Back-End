@@ -88,6 +88,9 @@
                 var entity = this.Context.RecurringTransactions.GetEntity(id);
                 this.validator.Type(entity.Type, amount, categoryId, receivingAccountId);
 
+                if (!updateInstances && startPeriod != entity.StartDate)
+                    throw new ValidationException($"Updating the start date without updating already created instances is not supported.");
+
                 var account = this.Context.Accounts.GetEntity(accountId, false);
 
                 CategoryEntity category = null;
@@ -134,7 +137,8 @@
                             instance.RevertProcessedTransaction(this.Context);
                         this.Context.Remove(instance);
                     }
-                    entity.NextOccurence = null;
+
+                    entity.NextOccurence = startPeriod;
                     entity.Finished = false;
                 }
 
@@ -209,6 +213,7 @@
                     Interval = interval,
                     IntervalUnit = intervalUnit,
                     NeedsConfirmation = needsConfirmation,
+                    NextOccurence = startPeriod,
                 };
 
                 if (entity.StartDate <= DateTime.Today)

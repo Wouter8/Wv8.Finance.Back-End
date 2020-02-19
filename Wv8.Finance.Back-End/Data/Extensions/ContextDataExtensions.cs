@@ -124,7 +124,7 @@
                 .ValueOrThrow(() => new DoesNotExistException($"Account with identifier {id} does not exist."));
 
             if (!allowObsolete && entity.IsObsolete)
-                throw new IsObsoleteException("Account is obsolete.");
+                throw new IsObsoleteException($"Account \"{entity.Description}\" is obsolete.");
 
             return entity;
         }
@@ -158,7 +158,7 @@
                 .ValueOrThrow(() => new DoesNotExistException($"Category with identifier {id} does not exist."));
 
             if (!allowObsolete && entity.IsObsolete)
-                throw new IsObsoleteException("Category is obsolete.");
+                throw new IsObsoleteException($"Category \"{entity.Description}\" is obsolete.");
 
             return entity;
         }

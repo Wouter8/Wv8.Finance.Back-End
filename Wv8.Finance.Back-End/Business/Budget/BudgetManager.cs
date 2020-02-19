@@ -109,10 +109,7 @@
 
             return this.ConcurrentInvoke(() =>
             {
-                var category = this.Context.Categories.GetEntity(categoryId);
-
-                if (category.IsObsolete)
-                    throw new ValidationException("Category is obsolete. No budgets can be created for obsolete categories.");
+                var category = this.Context.Categories.GetEntity(categoryId, false);
 
                 if (category.Type != CategoryType.Expense)
                     throw new ValidationException("Budgets can only be created for expense categories.");

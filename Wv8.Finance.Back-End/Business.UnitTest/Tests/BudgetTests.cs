@@ -3,6 +3,7 @@
     using System;
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Common.Enums;
+    using PersonalFinance.Common.Exceptions;
     using Wv8.Core;
     using Wv8.Core.Exceptions;
     using Xunit;
@@ -227,7 +228,7 @@
 
             this.CategoryManager.SetCategoryObsolete(category.Id, true);
             // Category is obsolete.
-            Assert.Throws<ValidationException>(() =>
+            Assert.Throws<IsObsoleteException>(() =>
                 this.BudgetManager.CreateBudget(category.Id, amount, startDate, endDate));
         }
 

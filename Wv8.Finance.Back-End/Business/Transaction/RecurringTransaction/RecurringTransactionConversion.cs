@@ -48,6 +48,7 @@
                 Interval = entity.Interval,
                 NextOccurence = entity.NextOccurence.ToMaybe().Select(dt => dt.ToString("O")),
                 Finished = entity.Finished,
+                NeedsConfirmation = entity.NeedsConfirmation,
             };
         }
     }

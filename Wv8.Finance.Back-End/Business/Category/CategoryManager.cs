@@ -170,7 +170,7 @@
                 var entity = this.Context.Categories.GetEntity(id);
 
                 if (entity.ParentCategoryId.HasValue && entity.ParentCategory.IsObsolete)
-                    throw new ValidationException("Parent category is obsolete.");
+                    throw new ValidationException($"Parent category \"{entity.ParentCategory.Description}\" is obsolete.");
 
                 if (obsolete)
                 {

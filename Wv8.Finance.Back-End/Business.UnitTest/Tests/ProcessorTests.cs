@@ -1,9 +1,12 @@
 ﻿namespace Business.UnitTest.Tests
 {
     using System;
+    using System.Linq;
     using PersonalFinance.Business.Transaction;
+    using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Models;
+    using Wv8.Core;
     using Xunit;
 
     /// <summary>
@@ -129,7 +132,41 @@
         [Fact]
         public void RecurringTransactions()
         {
-            // TODO: Implement
+            var account = this.GenerateAccount().Id;
+            var description = "Description";
+            var amount = -30;
+            var category = this.GenerateCategory().Id;
+            var startDate = DateTime.Today.AddDays(-7);
+            var endDate = DateTime.Today; // 2 instances should be created, and finished
+            var interval = 1;
+            var intervalUnit = IntervalUnit.Week;
+
+            var rTransaction = new RecurringTransactionEntity
+            {
+                Description = description,
+                Type = TransactionType.Expense,
+                Amount = amount,
+                StartDate = startDate,
+                EndDate = endDate,
+                AccountId = account,
+                CategoryId = category,
+                ReceivingAccountId = null,
+                Interval = interval,
+                IntervalUnit = intervalUnit,
+                NeedsConfirmation = false,
+                NextOccurence = startDate,
+            };
+            this.Context.RecurringTransactions.Add(rTransaction);
+            this.Context.SaveChanges();
+
+            this.TransactionProcessor.Run();
+            var instances = this.Context.Transactions
+                .Where(t => t.RecurringTransactionId == rTransaction.Id &&
+                            !t.NeedsConfirmation) // Verify needs confirmation property
+                .ToList();
+
+            Assert.True(rTransaction.Finished);
+            Assert.Equal(2, instances.Count);
         }
 
         /// <summary>

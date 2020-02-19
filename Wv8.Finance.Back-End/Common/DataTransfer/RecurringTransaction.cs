@@ -94,6 +94,12 @@
         /// </summary>
         public int Interval { get; set; }
 
+        /// <summary>
+        /// A value indicating if transactions created by this blueprint need to be manually confirmed before being processed.
+        /// This can be useful when the exact date or amount is not known.
+        /// </summary>
+        public bool NeedsConfirmation { get; set; }
+
         // TODO: Add Savings
     }
 }
