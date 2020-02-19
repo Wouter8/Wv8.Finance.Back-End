@@ -80,7 +80,11 @@
         /// </summary>
         public Maybe<int> RecurringTransactionId { get; set; }
 
-        // TODO: Add ReccuringTransaction object.
+        /// <summary>
+        /// Optionally, the recurring transaction this transaction descended from.
+        /// </summary>
+        public Maybe<RecurringTransaction> RecurringTransaction { get; set; }
+
         // TODO: Add Savings
     }
 }

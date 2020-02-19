@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;

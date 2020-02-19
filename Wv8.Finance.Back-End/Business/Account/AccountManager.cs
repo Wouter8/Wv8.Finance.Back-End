@@ -127,6 +127,8 @@
 
                 if (obsolete)
                 {
+                    if (entity.CurrentBalance != 0)
+                        throw new ValidationException("This account has a current balance which is not 0.");
                     entity.IsDefault = false;
                 }
                 else

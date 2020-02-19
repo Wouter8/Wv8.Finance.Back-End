@@ -8,6 +8,7 @@ namespace Business.UnitTest
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Business.Category;
     using PersonalFinance.Business.Transaction;
+    using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
@@ -49,7 +50,7 @@ namespace Business.UnitTest
         /// <summary>
         /// The periodic processor.
         /// </summary>
-        protected readonly ITransactionProcessor PeriodicProcessor;
+        protected readonly ITransactionProcessor TransactionProcessor;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTest"/> class.
@@ -73,7 +74,7 @@ namespace Business.UnitTest
             this.CategoryManager = serviceProvider.GetService<ICategoryManager>();
             this.BudgetManager = serviceProvider.GetService<IBudgetManager>();
             this.TransactionManager = serviceProvider.GetService<ITransactionManager>();
-            this.PeriodicProcessor = serviceProvider.GetService<ITransactionProcessor>();
+            this.TransactionProcessor = serviceProvider.GetService<ITransactionProcessor>();
         }
 
         #region CreateHelpers
@@ -200,8 +201,10 @@ namespace Business.UnitTest
             int? categoryId = null,
             int? receivingAccountId = null)
         {
-            if (((type == TransactionType.Expense) || (type == TransactionType.Income)) && !categoryId.HasValue)
+            if (type == TransactionType.Expense && !categoryId.HasValue)
                 categoryId = this.GenerateCategory().Id;
+            if (type == TransactionType.Income && !categoryId.HasValue)
+                categoryId = this.GenerateCategory(CategoryType.Income).Id;
             if (type == TransactionType.Transfer && !receivingAccountId.HasValue)
                 receivingAccountId = this.GenerateAccount().Id;
 

@@ -16,15 +16,17 @@
 
         /// <summary>
         /// Tests the good flow of the <see cref="IBudgetManager.GetBudget"/> method.
-        /// TODO: Create transactions and test spent is set correctly.
         /// </summary>
         [Fact]
         public void GetBudget()
         {
-            var budget = this.GenerateBudget();
+            var category = this.GenerateCategory();
+            var transaction = this.GenerateTransaction(categoryId: category.Id, amount: -50);
+            var budget = this.GenerateBudget(category.Id);
             var retrievedBudget = this.BudgetManager.GetBudget(budget.Id);
 
             this.AssertEqual(budget, retrievedBudget);
+            Assert.Equal(50, retrievedBudget.Spent);
         }
 
         /// <summary>
@@ -115,16 +117,20 @@
 
         /// <summary>
         /// Tests the good flow of the <see cref="IBudgetManager.UpdateBudget"/> method.
-        /// TODO: Create transactions and test spent is set correctly.
         /// </summary>
         [Fact]
         public void UpdateBudget()
         {
-            var budget = this.GenerateBudget();
+            var category = this.GenerateCategory();
+            var transaction1 =
+                this.GenerateTransaction(categoryId: category.Id, amount: -30, date: DateTime.Today.AddDays(-2));
+            var transaction2 =
+                this.GenerateTransaction(categoryId: category.Id, amount: -30, date: DateTime.Today.AddDays(-1));
+            var budget = this.GenerateBudget(category.Id);
 
             const decimal newAmount = 5;
-            var newStartDate = new DateTime(2019, 12, 01).ToString("O");
-            var newEndDate = new DateTime(2019, 12, 30).ToString("O");
+            var newStartDate = DateTime.Today.AddDays(-3).ToString("O");
+            var newEndDate = DateTime.Today.AddDays(-2).ToString("O");
 
             var updated =
                 this.BudgetManager.UpdateBudget(budget.Id, newAmount, newStartDate, newEndDate);
@@ -133,6 +139,7 @@
             Assert.Equal(newAmount, updated.Amount);
             Assert.Equal(newStartDate, updated.StartDate);
             Assert.Equal(newEndDate, updated.EndDate);
+            Assert.Equal(30, updated.Spent);
         }
 
         /// <summary>
@@ -178,16 +185,16 @@
 
         /// <summary>
         /// Tests the good flow of the <see cref="IBudgetManager.CreateBudget"/> method.
-        /// TODO: Create transactions and test spent is set correctly.
         /// </summary>
         [Fact]
         public void CreateBudget()
         {
             var category = this.GenerateCategory();
+            var transaction = this.GenerateTransaction(categoryId: category.Id, amount: -30, date: DateTime.Today.AddDays(-1));
 
             const decimal amount = 5;
-            var startDate = new DateTime(2019, 12, 01).ToString("O");
-            var endDate = new DateTime(2019, 12, 15).ToString("O");
+            var startDate = DateTime.Today.AddDays(-2).ToString("O");
+            var endDate = DateTime.Today.AddDays(-1).ToString("O");
 
             var budget = this.BudgetManager.CreateBudget(category.Id, amount, startDate, endDate);
 
@@ -195,6 +202,7 @@
             Assert.Equal(startDate, budget.StartDate);
             Assert.Equal(endDate, budget.EndDate);
             Assert.Equal(category.Id, budget.CategoryId);
+            Assert.Equal(30, budget.Spent);
         }
 
         /// <summary>

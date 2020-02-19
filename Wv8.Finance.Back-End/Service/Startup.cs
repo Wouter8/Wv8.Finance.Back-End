@@ -19,6 +19,7 @@ namespace PersonalFinance.Service
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Business.Category;
     using PersonalFinance.Business.Transaction;
+    using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Data;
     using PersonalFinance.Service.Services;
     using Wv8.Core.ModelBinding;

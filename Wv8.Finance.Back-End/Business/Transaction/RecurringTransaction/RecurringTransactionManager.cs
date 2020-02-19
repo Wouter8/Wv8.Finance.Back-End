@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;

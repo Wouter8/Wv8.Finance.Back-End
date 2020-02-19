@@ -5,6 +5,7 @@
     using System.Linq;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Category;
+    using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common.Comparers;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
@@ -45,6 +46,7 @@
                 ReceivingAccount = entity.ReceivingAccount.ToMaybe().Select(a => a.AsAccount()),
                 Processed = entity.Processed,
                 RecurringTransactionId = entity.RecurringTransactionId.ToMaybe(),
+                RecurringTransaction = entity.RecurringTransaction.ToMaybe().Select(t => t.AsRecurringTransaction()),
             };
         }
 

@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Business.Transaction
+﻿namespace PersonalFinance.Business.Transaction.Processor
 {
     /// <summary>
     /// An interface for a periodic transaction processor.

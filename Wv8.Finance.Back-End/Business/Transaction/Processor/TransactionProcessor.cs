@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Business.Transaction
+﻿namespace PersonalFinance.Business.Transaction.Processor
 {
     using System;
     using System.Linq;

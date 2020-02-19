@@ -9,7 +9,7 @@
     /// <summary>
     /// A test class testing the functionality of <see cref="ITransactionProcessor"/>.
     /// </summary>
-    public class PeriodicProcessorTests : BaseTest
+    public class ProcessorTests : BaseTest
     {
         /// <summary>
         /// Tests that transactions in the past get properly processed.
@@ -40,7 +40,7 @@
                 });
             this.Context.SaveChanges();
 
-            this.PeriodicProcessor.Run();
+            this.TransactionProcessor.Run();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -64,7 +64,7 @@
                 });
             this.Context.SaveChanges();
 
-            this.PeriodicProcessor.Run();
+            this.TransactionProcessor.Run();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -88,7 +88,7 @@
                 });
             this.Context.SaveChanges();
 
-            this.PeriodicProcessor.Run();
+            this.TransactionProcessor.Run();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -112,7 +112,7 @@
                 });
             this.Context.SaveChanges();
 
-            this.PeriodicProcessor.Run();
+            this.TransactionProcessor.Run();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);

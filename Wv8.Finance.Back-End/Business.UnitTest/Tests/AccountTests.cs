@@ -6,6 +6,7 @@
     using System.Text;
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.Enums;
     using Wv8.Core.Exceptions;
     using Xunit;
 
@@ -23,9 +24,17 @@
         public void GetAccount()
         {
             var savedAccount = this.GenerateAccount();
+            var transaction = this.GenerateTransaction(accountId: savedAccount.Id, amount: -50);
+
             var retrievedAccount = this.AccountManager.GetAccount(savedAccount.Id);
 
-            this.AssertEqual(savedAccount, retrievedAccount);
+            Assert.Equal(savedAccount.Id, retrievedAccount.Id);
+            Assert.Equal(savedAccount.Description, retrievedAccount.Description);
+            Assert.Equal(savedAccount.CurrentBalance, retrievedAccount.CurrentBalance);
+            Assert.Equal(-50, retrievedAccount.CurrentBalance);
+            Assert.Equal(savedAccount.IsDefault, retrievedAccount.IsDefault);
+            Assert.Equal(savedAccount.IsObsolete, retrievedAccount.IsObsolete);
+            Assert.Equal(savedAccount.IconId, retrievedAccount.IconId);
         }
 
         /// <summary>
@@ -247,6 +256,13 @@
         public void SetAccountObsolete_Exceptions()
         {
             var account = this.GenerateAccount("Description");
+
+            var transaction = this.GenerateTransaction(accountId: account.Id, amount: -50);
+
+            // Account has current balance of -50.
+            Assert.Throws<ValidationException>(() => this.AccountManager.SetAccountObsolete(account.Id, true));
+
+            var transaction2 = this.GenerateTransaction(accountId: account.Id, type: TransactionType.Income, amount: 50);
 
             this.AccountManager.SetAccountObsolete(account.Id, true);
 
