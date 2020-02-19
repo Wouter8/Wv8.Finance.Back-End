@@ -21,6 +21,7 @@ namespace PersonalFinance.Service
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Data;
+    using PersonalFinance.Service.Middleware;
     using PersonalFinance.Service.Services;
     using Wv8.Core.ModelBinding;
 
@@ -101,6 +102,9 @@ namespace PersonalFinance.Service
             }
 
             app.UseCors("CorsPolicy");
+
+            // Custom middleware
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.UseHttpsRedirection();
             app.UseRouting();
