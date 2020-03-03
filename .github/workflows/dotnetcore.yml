@@ -6,6 +6,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      workingDirectory: ./Wv8.Finance.Back-End
 
     steps:
     - uses: actions/checkout@v2
@@ -15,5 +17,7 @@ jobs:
         dotnet-version: 2.2.108
     - name: Build with dotnet
       run: dotnet build --configuration Release
+      working-directory: ${{env.workingDirectory}}
     - name: Test
       run: dotnet test
+      working-directory: ${{env.workingDirectory}}
