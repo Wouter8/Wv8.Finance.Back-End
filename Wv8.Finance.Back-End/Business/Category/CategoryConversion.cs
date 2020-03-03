@@ -6,6 +6,7 @@
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
+    using Wv8.Core.EntityFramework;
 
     /// <summary>
     /// Conversion class containing conversion methods.
@@ -16,8 +17,9 @@
         /// Converts the entity to a data transfer object.
         /// </summary>
         /// <param name="entity">The entity.</param>
+        /// <param name="includeObsoleteChilds">Value indicating if obsolete childs should be included.</param>
         /// <returns>The data transfer object.</returns>
-        public static Category AsCategory(this CategoryEntity entity)
+        public static Category AsCategory(this CategoryEntity entity, bool includeObsoleteChilds = true)
         {
             return new Category
             {
@@ -25,11 +27,14 @@
                 Description = entity.Description,
                 Type = entity.Type,
                 ParentCategoryId = entity.ParentCategoryId.ToMaybe(),
-                ParentCategory = entity.ParentCategory.ToMaybe().Select(pc => pc.AsCategory()),
+                ParentCategory = entity.ParentCategory.ToMaybe().Select(pc => pc.AsCategory(includeObsoleteChilds)),
                 IsObsolete = entity.IsObsolete,
                 IconId = entity.IconId,
                 Icon = entity.Icon?.AsIcon(),
-                Children = entity.Children.Select(c => c.AsChildCategory()).ToList(),
+                Children = entity.Children
+                    .WhereIf(!includeObsoleteChilds, c => !c.IsObsolete)
+                    .Select(c => c.AsChildCategory())
+                    .ToList(),
             };
         }
 

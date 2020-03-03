@@ -44,7 +44,7 @@
                 .WhereIf(!includeObsolete, c => !c.IsObsolete)
                 .WhereIf(group, c => !c.ParentCategoryId.HasValue)
                 .OrderBy(c => c.Description)
-                .Select(c => c.AsCategory())
+                .Select(c => c.AsCategory(includeObsolete))
                 .ToList();
         }
 
@@ -57,7 +57,7 @@
                 .Where(c => c.Type == type)
                 .WhereIf(group, c => !c.ParentCategoryId.HasValue)
                 .OrderBy(c => c.Description)
-                .Select(c => c.AsCategory())
+                .Select(c => c.AsCategory(includeObsolete))
                 .ToList();
         }
 

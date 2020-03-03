@@ -222,6 +222,7 @@
                 if (entity.StartDate <= DateTime.Today)
                     entity.ProcessRecurringTransaction(this.Context);
 
+                this.Context.RecurringTransactions.Add(entity);
                 this.Context.SaveChanges();
 
                 return entity.AsRecurringTransaction();
