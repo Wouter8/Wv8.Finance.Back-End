@@ -16,6 +16,7 @@ jobs:
       with:
         dotnet-version: 3.1.100
         owner: woutervanacht
+        config-file: ${{env.workingDirectory}}
         source-url: https://pkgs.dev.azure.com/woutervanacht/_packaging/Wv8-NuGet-Feed/nuget/v3/index.json
       env:
         NUGET_AUTH_TOKEN: ${{secrets.AZURE_DEVOPS_PAT}}
