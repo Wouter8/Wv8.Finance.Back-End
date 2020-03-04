@@ -1,4 +1,4 @@
-name: .NET Core
+name: Build - Test - Deploy
 
 on: 
   push:
@@ -26,16 +26,14 @@ jobs:
       env:
         NUGET_AUTH_TOKEN: ${{secrets.AZURE_DEVOPS_PAT}}
     - name: Build with dotnet
-      run: dotnet build --configuration Release
+      run: dotnet build --configuration Release /warnaserror
       working-directory: ${{env.workingDirectory}}
     - name: Test
       run: dotnet test
       working-directory: ${{env.workingDirectory}}
-    # Run dotnet build and publish
     - name: Publish with dotnet
       run: dotnet publish -c Release -o myapp
       working-directory: ${{env.workingDirectory}}
-    # Deploy to Azure Web apps
     - name: 'Run Azure webapp deploy action using publish profile credentials'
       uses: azure/webapps-deploy@v2
       with: 
