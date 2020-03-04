@@ -15,6 +15,7 @@ jobs:
       uses: actions/setup-dotnet@v1.4.0
       with:
         dotnet-version: 3.1.100
+        config-file: ${{env.workingDirectory}}
       env:
         NUGET_AUTH_TOKEN: ${{secrets.AZURE_DEVOPS_PAT}}
     - name: Build with dotnet
