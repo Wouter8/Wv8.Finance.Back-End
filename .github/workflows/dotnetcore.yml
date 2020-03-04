@@ -1,4 +1,4 @@
-name: .NET Core
+name: Pull Request - Build and Test
 
 on: [pull_request]
 
@@ -19,7 +19,7 @@ jobs:
       env:
         NUGET_AUTH_TOKEN: ${{secrets.AZURE_DEVOPS_PAT}}
     - name: Build with dotnet
-      run: dotnet build --configuration Release
+      run: dotnet build --configuration Release /warnaserror
       working-directory: ${{env.workingDirectory}}
     - name: Test
       run: dotnet test
