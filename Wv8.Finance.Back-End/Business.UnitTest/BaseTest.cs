@@ -221,9 +221,6 @@ namespace Business.UnitTest
             if (!date.HasValue)
                 date = DateTime.Today;
 
-            var str1 = date.Value.ToString("O");
-            var str2 = date.Value.ToIsoString();
-
             return this.TransactionManager.CreateTransaction(
                 accountId.Value,
                 type,
