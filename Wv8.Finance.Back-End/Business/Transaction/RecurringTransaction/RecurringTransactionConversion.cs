@@ -5,6 +5,7 @@
     using System.Linq;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Category;
+    using PersonalFinance.Common;
     using PersonalFinance.Common.Comparers;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
@@ -35,8 +36,8 @@
                 Id = entity.Id,
                 Description = entity.Description,
                 Amount = entity.Amount,
-                StartDate = entity.StartDate.ToString("O"),
-                EndDate = entity.EndDate.ToString("O"),
+                StartDate = entity.StartDate.ToIsoString(),
+                EndDate = entity.EndDate.ToIsoString(),
                 Type = entity.Type,
                 CategoryId = entity.CategoryId.ToMaybe(),
                 Category = entity.Category.ToMaybe().Select(c => c.AsCategory()),
@@ -46,7 +47,7 @@
                 ReceivingAccount = entity.ReceivingAccount.ToMaybe().Select(a => a.AsAccount()),
                 IntervalUnit = entity.IntervalUnit,
                 Interval = entity.Interval,
-                NextOccurence = entity.NextOccurence.ToMaybe().Select(dt => dt.ToString("O")),
+                NextOccurence = entity.NextOccurence.ToMaybe().Select(dt => dt.ToIsoString()),
                 Finished = entity.Finished,
                 NeedsConfirmation = entity.NeedsConfirmation,
             };

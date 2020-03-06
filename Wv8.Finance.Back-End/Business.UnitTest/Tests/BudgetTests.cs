@@ -2,6 +2,7 @@
 {
     using System;
     using PersonalFinance.Business.Budget;
+    using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Common.Exceptions;
     using Wv8.Core;
@@ -100,15 +101,15 @@
             retrievedBudgets =
                 this.BudgetManager.GetBudgetsByFilter(
                     category1.Id,
-                    new DateTime(2020, 01, 10).ToString("O"),
-                    new DateTime(2020, 01, 15).ToString("O"));
+                    new DateTime(2020, 01, 10).ToIsoString(),
+                    new DateTime(2020, 01, 15).ToIsoString());
             Assert.Single(retrievedBudgets);
 
             retrievedBudgets =
                 this.BudgetManager.GetBudgetsByFilter(
                     category1.Id,
-                    new DateTime(2019, 12, 10).ToString("O"),
-                    new DateTime(2020, 01, 15).ToString("O"));
+                    new DateTime(2019, 12, 10).ToIsoString(),
+                    new DateTime(2020, 01, 15).ToIsoString());
             Assert.Single(retrievedBudgets);
         }
 
@@ -130,8 +131,8 @@
             var budget = this.GenerateBudget(category.Id);
 
             const decimal newAmount = 5;
-            var newStartDate = DateTime.Today.AddDays(-3).ToString("O");
-            var newEndDate = DateTime.Today.AddDays(-2).ToString("O");
+            var newStartDate = DateTime.Today.AddDays(-3).ToIsoString();
+            var newEndDate = DateTime.Today.AddDays(-2).ToIsoString();
 
             var updated =
                 this.BudgetManager.UpdateBudget(budget.Id, newAmount, newStartDate, newEndDate);
@@ -176,8 +177,8 @@
                 this.BudgetManager.UpdateBudget(
                     100,
                     100,
-                    DateTime.Today.ToString("O"),
-                    DateTime.Today.AddDays(1).ToString("O")));
+                    DateTime.Today.ToIsoString(),
+                    DateTime.Today.AddDays(1).ToIsoString()));
         }
 
         #endregion UpdateBudget
@@ -194,8 +195,8 @@
             var transaction = this.GenerateTransaction(categoryId: category.Id, amount: -30, date: DateTime.Today.AddDays(-1));
 
             const decimal amount = 5;
-            var startDate = DateTime.Today.AddDays(-2).ToString("O");
-            var endDate = DateTime.Today.AddDays(-1).ToString("O");
+            var startDate = DateTime.Today.AddDays(-2).ToIsoString();
+            var endDate = DateTime.Today.AddDays(-1).ToIsoString();
 
             var budget = this.BudgetManager.CreateBudget(category.Id, amount, startDate, endDate);
 
@@ -216,8 +217,8 @@
             var categoryIncome = this.GenerateCategory(CategoryType.Income);
 
             const decimal amount = 5;
-            var startDate = new DateTime(2019, 12, 01).ToString("O");
-            var endDate = new DateTime(2019, 12, 15).ToString("O");
+            var startDate = new DateTime(2019, 12, 01).ToIsoString();
+            var endDate = new DateTime(2019, 12, 15).ToIsoString();
 
             // Category does not exist.
             Assert.Throws<DoesNotExistException>(() =>

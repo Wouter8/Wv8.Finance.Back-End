@@ -6,6 +6,7 @@
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Category;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
+    using PersonalFinance.Common;
     using PersonalFinance.Common.Comparers;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
@@ -36,7 +37,7 @@
                 Id = entity.Id,
                 Description = entity.Description,
                 Amount = entity.Amount,
-                Date = entity.Date.ToString("O"),
+                Date = entity.Date.ToIsoString(),
                 Type = entity.Type,
                 CategoryId = entity.CategoryId.ToMaybe(),
                 Category = entity.Category.ToMaybe().Select(c => c.AsCategory()),

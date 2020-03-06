@@ -185,8 +185,8 @@ namespace Business.UnitTest
             return this.BudgetManager.CreateBudget(
                 categoryId.Value,
                 amount ?? 100,
-                startDate.Value.ToString("O"),
-                endDate.Value.ToString("O"));
+                startDate.Value.ToIsoString(),
+                endDate.Value.ToIsoString());
         }
 
         /// <summary>
@@ -221,11 +221,14 @@ namespace Business.UnitTest
             if (!date.HasValue)
                 date = DateTime.Today;
 
+            var str1 = date.Value.ToString("O");
+            var str2 = date.Value.ToIsoString();
+
             return this.TransactionManager.CreateTransaction(
                 accountId.Value,
                 type,
                 description ?? this.GetRandomString(),
-                date.Value.ToString("O"),
+                date.Value.ToIsoString(),
                 amount ?? (type == TransactionType.Expense ? -50 : 50),
                 categoryId.ToMaybe(),
                 receivingAccountId.ToMaybe());
@@ -277,8 +280,8 @@ namespace Business.UnitTest
                 accountId.Value,
                 type,
                 description ?? this.GetRandomString(),
-                startDate.Value.ToString("O"),
-                endDate.Value.ToString("O"),
+                startDate.Value.ToIsoString(),
+                endDate.Value.ToIsoString(),
                 amount ?? (type == TransactionType.Expense ? -50 : 50),
                 categoryId.ToMaybe(),
                 receivingAccountId.ToMaybe(),

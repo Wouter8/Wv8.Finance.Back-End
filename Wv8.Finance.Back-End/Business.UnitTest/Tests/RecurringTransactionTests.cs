@@ -3,6 +3,7 @@
     using System;
     using System.Linq;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
+    using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;
     using Wv8.Core.Exceptions;
@@ -117,8 +118,8 @@
 
             var newAccount = this.GenerateAccount().Id;
             var newDescription = "Description";
-            var newStartDate = DateTime.Today.AddDays(-1).ToString("O");
-            var newEndDate = DateTime.Today.ToString("O");
+            var newStartDate = DateTime.Today.AddDays(-1).ToIsoString();
+            var newEndDate = DateTime.Today.ToIsoString();
             var newAmount = -30;
             var newCategory = this.GenerateCategory().Id;
             var newInterval = 1;
@@ -172,8 +173,8 @@
                 account,
                 TransactionType.Expense,
                 description,
-                startDate.ToString("O"),
-                endDate.ToString("O"),
+                startDate.ToIsoString(),
+                endDate.ToIsoString(),
                 amount,
                 category,
                 Maybe<int>.None,
@@ -189,8 +190,8 @@
                     rTransaction.Id,
                     account,
                     description,
-                    newStartDate.ToString("O"),
-                    endDate.ToString("O"),
+                    newStartDate.ToIsoString(),
+                    endDate.ToIsoString(),
                     amount,
                     category,
                     Maybe<int>.None,
@@ -223,8 +224,8 @@
                 account,
                 TransactionType.Expense,
                 description,
-                startDate.ToString("O"),
-                endDate.ToString("O"),
+                startDate.ToIsoString(),
+                endDate.ToIsoString(),
                 amount,
                 category,
                 Maybe<int>.None,
@@ -265,8 +266,8 @@
                 account.Id,
                 TransactionType.Expense,
                 description,
-                startDate.ToString("O"),
-                endDate.ToString("O"),
+                startDate.ToIsoString(),
+                endDate.ToIsoString(),
                 amount,
                 category,
                 Maybe<int>.None,
@@ -289,8 +290,8 @@
                 account.Id,
                 TransactionType.Expense,
                 description,
-                startDate.ToString("O"),
-                endDate.ToString("O"),
+                startDate.ToIsoString(),
+                endDate.ToIsoString(),
                 amount,
                 category,
                 Maybe<int>.None,

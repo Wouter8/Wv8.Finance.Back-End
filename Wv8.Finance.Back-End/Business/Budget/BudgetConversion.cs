@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using PersonalFinance.Business.Category;
+    using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
@@ -28,8 +29,8 @@
                 Id = entity.Id,
                 Amount = entity.Amount,
                 Spent = entity.Spent,
-                StartDate = entity.StartDate.ToString("O"),
-                EndDate = entity.EndDate.ToString("O"),
+                StartDate = entity.StartDate.ToIsoString(),
+                EndDate = entity.EndDate.ToIsoString(),
                 CategoryId = entity.CategoryId,
                 Category = entity.Category.AsCategory(),
             };

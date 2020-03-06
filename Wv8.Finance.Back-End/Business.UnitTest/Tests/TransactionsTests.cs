@@ -3,6 +3,7 @@
     using System;
     using System.Linq;
     using PersonalFinance.Business.Transaction;
+    using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Common.Exceptions;
     using Wv8.Core;
@@ -95,8 +96,8 @@
                 Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
-                DateTime.Today.AddDays(1).ToString("O"),
-                DateTime.Today.AddDays(1).ToString("O"),
+                DateTime.Today.AddDays(1).ToIsoString(),
+                DateTime.Today.AddDays(1).ToIsoString(),
                 0,
                 100);
 
@@ -127,8 +128,8 @@
                 Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
-                DateTime.Today.AddDays(2).ToString("O"),
-                DateTime.Today.AddDays(5).ToString("O"),
+                DateTime.Today.AddDays(2).ToIsoString(),
+                DateTime.Today.AddDays(5).ToIsoString(),
                 0,
                 100);
 
@@ -242,7 +243,7 @@
                 transaction.Id,
                 newAccountId,
                 newDescription,
-                newDate.ToString("O"),
+                newDate.ToIsoString(),
                 newAmount,
                 newCategoryId,
                 Maybe<int>.None);
@@ -281,7 +282,7 @@
                 transferTransaction.Id,
                 sender.Id,
                 transferTransaction.Description,
-                DateTime.Today.AddDays(1).ToString("O"), // Future
+                DateTime.Today.AddDays(1).ToIsoString(), // Future
                 transferTransaction.Amount,
                 Maybe<int>.None,
                 newReceiver.Id);
@@ -319,7 +320,7 @@
             var transferTransaction = this.GenerateTransaction(account.Id, TransactionType.Transfer);
 
             var description = "Description";
-            var date = DateTime.Today.ToString("O");
+            var date = DateTime.Today.ToIsoString();
             var amount = 20;
 
             /* Type errors */
@@ -483,7 +484,7 @@
                 accountId,
                 type,
                 description,
-                date.ToString("O"),
+                date.ToIsoString(),
                 amount,
                 categoryId,
                 Maybe<int>.None);
@@ -510,7 +511,7 @@
                 sender.Id,
                 TransactionType.Transfer,
                 description,
-                DateTime.Today.AddDays(1).ToString("O"), // Future
+                DateTime.Today.AddDays(1).ToIsoString(), // Future
                 50,
                 Maybe<int>.None,
                 receiver.Id);
@@ -539,7 +540,7 @@
             var account2 = this.GenerateAccount();
 
             var description = "Description";
-            var date = DateTime.Today.ToString("O");
+            var date = DateTime.Today.ToIsoString();
             var amount = 20;
 
             /* Type errors */
