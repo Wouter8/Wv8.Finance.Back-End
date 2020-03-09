@@ -85,6 +85,18 @@
         /// </summary>
         public Maybe<RecurringTransaction> RecurringTransaction { get; set; }
 
+        /// <summary>
+        /// A value indicating if this transaction needs to be manually confirmed before being processed.
+        /// This can be useful when the exact date or amount is not known.
+        /// </summary>
+        public bool NeedsConfirmation { get; set; }
+
+        /// <summary>
+        /// A value indicating if this transaction is manually confirmed to be processed.
+        /// Only filled if <see cref="NeedsConfirmation"/> is true.
+        /// </summary>
+        public Maybe<bool> IsConfirmed { get; set; }
+
         // TODO: Add Savings
     }
 }
