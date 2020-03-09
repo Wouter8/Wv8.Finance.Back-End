@@ -6,6 +6,7 @@
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Common.Exceptions;
+    using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Exceptions;
     using Xunit;
@@ -63,14 +64,14 @@
                 account1.Id,
                 TransactionType.Income,
                 "Income",
-                DateTime.Today.AddDays(1),
+                this.GetDateTime().AddDays(1),
                 100,
                 categoryIncome.Id);
             var transaction2 = this.GenerateTransaction(
                 account2.Id,
                 TransactionType.Income,
                 "Expense",
-                DateTime.Today,
+                this.GetDateTime(),
                 200,
                 categoryIncome.Id);
 
@@ -96,8 +97,8 @@
                 Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
-                DateTime.Today.AddDays(1).ToIsoString(),
-                DateTime.Today.AddDays(1).ToIsoString(),
+                this.GetDateTime().AddDays(1).ToIsoString(),
+                this.GetDateTime().AddDays(1).ToIsoString(),
                 0,
                 100);
 
@@ -111,14 +112,14 @@
                 account1.Id,
                 TransactionType.Expense,
                 "DDD",
-                DateTime.Today.AddDays(2),
+                this.GetDateTime().AddDays(2),
                 -200,
                 categoryExpense.Id);
             var transaction4 = this.GenerateTransaction(
                 account1.Id,
                 TransactionType.Expense,
                 "FFF",
-                DateTime.Today.AddDays(3),
+                this.GetDateTime().AddDays(3),
                 -20,
                 categoryChild.Id);
 
@@ -128,8 +129,8 @@
                 Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
-                DateTime.Today.AddDays(2).ToIsoString(),
-                DateTime.Today.AddDays(5).ToIsoString(),
+                this.GetDateTime().AddDays(2).ToIsoString(),
+                this.GetDateTime().AddDays(5).ToIsoString(),
                 0,
                 100);
 
@@ -194,7 +195,7 @@
             var transaction5 = this.GenerateTransaction(
                 accountId: account1.Id,
                 type: TransactionType.Transfer,
-                date: DateTime.Today,
+                date: this.GetDateTime(),
                 amount: 200,
                 receivingAccountId: account2.Id);
 
@@ -231,7 +232,7 @@
             // New values.
             var newAccountId = this.GenerateAccount().Id;
             var newDescription = "Description";
-            var newDate = DateTime.Today.AddDays(-1);
+            var newDate = this.GetDateTime().AddDays(-1);
             var newAmount = -10;
             var newCategoryId = this.GenerateCategory().Id;
             var newBudgetId = this.GenerateBudget(
@@ -251,7 +252,7 @@
             // Assert.
             Assert.Equal(transaction.Id, updated.Id);
             Assert.Equal(newDescription, updated.Description);
-            Assert.Equal(newDate, DateTime.Parse(updated.Date));
+            Assert.Equal(newDate.ToIsoString(), updated.Date);
             Assert.Equal(newAmount, updated.Amount);
             Assert.Equal(newCategoryId, updated.CategoryId.Value);
             Assert.True(updated.Processed);
@@ -282,7 +283,7 @@
                 transferTransaction.Id,
                 sender.Id,
                 transferTransaction.Description,
-                DateTime.Today.AddDays(1).ToIsoString(), // Future
+                this.GetDateTime().AddDays(1).ToIsoString(), // Future
                 transferTransaction.Amount,
                 Maybe<int>.None,
                 newReceiver.Id);
@@ -320,7 +321,7 @@
             var transferTransaction = this.GenerateTransaction(account.Id, TransactionType.Transfer);
 
             var description = "Description";
-            var date = DateTime.Today.ToIsoString();
+            var date = this.GetDateTime().ToIsoString();
             var amount = 20;
 
             /* Type errors */
@@ -472,7 +473,7 @@
             var accountId = this.GenerateAccount().Id;
             var type = TransactionType.Expense;
             var description = "Description";
-            var date = DateTime.Today.AddDays(-1);
+            var date = this.GetDateTime().AddDays(-1);
             var amount = -10;
             var categoryId = this.GenerateCategory().Id;
             var budgetId = this.GenerateBudget(
@@ -492,7 +493,7 @@
             // Assert.
             Assert.Equal(type, created.Type);
             Assert.Equal(description, created.Description);
-            Assert.Equal(date, DateTime.Parse(created.Date));
+            Assert.Equal(date.ToIsoString(), created.Date);
             Assert.Equal(amount, created.Amount);
             Assert.Equal(categoryId, created.CategoryId.Value);
             Assert.True(created.Processed);
@@ -511,7 +512,7 @@
                 sender.Id,
                 TransactionType.Transfer,
                 description,
-                DateTime.Today.AddDays(1).ToIsoString(), // Future
+                this.GetDateTime().AddDays(1).ToIsoString(), // Future
                 50,
                 Maybe<int>.None,
                 receiver.Id);
@@ -540,7 +541,7 @@
             var account2 = this.GenerateAccount();
 
             var description = "Description";
-            var date = DateTime.Today.ToIsoString();
+            var date = this.GetDateTime().ToIsoString();
             var amount = 20;
 
             /* Type errors */
@@ -669,6 +670,131 @@
 
         #endregion CreateTransaction
 
+        #region ConfirmTransaction
+
+        /// <summary>
+        /// Tests the good flow of the <see cref="ITransactionManager.ConfirmTransaction"/> method.
+        /// </summary>
+        [Fact]
+        public void ConfirmTransaction()
+        {
+            var account = this.GenerateAccount();
+            var category = this.GenerateCategory();
+
+            // Add to be confirmed transaction
+            var transaction = new TransactionEntity
+            {
+                AccountId = account.Id,
+                Amount = -45,
+                CategoryId = category.Id,
+                Date = this.GetDateTime(),
+                Description = "Description",
+                IsConfirmed = false,
+                NeedsConfirmation = true,
+                Processed = false,
+                Type = TransactionType.Expense,
+            };
+
+            this.Context.Transactions.Add(transaction);
+            this.Context.SaveChanges();
+
+            var confirmedAmount = -50;
+            var confirmedDate = this.GetDateTime().AddDays(-1);
+
+            var updated = this.TransactionManager.ConfirmTransaction(
+                transaction.Id, confirmedDate.ToIsoString(), confirmedAmount);
+
+            // Assert.
+            Assert.Equal(confirmedDate.ToIsoString(), updated.Date);
+            Assert.Equal(confirmedAmount, updated.Amount);
+            Assert.True(updated.Processed);
+        }
+
+        /// <summary>
+        /// Tests the exceptional flow of the <see cref="ITransactionManager.CreateTransaction"/> method.
+        /// </summary>
+        [Fact]
+        public void ConfirmTransaction_Exceptions()
+        {
+            var account = this.GenerateAccount();
+            var category = this.GenerateCategory();
+            var receivingAccount = this.GenerateAccount();
+
+            // Add to be confirmed transaction
+            var transaction = new TransactionEntity
+            {
+                AccountId = account.Id,
+                Amount = -45,
+                CategoryId = category.Id,
+                Date = this.GetDateTime(),
+                Description = "Description",
+                IsConfirmed = false,
+                NeedsConfirmation = true,
+                Processed = false,
+                Type = TransactionType.Expense,
+            };
+            // Transaction that doesn't need confirmation
+            var transactionNoConfirmation = new TransactionEntity
+            {
+                AccountId = account.Id,
+                Amount = -45,
+                CategoryId = category.Id,
+                Date = this.GetDateTime().AddDays(1),
+                Description = "Description",
+                NeedsConfirmation = false,
+                Processed = false,
+                Type = TransactionType.Expense,
+            };
+            // Transfer transaction
+            var transferTransaction = new TransactionEntity
+            {
+                AccountId = account.Id,
+                Amount = -45,
+                ReceivingAccountId = receivingAccount.Id,
+                Date = this.GetDateTime().AddDays(1),
+                Description = "Description",
+                IsConfirmed = false,
+                NeedsConfirmation = true,
+                Processed = false,
+                Type = TransactionType.Transfer,
+            };
+
+            this.Context.Transactions.Add(transaction);
+            this.Context.Transactions.Add(transactionNoConfirmation);
+            this.Context.Transactions.Add(transferTransaction);
+            this.Context.SaveChanges();
+
+            var confirmedAmount = -50;
+            var confirmedDate = this.GetDateTime().AddDays(-1);
+
+            Assert.Throws<InvalidOperationException>(
+                () => this.TransactionManager.ConfirmTransaction(
+                    transactionNoConfirmation.Id, confirmedDate.ToIsoString(), confirmedAmount));
+
+            // Account obsolete
+            this.AccountManager.SetAccountObsolete(account.Id, true);
+            Assert.Throws<IsObsoleteException>(
+                () => this.TransactionManager.ConfirmTransaction(
+                    transaction.Id, confirmedDate.ToIsoString(), confirmedAmount));
+            this.AccountManager.SetAccountObsolete(account.Id, false);
+
+            // Receiving account obsolete
+            this.AccountManager.SetAccountObsolete(receivingAccount.Id, true);
+            Assert.Throws<IsObsoleteException>(
+                () => this.TransactionManager.ConfirmTransaction(
+                    transferTransaction.Id, confirmedDate.ToIsoString(), -confirmedAmount));
+            this.AccountManager.SetAccountObsolete(receivingAccount.Id, false);
+
+            // Category obsolete
+            this.CategoryManager.SetCategoryObsolete(category.Id, true);
+            Assert.Throws<IsObsoleteException>(
+                () => this.TransactionManager.ConfirmTransaction(
+                    transaction.Id, confirmedDate.ToIsoString(), confirmedAmount));
+            this.CategoryManager.SetCategoryObsolete(category.Id, false);
+        }
+
+        #endregion ConfirmTransaction
+
         #region DeleteTransaction
 
         /// <summary>
@@ -682,7 +808,7 @@
             var transaction = this.GenerateTransaction(
                 accountId: account.Id,
                 amount: -20,
-                date: DateTime.Today);
+                date: this.GetDateTime());
 
             this.TransactionManager.DeleteTransaction(transaction.Id);
 

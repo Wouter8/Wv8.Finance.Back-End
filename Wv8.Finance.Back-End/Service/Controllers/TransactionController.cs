@@ -112,6 +112,19 @@
         }
 
         /// <summary>
+        /// Confirms a transaction so that it can be processed.
+        /// </summary>
+        /// <param name="id">The identifier of the unconfirmed transaction.</param>
+        /// <param name="date">The date of the transaction.</param>
+        /// <param name="amount">The amount of the transaction.</param>
+        /// <returns>The confirmed transaction.</returns>
+        [HttpPut("{id}/confirm")]
+        public Transaction ConfirmTransaction(int id, string date, decimal amount)
+        {
+            return this.manager.ConfirmTransaction(id, date, amount);
+        }
+
+        /// <summary>
         /// Removes a transaction.
         /// </summary>
         /// <param name="id">The identifier of the transaction.</param>

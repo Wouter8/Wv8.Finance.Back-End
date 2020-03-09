@@ -33,14 +33,17 @@
         /// </summary>
         /// <param name="input">The input.</param>
         /// <param name="parameterName">The name of the parameter.</param>
+        /// <param name="onlyDate">If true, the time value will be reset to 00:00.</param>
         /// <returns>The converted DateTime.</returns>
-        public DateTime IsoString(string input, string parameterName)
+        public DateTime IsoString(string input, string parameterName, bool onlyDate = true)
         {
             var success = DateTime.TryParse(input, out var dateTime);
             if (!success)
                 throw new ValidationException($"ISO-string for {parameterName} could not be converted to a date/time");
 
-            return dateTime;
+            return onlyDate
+                ? dateTime.Date
+                : dateTime;
         }
 
         /// <summary>

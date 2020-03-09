@@ -178,9 +178,9 @@ namespace Business.UnitTest
             if (!categoryId.HasValue)
                 categoryId = this.GenerateCategory().Id;
             if (!startDate.HasValue)
-                startDate = DateTime.Today;
+                startDate = this.GetDateTime();
             if (!endDate.HasValue)
-                endDate = DateTime.Today.AddMonths(1);
+                endDate = this.GetDateTime().AddMonths(1);
 
             return this.BudgetManager.CreateBudget(
                 categoryId.Value,
@@ -219,7 +219,7 @@ namespace Business.UnitTest
             if (!accountId.HasValue)
                 accountId = this.GenerateAccount().Id;
             if (!date.HasValue)
-                date = DateTime.Today;
+                date = this.GetDateTime();
 
             return this.TransactionManager.CreateTransaction(
                 accountId.Value,
@@ -269,7 +269,7 @@ namespace Business.UnitTest
             if (!accountId.HasValue)
                 accountId = this.GenerateAccount().Id;
             if (!startDate.HasValue)
-                startDate = DateTime.Today;
+                startDate = this.GetDateTime();
             if (!endDate.HasValue)
                 endDate = startDate.Value.AddMonths(3);
 
@@ -414,6 +414,30 @@ namespace Business.UnitTest
         }
 
         #endregion AssertHelpers
+
+        /// <summary>
+        /// Generates a date time object with correct configuration.
+        /// The date will be today.
+        /// </summary>
+        /// <returns>The generated date time.</returns>
+        protected DateTime GetDateTime()
+        {
+            var dateTime = DateTime.Today;
+            return DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+        }
+
+        /// <summary>
+        /// Generates a date time object for a date with correct configuration.
+        /// </summary>
+        /// <param name="year">The year.</param>
+        /// <param name="month">The month.</param>
+        /// <param name="day">The day.</param>
+        /// <returns>The generated date time.</returns>
+        protected DateTime GetDateTime(int year, int month, int day)
+        {
+            var dateTime = new DateTime(year, month, day);
+            return DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+        }
 
         /// <summary>
         /// Generates a random string.

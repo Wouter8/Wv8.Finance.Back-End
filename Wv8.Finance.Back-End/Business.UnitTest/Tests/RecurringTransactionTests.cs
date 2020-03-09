@@ -52,8 +52,8 @@
             var finishedRecurringTransactions = this.GenerateRecurringTransaction(
                 accountId: account1.Id,
                 type: TransactionType.Expense,
-                startDate: DateTime.Today.AddDays(-7),
-                endDate: DateTime.Today,
+                startDate: this.GetDateTime().AddDays(-7),
+                endDate: this.GetDateTime(),
                 categoryId: category.Id);
 
             // No filters
@@ -97,8 +97,8 @@
         [Fact]
         public void UpdateRecurringTransaction()
         {
-            var startDate = DateTime.Today.AddDays(-7);
-            var endDate = DateTime.Today.AddDays(7); // 2 instances should be created, not finished
+            var startDate = this.GetDateTime().AddDays(-7);
+            var endDate = this.GetDateTime().AddDays(7); // 2 instances should be created, not finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
@@ -113,13 +113,13 @@
                 .ToList();
 
             Assert.False(rTransaction.Finished);
-            Assert.Equal(endDate, DateTime.Parse(rTransaction.NextOccurence.Value));
+            Assert.Equal(endDate.ToIsoString(), rTransaction.NextOccurence.Value);
             Assert.Equal(2, instances.Count);
 
             var newAccount = this.GenerateAccount().Id;
             var newDescription = "Description";
-            var newStartDate = DateTime.Today.AddDays(-1).ToIsoString();
-            var newEndDate = DateTime.Today.ToIsoString();
+            var newStartDate = this.GetDateTime().AddDays(-1).ToIsoString();
+            var newEndDate = this.GetDateTime().ToIsoString();
             var newAmount = -30;
             var newCategory = this.GenerateCategory().Id;
             var newInterval = 1;
@@ -164,8 +164,8 @@
             var description = "Description";
             var amount = -30;
             var category = this.GenerateCategory().Id;
-            var startDate = DateTime.Today.AddDays(-7);
-            var endDate = DateTime.Today.AddDays(7); // 2 instances should be created, not finished
+            var startDate = this.GetDateTime().AddDays(-7);
+            var endDate = this.GetDateTime().AddDays(7); // 2 instances should be created, not finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
@@ -183,7 +183,7 @@
                 false);
 
             // Try to update start date without updating instances.
-            var newStartDate = DateTime.Today.AddDays(-1);
+            var newStartDate = this.GetDateTime().AddDays(-1);
 
             Assert.Throws<ValidationException>(() =>
                 this.RecurringTransactionManager.UpdateRecurringTransaction(
@@ -215,8 +215,8 @@
             var description = "Description";
             var amount = -30;
             var category = this.GenerateCategory().Id;
-            var startDate = DateTime.Today.AddDays(-7);
-            var endDate = DateTime.Today.AddDays(7); // 2 instances should be created, not finished
+            var startDate = this.GetDateTime().AddDays(-7);
+            var endDate = this.GetDateTime().AddDays(7); // 2 instances should be created, not finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
@@ -239,7 +239,7 @@
                 .ToList();
 
             Assert.False(rTransaction.Finished);
-            Assert.Equal(endDate, DateTime.Parse(rTransaction.NextOccurence.Value));
+            Assert.Equal(endDate.ToIsoString(), rTransaction.NextOccurence.Value);
             Assert.Equal(2, instances.Count);
         }
 
@@ -257,8 +257,8 @@
             var description = "Description";
             var amount = -30;
             var category = this.GenerateCategory().Id;
-            var startDate = DateTime.Today.AddDays(-7);
-            var endDate = DateTime.Today.AddDays(7); // 2 instances should be created, not finished
+            var startDate = this.GetDateTime().AddDays(-7);
+            var endDate = this.GetDateTime().AddDays(7); // 2 instances should be created, not finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
