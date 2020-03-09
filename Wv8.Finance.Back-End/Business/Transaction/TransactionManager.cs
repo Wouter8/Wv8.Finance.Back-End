@@ -5,6 +5,7 @@
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
+    using PersonalFinance.Common.Exceptions;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.Models;
@@ -181,6 +182,39 @@
                     entity.ProcessTransaction(this.Context);
 
                 this.Context.Transactions.Add(entity);
+
+                this.Context.SaveChanges();
+
+                return entity.AsTransaction();
+            });
+        }
+
+        /// <inheritdoc />
+        public Transaction ConfirmTransaction(int id, string isoDate, decimal amount)
+        {
+            var date = this.validator.IsoString(isoDate, "date");
+
+            return this.ConcurrentInvoke(() =>
+            {
+                var entity = this.Context.Transactions.GetEntity(id);
+                this.validator.Type(entity.Type, amount, entity.CategoryId.ToMaybe(), entity.ReceivingAccountId.ToMaybe());
+
+                if (!entity.NeedsConfirmation)
+                    throw new InvalidOperationException($"This transaction does not need to be confirmed.");
+
+                if (entity.Account.IsObsolete)
+                    throw new IsObsoleteException($"Account \"{entity.Account.Description}\" is obsolete.");
+                if (entity.CategoryId.HasValue && entity.Category.IsObsolete)
+                    throw new IsObsoleteException($"Category \"{entity.Category.Description}\" is obsolete.");
+                if (entity.ReceivingAccountId.HasValue && entity.ReceivingAccount.IsObsolete)
+                    throw new IsObsoleteException($"Account \"{entity.ReceivingAccount.Description}\" is obsolete.");
+
+                entity.Date = date;
+                entity.Amount = amount;
+                entity.IsConfirmed = true;
+
+                if (date <= DateTime.Today)
+                    entity.ProcessTransaction(this.Context);
 
                 this.Context.SaveChanges();
 

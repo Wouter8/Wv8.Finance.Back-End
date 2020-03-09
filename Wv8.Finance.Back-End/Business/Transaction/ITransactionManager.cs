@@ -62,6 +62,15 @@
         Transaction CreateTransaction(int accountId, TransactionType type, string description, string date, decimal amount, Maybe<int> categoryId, Maybe<int> receivingAccountId);
 
         /// <summary>
+        /// Confirms a transaction so that it can be processed.
+        /// </summary>
+        /// <param name="id">The identifier of the unconfirmed transaction.</param>
+        /// <param name="date">The date of the transaction.</param>
+        /// <param name="amount">The amount of the transaction.</param>
+        /// <returns>The confirmed transaction.</returns>
+        Transaction ConfirmTransaction(int id, string date, decimal amount);
+
+        /// <summary>
         /// Removes a transaction.
         /// </summary>
         /// <param name="id">The identifier of the transaction.</param>
