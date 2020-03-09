@@ -48,6 +48,8 @@
                 Processed = entity.Processed,
                 RecurringTransactionId = entity.RecurringTransactionId.ToMaybe(),
                 RecurringTransaction = entity.RecurringTransaction.ToMaybe().Select(t => t.AsRecurringTransaction()),
+                NeedsConfirmation = entity.NeedsConfirmation,
+                IsConfirmed = entity.IsConfirmed.ToMaybe(),
             };
         }
 
