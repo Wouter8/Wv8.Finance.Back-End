@@ -85,7 +85,7 @@
                     if (parentCategory.Description == description)
                         throw new ValidationException($"The same description as parent \"{parentCategory.Description}\" is not allowed.");
 
-                    if (parentCategory.Children.Any(c => c.Description == description && !c.IsObsolete))
+                    if (parentCategory.Children.Any(c => c.Id != id && c.Description == description && !c.IsObsolete))
                         throw new ValidationException($"An active category with description \"{description}\" already exists under \"{parentCategory.Description}\".");
                 }
                 else
