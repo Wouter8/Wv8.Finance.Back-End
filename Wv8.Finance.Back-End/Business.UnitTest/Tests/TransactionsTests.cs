@@ -300,6 +300,42 @@
             Assert.Equal(0, sender.CurrentBalance);
             Assert.Equal(0, receiver.CurrentBalance);
             Assert.Equal(0, newReceiver.CurrentBalance);
+
+            // Transaction that needs confirmation.
+            var toBeConfirmedTransaction = this.GenerateTransaction(needsConfirmation: true);
+            updated = this.TransactionManager.UpdateTransaction(
+                toBeConfirmedTransaction.Id,
+                newAccountId,
+                newDescription,
+                newDate.ToIsoString(),
+                newAmount,
+                newCategoryId,
+                Maybe<int>.None);
+
+            // Shouldn't be processed since transaction is not confirmed yet.
+            Assert.False(updated.Processed);
+
+            // Change date to future and confirm
+            updated = this.TransactionManager.UpdateTransaction(
+                toBeConfirmedTransaction.Id,
+                newAccountId,
+                newDescription,
+                DateTime.Today.AddDays(1).ToIsoString(),
+                newAmount,
+                newCategoryId,
+                Maybe<int>.None);
+            updated = this.TransactionManager.ConfirmTransaction(
+                toBeConfirmedTransaction.Id, DateTime.Today.AddDays(1).ToIsoString(), newAmount);
+            // Now change date to past
+            updated = this.TransactionManager.UpdateTransaction(
+                toBeConfirmedTransaction.Id,
+                newAccountId,
+                newDescription,
+                DateTime.Today.ToIsoString(),
+                newAmount,
+                newCategoryId,
+                Maybe<int>.None);
+            Assert.True(updated.Processed);
         }
 
         /// <summary>
@@ -488,7 +524,8 @@
                 date.ToIsoString(),
                 amount,
                 categoryId,
-                Maybe<int>.None);
+                Maybe<int>.None,
+                false);
 
             // Assert.
             Assert.Equal(type, created.Type);
@@ -503,7 +540,7 @@
             Assert.Equal(Math.Abs(amount), budget.Spent);
             Assert.Equal(amount, account.CurrentBalance);
 
-            // Test updating transfer transaction.
+            // Test transfer transaction.
             var sender = this.GenerateAccount();
             var receiver = this.GenerateAccount();
 
@@ -515,16 +552,39 @@
                 DateTime.Today.AddDays(1).ToIsoString(), // Future
                 50,
                 Maybe<int>.None,
-                receiver.Id);
+                receiver.Id,
+                false);
 
             // Assert
             Assert.Equal(receiver.Id, created.ReceivingAccountId.Value);
             Assert.False(created.Processed);
 
+            // Shouldn't be processed because transaction is in future.
             sender = this.AccountManager.GetAccount(sender.Id);
             receiver = this.AccountManager.GetAccount(receiver.Id);
+            Assert.Equal(0, sender.CurrentBalance);
+            Assert.Equal(0, receiver.CurrentBalance);
 
-            // Shouldn't be processed because update is in future.
+            // Test transaction that needs to be confirmed.
+            // Create.
+            created = this.TransactionManager.CreateTransaction(
+                sender.Id,
+                TransactionType.Transfer,
+                description,
+                DateTime.Today.ToIsoString(),
+                50,
+                Maybe<int>.None,
+                receiver.Id,
+                true);
+
+            // Assert
+            Assert.True(created.NeedsConfirmation);
+            Assert.False(created.IsConfirmed.Value);
+            Assert.False(created.Processed);
+
+            // Shouldn't be processed because transaction is unconfirmed.
+            sender = this.AccountManager.GetAccount(sender.Id);
+            receiver = this.AccountManager.GetAccount(receiver.Id);
             Assert.Equal(0, sender.CurrentBalance);
             Assert.Equal(0, receiver.CurrentBalance);
         }
@@ -553,7 +613,8 @@
                 date,
                 amount,
                 expenseCategory.Id,
-                Maybe<int>.None));
+                Maybe<int>.None,
+                false));
             // No category specified on expense.
             Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
@@ -562,7 +623,8 @@
                 date,
                 -amount,
                 Maybe<int>.None,
-                Maybe<int>.None));
+                Maybe<int>.None,
+                false));
             // Amount negative on income transaction.
             Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
@@ -571,7 +633,8 @@
                 date,
                 -amount,
                 incomeCategory.Id,
-                Maybe<int>.None));
+                Maybe<int>.None,
+                false));
             // No category specified on income.
             Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
@@ -580,7 +643,8 @@
                 date,
                 amount,
                 Maybe<int>.None,
-                Maybe<int>.None));
+                Maybe<int>.None,
+                false));
             // Amount negative on transfer transaction.
             Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
@@ -589,7 +653,8 @@
                 date,
                 -amount,
                 Maybe<int>.None,
-                account2.Id));
+                account2.Id,
+                false));
             // No receiver specified on transfer.
             Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
@@ -598,7 +663,8 @@
                 date,
                 amount,
                 Maybe<int>.None,
-                Maybe<int>.None));
+                Maybe<int>.None,
+                false));
 
             /* Account obsolete */
             this.AccountManager.SetAccountObsolete(account.Id, true);
@@ -609,7 +675,8 @@
                 date,
                 -amount,
                 expenseCategory.Id,
-                Maybe<int>.None));
+                Maybe<int>.None,
+                false));
             this.AccountManager.SetAccountObsolete(account.Id, false);
 
             /* Category mismatch */
@@ -621,7 +688,8 @@
                 date,
                 -amount,
                 incomeCategory.Id,
-                Maybe<int>.None));
+                Maybe<int>.None,
+                false));
             // Expense category on income transaction.
             Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
@@ -630,7 +698,8 @@
                 date,
                 amount,
                 expenseCategory.Id,
-                Maybe<int>.None));
+                Maybe<int>.None,
+                false));
 
             /* Category obsolete */
             // Income category on expense transaction.
@@ -642,7 +711,8 @@
                 date,
                 -amount,
                 expenseCategory.Id,
-                Maybe<int>.None));
+                Maybe<int>.None,
+                false));
             this.CategoryManager.SetCategoryObsolete(expenseCategory.Id, false);
 
             /* Receiving account obsolete. */
@@ -654,7 +724,8 @@
                 date,
                 amount,
                 Maybe<int>.None,
-                account2.Id));
+                account2.Id,
+                false));
             this.AccountManager.SetAccountObsolete(account2.Id, false);
 
             /* Sender same as receiver */
@@ -665,7 +736,8 @@
                 date,
                 -amount,
                 Maybe<int>.None,
-                account.Id));
+                account.Id,
+                false));
         }
 
         #endregion CreateTransaction
@@ -678,25 +750,8 @@
         [Fact]
         public void ConfirmTransaction()
         {
-            var account = this.GenerateAccount();
-            var category = this.GenerateCategory();
-
             // Add to be confirmed transaction
-            var transaction = new TransactionEntity
-            {
-                AccountId = account.Id,
-                Amount = -45,
-                CategoryId = category.Id,
-                Date = DateTime.Today,
-                Description = "Description",
-                IsConfirmed = false,
-                NeedsConfirmation = true,
-                Processed = false,
-                Type = TransactionType.Expense,
-            };
-
-            this.Context.Transactions.Add(transaction);
-            this.Context.SaveChanges();
+            var transaction = this.GenerateTransaction(needsConfirmation: true);
 
             var confirmedAmount = -50;
             var confirmedDate = DateTime.Today.AddDays(-1);
@@ -708,6 +763,17 @@
             Assert.Equal(confirmedDate.ToIsoString(), updated.Date);
             Assert.Equal(confirmedAmount, updated.Amount);
             Assert.True(updated.Processed);
+
+            // Test confirmation in the future.
+            confirmedDate = DateTime.Today.AddDays(3);
+            var transaction2 = this.GenerateTransaction(needsConfirmation: true);
+            updated = this.TransactionManager.ConfirmTransaction(
+                transaction2.Id, confirmedDate.ToIsoString(), confirmedAmount);
+
+            // Assert.
+            Assert.Equal(confirmedDate.ToIsoString(), updated.Date);
+            Assert.Equal(confirmedAmount, updated.Amount);
+            Assert.False(updated.Processed);
         }
 
         /// <summary>

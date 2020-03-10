@@ -124,7 +124,9 @@
                 entity.ReceivingAccountId = receivingAccountId.ToNullable();
                 entity.ReceivingAccount = receivingAccount;
 
-                if (date <= DateTime.Today)
+                // Is confirmed is always filled if needs confirmation is true.
+                // ReSharper disable once PossibleInvalidOperationException
+                if (date <= DateTime.Today && (!entity.NeedsConfirmation || entity.IsConfirmed.Value))
                     entity.ProcessTransaction(this.Context);
 
                 this.Context.SaveChanges();
@@ -134,7 +136,15 @@
         }
 
         /// <inheritdoc />
-        public Transaction CreateTransaction(int accountId, TransactionType type, string description, string isoDate, decimal amount, Maybe<int> categoryId, Maybe<int> receivingAccountId)
+        public Transaction CreateTransaction(
+            int accountId,
+            TransactionType type,
+            string description,
+            string isoDate,
+            decimal amount,
+            Maybe<int> categoryId,
+            Maybe<int> receivingAccountId,
+            bool needsConfirmation)
         {
             this.validator.Description(description);
             var date = this.validator.IsoString(isoDate, "date");
@@ -176,9 +186,11 @@
                     Category = category,
                     ReceivingAccountId = receivingAccountId.ToNullable(),
                     ReceivingAccount = receivingAccount,
+                    NeedsConfirmation = needsConfirmation,
+                    IsConfirmed = needsConfirmation ? false : (bool?)null,
                 };
 
-                if (date <= DateTime.Today)
+                if (date <= DateTime.Today && !needsConfirmation)
                     entity.ProcessTransaction(this.Context);
 
                 this.Context.Transactions.Add(entity);

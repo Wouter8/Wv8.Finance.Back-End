@@ -199,6 +199,7 @@ namespace Business.UnitTest
         /// <param name="amount">The amount.</param>
         /// <param name="categoryId">The identifier of the category.</param>
         /// <param name="receivingAccountId">The identifier of the receiving account.</param>
+        /// <param name="needsConfirmation">A value indicating if the transaction has to be confirmed.</param>
         /// <returns>The created transaction.</returns>
         protected Transaction GenerateTransaction(
             int? accountId = null,
@@ -207,7 +208,8 @@ namespace Business.UnitTest
             DateTime? date = null,
             decimal? amount = null,
             int? categoryId = null,
-            int? receivingAccountId = null)
+            int? receivingAccountId = null,
+            bool needsConfirmation = false)
         {
             if (type == TransactionType.Expense && !categoryId.HasValue)
                 categoryId = this.GenerateCategory().Id;
@@ -228,7 +230,8 @@ namespace Business.UnitTest
                 date.Value.ToIsoString(),
                 amount ?? (type == TransactionType.Expense ? -50 : 50),
                 categoryId.ToMaybe(),
-                receivingAccountId.ToMaybe());
+                receivingAccountId.ToMaybe(),
+                needsConfirmation);
         }
 
         /// <summary>
