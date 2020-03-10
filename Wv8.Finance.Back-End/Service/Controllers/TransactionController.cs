@@ -97,6 +97,7 @@
         /// <param name="amount">The amount of the transaction.</param>
         /// <param name="categoryId">The identifier of the category the transaction belongs to.</param>
         /// <param name="receivingAccountId">The identifier of the receiving account.</param>
+        /// <param name="needsConfirmation">A value indicating if the transaction still needs to be confirmed.</param>
         /// <returns>The created transaction.</returns>
         [HttpPost]
         public Transaction CreateTransaction(
@@ -106,9 +107,10 @@
             string date,
             decimal amount,
             [FromQuery] Maybe<int> categoryId,
-            [FromQuery] Maybe<int> receivingAccountId)
+            [FromQuery] Maybe<int> receivingAccountId,
+            bool needsConfirmation)
         {
-            return this.manager.CreateTransaction(accountId, type, description, date, amount, categoryId, receivingAccountId);
+            return this.manager.CreateTransaction(accountId, type, description, date, amount, categoryId, receivingAccountId, needsConfirmation);
         }
 
         /// <summary>
