@@ -15,7 +15,7 @@
         /// <returns>The ISO string.</returns>
         public static string ToIsoString(this DateTime dateTime)
         {
-            dateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+            dateTime = dateTime.ToUniversalTime();
             return dateTime.ToString("O", CultureInfo.InvariantCulture);
         }
     }

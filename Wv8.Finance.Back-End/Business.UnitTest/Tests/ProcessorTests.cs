@@ -24,8 +24,8 @@
             var category2 = this.GenerateCategory(CategoryType.Income);
             var budget = this.GenerateBudget(
                 categoryId: category.Id,
-                startDate: this.GetDateTime().AddDays(-1),
-                endDate: this.GetDateTime().AddDays(1));
+                startDate: DateTime.Today.AddDays(-1),
+                endDate: DateTime.Today.AddDays(1));
             var account = this.GenerateAccount();
             var account2 = this.GenerateAccount();
 
@@ -36,7 +36,7 @@
                     AccountId = account.Id,
                     Amount = -20,
                     CategoryId = category.Id,
-                    Date = this.GetDateTime().AddDays(1),
+                    Date = DateTime.Today.AddDays(1),
                     Description = "Description",
                     Processed = false,
                     Type = TransactionType.Expense,
@@ -60,7 +60,7 @@
                     AccountId = account.Id,
                     Amount = -20,
                     CategoryId = category.Id,
-                    Date = this.GetDateTime(),
+                    Date = DateTime.Today,
                     Description = "Description",
                     Processed = false,
                     Type = TransactionType.Expense,
@@ -84,7 +84,7 @@
                     AccountId = account.Id,
                     Amount = 50,
                     CategoryId = category2.Id,
-                    Date = this.GetDateTime(),
+                    Date = DateTime.Today,
                     Description = "Description",
                     Processed = false,
                     Type = TransactionType.Income,
@@ -108,7 +108,7 @@
                     AccountId = account.Id,
                     Amount = 30,
                     ReceivingAccountId = account2.Id,
-                    Date = this.GetDateTime(),
+                    Date = DateTime.Today,
                     Description = "Description",
                     Processed = false,
                     Type = TransactionType.Transfer,
@@ -132,7 +132,7 @@
                     AccountId = account.Id,
                     Amount = -30,
                     ReceivingAccountId = account2.Id,
-                    Date = this.GetDateTime(),
+                    Date = DateTime.Today,
                     Description = "Description",
                     Processed = false,
                     CategoryId = category.Id,
@@ -163,8 +163,8 @@
             var description = "Description";
             var amount = -30;
             var category = this.GenerateCategory().Id;
-            var startDate = this.GetDateTime().AddDays(-7);
-            var endDate = this.GetDateTime(); // 2 instances should be created, and finished
+            var startDate = DateTime.Today.AddDays(-7);
+            var endDate = DateTime.Today; // 2 instances should be created, and finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 

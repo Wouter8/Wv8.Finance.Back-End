@@ -64,14 +64,14 @@
                 account1.Id,
                 TransactionType.Income,
                 "Income",
-                this.GetDateTime().AddDays(1),
+                DateTime.Today.AddDays(1),
                 100,
                 categoryIncome.Id);
             var transaction2 = this.GenerateTransaction(
                 account2.Id,
                 TransactionType.Income,
                 "Expense",
-                this.GetDateTime(),
+                DateTime.Today,
                 200,
                 categoryIncome.Id);
 
@@ -97,8 +97,8 @@
                 Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
-                this.GetDateTime().AddDays(1).ToIsoString(),
-                this.GetDateTime().AddDays(1).ToIsoString(),
+                DateTime.Today.AddDays(1).ToIsoString(),
+                DateTime.Today.AddDays(1).ToIsoString(),
                 0,
                 100);
 
@@ -112,14 +112,14 @@
                 account1.Id,
                 TransactionType.Expense,
                 "DDD",
-                this.GetDateTime().AddDays(2),
+                DateTime.Today.AddDays(2),
                 -200,
                 categoryExpense.Id);
             var transaction4 = this.GenerateTransaction(
                 account1.Id,
                 TransactionType.Expense,
                 "FFF",
-                this.GetDateTime().AddDays(3),
+                DateTime.Today.AddDays(3),
                 -20,
                 categoryChild.Id);
 
@@ -129,8 +129,8 @@
                 Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
-                this.GetDateTime().AddDays(2).ToIsoString(),
-                this.GetDateTime().AddDays(5).ToIsoString(),
+                DateTime.Today.AddDays(2).ToIsoString(),
+                DateTime.Today.AddDays(5).ToIsoString(),
                 0,
                 100);
 
@@ -195,7 +195,7 @@
             var transaction5 = this.GenerateTransaction(
                 accountId: account1.Id,
                 type: TransactionType.Transfer,
-                date: this.GetDateTime(),
+                date: DateTime.Today,
                 amount: 200,
                 receivingAccountId: account2.Id);
 
@@ -232,7 +232,7 @@
             // New values.
             var newAccountId = this.GenerateAccount().Id;
             var newDescription = "Description";
-            var newDate = this.GetDateTime().AddDays(-1);
+            var newDate = DateTime.Today.AddDays(-1);
             var newAmount = -10;
             var newCategoryId = this.GenerateCategory().Id;
             var newBudgetId = this.GenerateBudget(
@@ -283,7 +283,7 @@
                 transferTransaction.Id,
                 sender.Id,
                 transferTransaction.Description,
-                this.GetDateTime().AddDays(1).ToIsoString(), // Future
+                DateTime.Today.AddDays(1).ToIsoString(), // Future
                 transferTransaction.Amount,
                 Maybe<int>.None,
                 newReceiver.Id);
@@ -321,7 +321,7 @@
             var transferTransaction = this.GenerateTransaction(account.Id, TransactionType.Transfer);
 
             var description = "Description";
-            var date = this.GetDateTime().ToIsoString();
+            var date = DateTime.Today.ToIsoString();
             var amount = 20;
 
             /* Type errors */
@@ -473,7 +473,7 @@
             var accountId = this.GenerateAccount().Id;
             var type = TransactionType.Expense;
             var description = "Description";
-            var date = this.GetDateTime().AddDays(-1);
+            var date = DateTime.Today.AddDays(-1);
             var amount = -10;
             var categoryId = this.GenerateCategory().Id;
             var budgetId = this.GenerateBudget(
@@ -512,7 +512,7 @@
                 sender.Id,
                 TransactionType.Transfer,
                 description,
-                this.GetDateTime().AddDays(1).ToIsoString(), // Future
+                DateTime.Today.AddDays(1).ToIsoString(), // Future
                 50,
                 Maybe<int>.None,
                 receiver.Id);
@@ -541,7 +541,7 @@
             var account2 = this.GenerateAccount();
 
             var description = "Description";
-            var date = this.GetDateTime().ToIsoString();
+            var date = DateTime.Today.ToIsoString();
             var amount = 20;
 
             /* Type errors */
@@ -687,7 +687,7 @@
                 AccountId = account.Id,
                 Amount = -45,
                 CategoryId = category.Id,
-                Date = this.GetDateTime(),
+                Date = DateTime.Today,
                 Description = "Description",
                 IsConfirmed = false,
                 NeedsConfirmation = true,
@@ -699,7 +699,7 @@
             this.Context.SaveChanges();
 
             var confirmedAmount = -50;
-            var confirmedDate = this.GetDateTime().AddDays(-1);
+            var confirmedDate = DateTime.Today.AddDays(-1);
 
             var updated = this.TransactionManager.ConfirmTransaction(
                 transaction.Id, confirmedDate.ToIsoString(), confirmedAmount);
@@ -726,7 +726,7 @@
                 AccountId = account.Id,
                 Amount = -45,
                 CategoryId = category.Id,
-                Date = this.GetDateTime(),
+                Date = DateTime.Today,
                 Description = "Description",
                 IsConfirmed = false,
                 NeedsConfirmation = true,
@@ -739,7 +739,7 @@
                 AccountId = account.Id,
                 Amount = -45,
                 CategoryId = category.Id,
-                Date = this.GetDateTime().AddDays(1),
+                Date = DateTime.Today,
                 Description = "Description",
                 NeedsConfirmation = false,
                 Processed = false,
@@ -751,7 +751,7 @@
                 AccountId = account.Id,
                 Amount = -45,
                 ReceivingAccountId = receivingAccount.Id,
-                Date = this.GetDateTime().AddDays(1),
+                Date = DateTime.Today,
                 Description = "Description",
                 IsConfirmed = false,
                 NeedsConfirmation = true,
@@ -765,7 +765,7 @@
             this.Context.SaveChanges();
 
             var confirmedAmount = -50;
-            var confirmedDate = this.GetDateTime().AddDays(-1);
+            var confirmedDate = DateTime.Today.AddDays(-1);
 
             Assert.Throws<InvalidOperationException>(
                 () => this.TransactionManager.ConfirmTransaction(
@@ -808,7 +808,7 @@
             var transaction = this.GenerateTransaction(
                 accountId: account.Id,
                 amount: -20,
-                date: this.GetDateTime());
+                date: DateTime.Today);
 
             this.TransactionManager.DeleteTransaction(transaction.Id);
 
