@@ -79,8 +79,8 @@
             var category2 = this.GenerateCategory();
 
             // In the past so that GenerateBudget does not collide with this date
-            var startDate = this.GetDateTime(2020, 01, 01);
-            var endDate = this.GetDateTime(2020, 02, 01);
+            var startDate = new DateTime(2020, 01, 01);
+            var endDate = new DateTime(2020, 02, 01);
 
             var budget1 = this.GenerateBudget(category1.Id);
             var budget2 = this.GenerateBudget(category2.Id);
@@ -101,15 +101,15 @@
             retrievedBudgets =
                 this.BudgetManager.GetBudgetsByFilter(
                     category1.Id,
-                    this.GetDateTime(2020, 01, 10).ToIsoString(),
-                    this.GetDateTime(2020, 01, 15).ToIsoString());
+                    new DateTime(2020, 01, 10).ToIsoString(),
+                    new DateTime(2020, 01, 15).ToIsoString());
             Assert.Single(retrievedBudgets);
 
             retrievedBudgets =
                 this.BudgetManager.GetBudgetsByFilter(
                     category1.Id,
-                    this.GetDateTime(2019, 12, 10).ToIsoString(),
-                    this.GetDateTime(2020, 01, 15).ToIsoString());
+                    new DateTime(2019, 12, 10).ToIsoString(),
+                    new DateTime(2020, 01, 15).ToIsoString());
             Assert.Single(retrievedBudgets);
         }
 
@@ -125,14 +125,14 @@
         {
             var category = this.GenerateCategory();
             var transaction1 =
-                this.GenerateTransaction(categoryId: category.Id, amount: -30, date: this.GetDateTime().AddDays(-2));
+                this.GenerateTransaction(categoryId: category.Id, amount: -30, date: DateTime.Today.AddDays(-2));
             var transaction2 =
-                this.GenerateTransaction(categoryId: category.Id, amount: -30, date: this.GetDateTime().AddDays(-1));
+                this.GenerateTransaction(categoryId: category.Id, amount: -30, date: DateTime.Today.AddDays(-1));
             var budget = this.GenerateBudget(category.Id);
 
             const decimal newAmount = 5;
-            var newStartDate = this.GetDateTime().AddDays(-3).ToIsoString();
-            var newEndDate = this.GetDateTime().AddDays(-2).ToIsoString();
+            var newStartDate = DateTime.Today.AddDays(-3).ToIsoString();
+            var newEndDate = DateTime.Today.AddDays(-2).ToIsoString();
 
             var updated =
                 this.BudgetManager.UpdateBudget(budget.Id, newAmount, newStartDate, newEndDate);
@@ -177,8 +177,8 @@
                 this.BudgetManager.UpdateBudget(
                     100,
                     100,
-                    this.GetDateTime().ToIsoString(),
-                    this.GetDateTime().AddDays(1).ToIsoString()));
+                    DateTime.Today.ToIsoString(),
+                    DateTime.Today.AddDays(1).ToIsoString()));
         }
 
         #endregion UpdateBudget
@@ -192,11 +192,11 @@
         public void CreateBudget()
         {
             var category = this.GenerateCategory();
-            var transaction = this.GenerateTransaction(categoryId: category.Id, amount: -30, date: this.GetDateTime().AddDays(-1));
+            var transaction = this.GenerateTransaction(categoryId: category.Id, amount: -30, date: DateTime.Today.AddDays(-1));
 
             const decimal amount = 5;
-            var startDate = this.GetDateTime().AddDays(-2).ToIsoString();
-            var endDate = this.GetDateTime().AddDays(-1).ToIsoString();
+            var startDate = DateTime.Today.AddDays(-2).ToIsoString();
+            var endDate = DateTime.Today.AddDays(-1).ToIsoString();
 
             var budget = this.BudgetManager.CreateBudget(category.Id, amount, startDate, endDate);
 
@@ -217,8 +217,8 @@
             var categoryIncome = this.GenerateCategory(CategoryType.Income);
 
             const decimal amount = 5;
-            var startDate = this.GetDateTime(2019, 12, 01).ToIsoString();
-            var endDate = this.GetDateTime(2019, 12, 15).ToIsoString();
+            var startDate = new DateTime(2019, 12, 01).ToIsoString();
+            var endDate = new DateTime(2019, 12, 15).ToIsoString();
 
             // Category does not exist.
             Assert.Throws<DoesNotExistException>(() =>
