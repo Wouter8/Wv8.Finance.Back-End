@@ -107,5 +107,32 @@
                     // Entity is valid not valid at start, but becomes valid in period
                     (e.ValidFrom >= start && e.ValidFrom <= start && e.ValidTo >= end));
         }
+
+        /// <summary>
+        /// Creates a new historical entry for a currently valid entity. The existing entity will be marked invalid.
+        /// The new entity will be added to the context.
+        /// </summary>
+        /// <typeparam name="T">The type of the entity.</typeparam>
+        /// <param name="entity">The currently valid entity.</param>
+        /// <param name="context">The context.</param>
+        /// <returns>The newly valid entity.</returns>
+        public static T NewHistoricalEntry<T>(this T entity, IHistoricalContext context)
+            where T : class, IHistoricalEntity
+        {
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+            if (entity.ValidTo < DateTime.MaxValue)
+                throw new InvalidOperationException("The specified entity is not currently valid.");
+
+            entity.ValidTo = context.CreationDateTime;
+
+            var newEntity = (T)entity.Clone();
+            newEntity.ValidFrom = context.CreationDateTime;
+            newEntity.ValidTo = DateTime.MaxValue;
+
+            context.Entry(entity).State = EntityState.Added;
+
+            return newEntity;
+        }
     }
 }
