@@ -1,14 +1,23 @@
 ﻿namespace PersonalFinance.Data.Models
 {
+    using System;
+    using PersonalFinance.Data.History;
+
     /// <summary>
     /// An entity representing an account. Used for different bank accounts, etc.
     /// </summary>
-    public class AccountEntity
+    public class AccountEntity : IHistoricalEntity
     {
         /// <summary>
         /// The identifier of this account.
         /// </summary>
         public int Id { get; set; }
+
+        /// <inheritdoc />
+        public DateTime ValidFrom { get; set; }
+
+        /// <inheritdoc />
+        public DateTime ValidTo { get; set; }
 
         /// <summary>
         /// The description of this account.
@@ -39,5 +48,11 @@
         /// The icon for this account.
         /// </summary>
         public IconEntity Icon { get; set; }
+
+        /// <inheritdoc />
+        public object Clone()
+        {
+            return this.MemberwiseClone();
+        }
     }
 }

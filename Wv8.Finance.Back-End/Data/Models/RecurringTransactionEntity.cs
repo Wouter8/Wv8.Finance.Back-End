@@ -3,16 +3,23 @@
     using System;
     using System.Collections.Generic;
     using PersonalFinance.Common.Enums;
+    using PersonalFinance.Data.History;
 
     /// <summary>
     /// An entity representing a blue print for a transaction which get created based on an interval.
     /// </summary>
-    public class RecurringTransactionEntity
+    public class RecurringTransactionEntity : IHistoricalEntity
     {
         /// <summary>
         /// The identifier of the transaction to be created.
         /// </summary>
         public int Id { get; set; }
+
+        /// <inheritdoc />
+        public DateTime ValidFrom { get; set; }
+
+        /// <inheritdoc />
+        public DateTime ValidTo { get; set; }
 
         /// <summary>
         /// The description of the transaction to be created.
@@ -106,5 +113,11 @@
         public bool NeedsConfirmation { get; set; }
 
         // TODO: Add Savings
+
+        /// <inheritdoc />
+        public object Clone()
+        {
+            return this.MemberwiseClone();
+        }
     }
 }

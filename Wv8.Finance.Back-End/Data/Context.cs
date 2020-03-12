@@ -4,12 +4,13 @@
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
     using PersonalFinance.Data.Extensions;
+    using PersonalFinance.Data.History;
     using PersonalFinance.Data.Models;
 
     /// <summary>
     /// The database context which provides read/write functionality to the database.
     /// </summary>
-    public class Context : DbContext
+    public class Context : DbContext, IHistoricalContext
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Context"/> class with specified options.
@@ -18,6 +19,7 @@
         public Context(DbContextOptions<Context> options)
             : base(options)
         {
+            this.CreationDateTime = HistoryExtensions.GetUniqueDateTime();
         }
 
         /// <summary>
@@ -49,6 +51,9 @@
         /// The set of icons.
         /// </summary>
         public DbSet<IconEntity> Icons { get; set; }
+
+        /// <inheritdoc/>
+        public DateTime CreationDateTime { get; set; }
 
         /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder modelBuilder)

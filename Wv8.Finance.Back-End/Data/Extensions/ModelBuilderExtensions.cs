@@ -43,6 +43,7 @@
         {
             var entity = builder.Entity<AccountEntity>();
 
+            entity.HasKey(e => new { e.Id, e.ValidFrom, e.ValidTo });
             entity.Property(e => e.Description).IsRequired();
             entity.Property(e => e.CurrentBalance).HasPrecision(12, 2);
         }
@@ -79,7 +80,6 @@
             var entity = builder.Entity<TransactionEntity>();
 
             entity.Property(e => e.Description).IsRequired();
-
             entity.Property(e => e.Amount).HasPrecision(12, 2);
         }
 
@@ -89,10 +89,10 @@
         /// <param name="builder">The builder.</param>
         private static void BuildRecurringTransactionEntity(this ModelBuilder builder)
         {
-            var entity = builder.Entity<TransactionEntity>();
+            var entity = builder.Entity<RecurringTransactionEntity>();
 
+            entity.HasKey(e => new { e.Id, e.ValidFrom, e.ValidTo });
             entity.Property(e => e.Description).IsRequired();
-
             entity.Property(e => e.Amount).HasPrecision(12, 2);
         }
     }
