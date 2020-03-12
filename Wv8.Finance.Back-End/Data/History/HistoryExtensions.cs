@@ -1,6 +1,7 @@
 ﻿namespace PersonalFinance.Data.History
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,28 @@
                 if (Interlocked.CompareExchange(ref timeTicks, newTicks, ticks) == ticks)
                     return new DateTime(newTicks, DateTimeKind.Utc);
             }
+        }
+
+        /// <summary>
+        /// Returns all days between <paramref name="start"/> and <paramref name="end"/>.
+        /// The time of each date is set to 00:00.
+        /// </summary>
+        /// <param name="start">The start of the period.</param>
+        /// <param name="end">The end of the period.</param>
+        /// <returns>The list of dates.</returns>
+        public static List<DateTime> GetDaysBetween(DateTime start, DateTime end)
+        {
+            var list = new List<DateTime>();
+            if (start > end) return list;
+
+            var date = start;
+            while (date <= end)
+            {
+                list.Add(date.Date);
+                date = date.AddDays(1);
+            }
+
+            return list;
         }
 
         /// <summary>
