@@ -825,10 +825,10 @@
                 Type = TransactionType.Transfer,
             };
 
-            this.Context.Transactions.Add(transaction);
-            this.Context.Transactions.Add(transactionNoConfirmation);
-            this.Context.Transactions.Add(transferTransaction);
-            this.Context.SaveChanges();
+            this.context.Transactions.Add(transaction);
+            this.context.Transactions.Add(transactionNoConfirmation);
+            this.context.Transactions.Add(transferTransaction);
+            this.context.SaveChanges();
 
             var confirmedAmount = -50;
             var confirmedDate = DateTime.Today.AddDays(-1);

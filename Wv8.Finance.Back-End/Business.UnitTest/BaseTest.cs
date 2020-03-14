@@ -25,6 +25,11 @@ namespace Business.UnitTest
     public abstract class BaseTest : IDisposable
     {
         /// <summary>
+        /// The database context to assert things by manually querying the database.
+        /// </summary>
+        protected Context context;
+
+        /// <summary>
         /// The service provider to retrieve services/managers.
         /// </summary>
         private readonly ServiceProvider serviceProvider;
@@ -35,11 +40,6 @@ namespace Business.UnitTest
         /// It can however be turned off while developing, to be able to debug database issues.
         /// </summary>
         private readonly bool useInMemoryDatabase = true;
-
-        /// <summary>
-        /// The database context to assert things by manually querying the database.
-        /// </summary>
-        protected Context Context;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTest"/> class.
@@ -70,8 +70,8 @@ namespace Business.UnitTest
             this.serviceProvider = services.BuildServiceProvider();
 
             this.RefreshContext();
-            this.Context.Database.EnsureDeleted();
-            this.Context.Database.EnsureCreated();
+            this.context.Database.EnsureDeleted();
+            this.context.Database.EnsureCreated();
         }
 
         /// <summary>
@@ -448,7 +448,7 @@ namespace Business.UnitTest
         /// </summary>
         protected void RefreshContext()
         {
-            this.Context = this.serviceProvider.GetService<Context>();
+            this.context = this.serviceProvider.GetService<Context>();
         }
 
         /// <summary>

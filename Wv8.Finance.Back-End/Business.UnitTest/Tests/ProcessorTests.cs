@@ -30,7 +30,7 @@
             var account2 = this.GenerateAccount();
 
             // Expense - not to be processed
-            this.Context.Transactions.Add(
+            this.context.Transactions.Add(
                 new TransactionEntity
                 {
                     AccountId = account.Id,
@@ -41,7 +41,7 @@
                     Processed = false,
                     Type = TransactionType.Expense,
                 });
-            this.Context.SaveChanges();
+            this.context.SaveChanges();
 
             this.TransactionProcessor.Run();
 
@@ -54,7 +54,7 @@
             Assert.Equal(0, budget.Spent);
 
             // Expense - to be processed
-            this.Context.Transactions.Add(
+            this.context.Transactions.Add(
                 new TransactionEntity
                 {
                     AccountId = account.Id,
@@ -65,7 +65,7 @@
                     Processed = false,
                     Type = TransactionType.Expense,
                 });
-            this.Context.SaveChanges();
+            this.context.SaveChanges();
 
             this.TransactionProcessor.Run();
 
@@ -78,7 +78,7 @@
             Assert.Equal(20, budget.Spent);
 
             // Income - to be processed
-            this.Context.Transactions.Add(
+            this.context.Transactions.Add(
                 new TransactionEntity
                 {
                     AccountId = account.Id,
@@ -89,7 +89,7 @@
                     Processed = false,
                     Type = TransactionType.Income,
                 });
-            this.Context.SaveChanges();
+            this.context.SaveChanges();
 
             this.TransactionProcessor.Run();
 
@@ -102,7 +102,7 @@
             Assert.Equal(20, budget.Spent);
 
             // Transfer - to be processed
-            this.Context.Transactions.Add(
+            this.context.Transactions.Add(
                 new TransactionEntity
                 {
                     AccountId = account.Id,
@@ -113,7 +113,7 @@
                     Processed = false,
                     Type = TransactionType.Transfer,
                 });
-            this.Context.SaveChanges();
+            this.context.SaveChanges();
 
             this.TransactionProcessor.Run();
 
@@ -126,7 +126,7 @@
             Assert.Equal(20, budget.Spent);
 
             // Unconfirmed transaction - not to be processed
-            this.Context.Transactions.Add(
+            this.context.Transactions.Add(
                 new TransactionEntity
                 {
                     AccountId = account.Id,
@@ -140,7 +140,7 @@
                     NeedsConfirmation = true,
                     IsConfirmed = false,
                 });
-            this.Context.SaveChanges();
+            this.context.SaveChanges();
 
             this.TransactionProcessor.Run();
 
@@ -183,15 +183,15 @@
                 NeedsConfirmation = false,
                 NextOccurence = startDate,
             };
-            this.Context.RecurringTransactions.Add(rTransaction);
-            this.Context.SaveChanges();
+            this.context.RecurringTransactions.Add(rTransaction);
+            this.context.SaveChanges();
 
             this.TransactionProcessor.Run();
 
             this.RefreshContext();
 
-            rTransaction = this.Context.RecurringTransactions.Single(rt => rt.Id == rTransaction.Id);
-            var instances = this.Context.Transactions
+            rTransaction = this.context.RecurringTransactions.Single(rt => rt.Id == rTransaction.Id);
+            var instances = this.context.Transactions
                 .Where(t => t.RecurringTransactionId == rTransaction.Id &&
                             !t.NeedsConfirmation) // Verify needs confirmation property
                 .ToList();
