@@ -242,6 +242,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                 ? new List<AccountHistoryEntity> { currentHistoryEntry.NewHistoricalEntry(context) }
                 : account.History
                     .Between(date, DateTime.MaxValue)
+                    .OrderBy(h => h.ValidFrom)
                     .ToList();
 
             var processedAt = context.CreationTime;
