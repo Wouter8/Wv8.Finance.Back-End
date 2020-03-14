@@ -9,12 +9,6 @@
     public interface IHistoricalEntity : ICloneable
     {
         /// <summary>
-        /// The identifier of the entity.
-        /// </summary>
-        [Key]
-        int Id { get; set; }
-
-        /// <summary>
         /// The date and time from which this entity is valid.
         /// </summary>
         [Key]
@@ -23,7 +17,6 @@
         /// <summary>
         /// The date and time till which this entity is valid.
         /// </summary>
-        [Key]
         DateTime ValidTo { get; set; }
     }
 }

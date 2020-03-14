@@ -16,6 +16,7 @@
         {
             builder.BuildIconEntity();
             builder.BuildAccountEntity();
+            builder.BuildAccountHistoryEntity();
             builder.BuildCategoryEntity();
             builder.BuildBudgetEntity();
             builder.BuildTransactionEntity();
@@ -43,9 +44,19 @@
         {
             var entity = builder.Entity<AccountEntity>();
 
-            entity.HasKey(e => new { e.Id, e.ValidFrom, e.ValidTo });
             entity.Property(e => e.Description).IsRequired();
-            entity.Property(e => e.CurrentBalance).HasPrecision(12, 2);
+        }
+
+        /// <summary>
+        /// Adds the required properties to the fields of the historical account entity.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        private static void BuildAccountHistoryEntity(this ModelBuilder builder)
+        {
+            var entity = builder.Entity<AccountHistoryEntity>();
+
+            entity.HasKey(e => new { e.AccountId, e.ValidFrom });
+            entity.Property(e => e.Balance).HasPrecision(12, 2);
         }
 
         /// <summary>
@@ -91,7 +102,6 @@
         {
             var entity = builder.Entity<RecurringTransactionEntity>();
 
-            entity.HasKey(e => new { e.Id, e.ValidFrom, e.ValidTo });
             entity.Property(e => e.Description).IsRequired();
             entity.Property(e => e.Amount).HasPrecision(12, 2);
         }

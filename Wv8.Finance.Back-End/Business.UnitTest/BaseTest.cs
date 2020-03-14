@@ -21,42 +21,25 @@ namespace Business.UnitTest
     /// <summary>
     /// A class with basic functionality for tests.
     /// </summary>
-    public abstract class BaseTest
+    [Collection("Tests")]
+    public abstract class BaseTest : IDisposable
     {
+        /// <summary>
+        /// The service provider to retrieve services/managers.
+        /// </summary>
+        private readonly ServiceProvider serviceProvider;
+
+        /// <summary>
+        /// A value indicating if an in memory database should be used. This should always be true upon
+        /// deploying, because the pipeline that will run does not have a local database.
+        /// It can however be turned off while developing, to be able to debug database issues.
+        /// </summary>
+        private readonly bool useInMemoryDatabase = true;
+
         /// <summary>
         /// The database context to assert things by manually querying the database.
         /// </summary>
-        protected readonly Context Context;
-
-        /// <summary>
-        /// The account manager.
-        /// </summary>
-        protected readonly IAccountManager AccountManager;
-
-        /// <summary>
-        /// The category manager.
-        /// </summary>
-        protected readonly ICategoryManager CategoryManager;
-
-        /// <summary>
-        /// The budget manager.
-        /// </summary>
-        protected readonly IBudgetManager BudgetManager;
-
-        /// <summary>
-        /// The transaction manager.
-        /// </summary>
-        protected readonly ITransactionManager TransactionManager;
-
-        /// <summary>
-        /// The transaction manager.
-        /// </summary>
-        protected readonly IRecurringTransactionManager RecurringTransactionManager;
-
-        /// <summary>
-        /// The periodic processor.
-        /// </summary>
-        protected readonly ITransactionProcessor TransactionProcessor;
+        protected Context Context;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTest"/> class.
@@ -65,7 +48,17 @@ namespace Business.UnitTest
         {
             var services = new ServiceCollection();
 
-            services.AddDbContext<Context>(options => options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
+            if (this.useInMemoryDatabase)
+            {
+                services.AddDbContext<Context>(
+                    options => options.UseInMemoryDatabase(Guid.NewGuid().ToString()), ServiceLifetime.Transient);
+            }
+            else
+            {
+                services.AddDbContext<Context>(
+                    options => options.UseSqlServer(
+                        "Server=(LocalDb)\\MSSQLLocalDB;Database=Wv8-Finance-Test;Integrated Security=SSPI;"), ServiceLifetime.Transient);
+            }
 
             services.AddTransient<IAccountManager, AccountManager>();
             services.AddTransient<ICategoryManager, CategoryManager>();
@@ -74,15 +67,47 @@ namespace Business.UnitTest
             services.AddTransient<IRecurringTransactionManager, RecurringTransactionManager>();
             services.AddTransient<ITransactionProcessor, TransactionProcessor>();
 
-            var serviceProvider = services.BuildServiceProvider();
+            this.serviceProvider = services.BuildServiceProvider();
 
-            this.Context = serviceProvider.GetService<Context>();
-            this.AccountManager = serviceProvider.GetService<IAccountManager>();
-            this.CategoryManager = serviceProvider.GetService<ICategoryManager>();
-            this.BudgetManager = serviceProvider.GetService<IBudgetManager>();
-            this.TransactionManager = serviceProvider.GetService<ITransactionManager>();
-            this.RecurringTransactionManager = serviceProvider.GetService<IRecurringTransactionManager>();
-            this.TransactionProcessor = serviceProvider.GetService<ITransactionProcessor>();
+            this.RefreshContext();
+            this.Context.Database.EnsureDeleted();
+            this.Context.Database.EnsureCreated();
+        }
+
+        /// <summary>
+        /// The account manager.
+        /// </summary>
+        protected IAccountManager AccountManager => this.serviceProvider.GetService<IAccountManager>();
+
+        /// <summary>
+        /// The category manager.
+        /// </summary>
+        protected ICategoryManager CategoryManager => this.serviceProvider.GetService<ICategoryManager>();
+
+        /// <summary>
+        /// The budget manager.
+        /// </summary>
+        protected IBudgetManager BudgetManager => this.serviceProvider.GetService<IBudgetManager>();
+
+        /// <summary>
+        /// The transaction manager.
+        /// </summary>
+        protected ITransactionManager TransactionManager => this.serviceProvider.GetService<ITransactionManager>();
+
+        /// <summary>
+        /// The transaction manager.
+        /// </summary>
+        protected IRecurringTransactionManager RecurringTransactionManager => this.serviceProvider.GetService<IRecurringTransactionManager>();
+
+        /// <summary>
+        /// The periodic processor.
+        /// </summary>
+        protected ITransactionProcessor TransactionProcessor => this.serviceProvider.GetService<ITransactionProcessor>();
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            this.serviceProvider?.Dispose();
         }
 
         #region CreateHelpers
@@ -417,6 +442,14 @@ namespace Business.UnitTest
         }
 
         #endregion AssertHelpers
+
+        /// <summary>
+        /// Refreshes the database context of this test.
+        /// </summary>
+        protected void RefreshContext()
+        {
+            this.Context = this.serviceProvider.GetService<Context>();
+        }
 
         /// <summary>
         /// Generates a random string.

@@ -19,13 +19,18 @@
         public Context(DbContextOptions<Context> options)
             : base(options)
         {
-            this.CreationDateTime = HistoryExtensions.GetUniqueDateTime();
+            this.CreationTime = HistoryExtensions.GetUniqueDateTime();
         }
 
         /// <summary>
         /// The set of accounts.
         /// </summary>
         public DbSet<AccountEntity> Accounts { get; set; }
+
+        /// <summary>
+        /// The set of historical accounts.
+        /// </summary>
+        public DbSet<AccountHistoryEntity> AccountHistory { get; set; }
 
         /// <summary>
         /// The set of categories.
@@ -53,7 +58,7 @@
         public DbSet<IconEntity> Icons { get; set; }
 
         /// <inheritdoc/>
-        public DateTime CreationDateTime { get; set; }
+        public DateTime CreationTime { get; set; }
 
         /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder modelBuilder)

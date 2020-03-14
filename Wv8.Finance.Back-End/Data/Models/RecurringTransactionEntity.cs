@@ -8,18 +8,12 @@
     /// <summary>
     /// An entity representing a blue print for a transaction which get created based on an interval.
     /// </summary>
-    public class RecurringTransactionEntity : IHistoricalEntity
+    public class RecurringTransactionEntity
     {
         /// <summary>
         /// The identifier of the transaction to be created.
         /// </summary>
         public int Id { get; set; }
-
-        /// <inheritdoc />
-        public DateTime ValidFrom { get; set; }
-
-        /// <inheritdoc />
-        public DateTime ValidTo { get; set; }
 
         /// <summary>
         /// The description of the transaction to be created.
@@ -111,13 +105,5 @@
         /// This can be useful when the exact date or amount is not known.
         /// </summary>
         public bool NeedsConfirmation { get; set; }
-
-        // TODO: Add Savings
-
-        /// <inheritdoc />
-        public object Clone()
-        {
-            return this.MemberwiseClone();
-        }
     }
 }

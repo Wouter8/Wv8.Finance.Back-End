@@ -12,7 +12,7 @@
         /// The date and time this context was created. It will always be unique,
         /// potentially with just one tick.
         /// </summary>
-        DateTime CreationDateTime { get; set; }
+        DateTime CreationTime { get; set; }
 
         /// <summary>
         /// Gets an entity object for the given entity providing access to information

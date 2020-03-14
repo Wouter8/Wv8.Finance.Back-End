@@ -20,7 +20,7 @@
 
         /// <summary>
         /// Gets a date time which will always be unique. This can be used for
-        /// <see cref="IHistoricalContext.CreationDateTime"/>.
+        /// <see cref="IHistoricalContext.CreationTime"/>.
         /// </summary>
         /// <returns>The unique date time.</returns>
         public static DateTime GetUniqueDateTime()
@@ -64,7 +64,7 @@
         /// <typeparam name="T">The type of the entity.</typeparam>
         /// <param name="set">The database set.</param>
         /// <returns>The filtered query.</returns>
-        public static IQueryable<T> AtNow<T>(this DbSet<T> set)
+        public static IQueryable<T> AtNow<T>(this IQueryable<T> set)
             where T : class, IHistoricalEntity
         {
             var now = DateTime.UtcNow;
@@ -79,7 +79,71 @@
         /// <param name="set">The database set.</param>
         /// <param name="dateTime">The date and time for which the entity must be valid.</param>
         /// <returns>The filtered query.</returns>
-        public static IQueryable<T> At<T>(this DbSet<T> set, DateTime dateTime)
+        public static IEnumerable<T> At<T>(this IEnumerable<T> set, DateTime dateTime)
+            where T : class, IHistoricalEntity
+        {
+            return set
+                .Where(e => e.ValidFrom <= dateTime && e.ValidTo >= dateTime);
+        }
+
+        /// <summary>
+        /// Returns the query which already filters all entities which are not valid for
+        /// the current date.
+        /// </summary>
+        /// <typeparam name="T">The type of the entity.</typeparam>
+        /// <param name="set">The database set.</param>
+        /// <returns>The filtered query.</returns>
+        public static IEnumerable<T> AtNow<T>(this IEnumerable<T> set)
+            where T : class, IHistoricalEntity
+        {
+            var now = DateTime.UtcNow;
+            return set.At(now);
+        }
+
+        /// <summary>
+        /// Return the only element that is currently valid.
+        /// </summary>
+        /// <typeparam name="T">The type of the entity.</typeparam>
+        /// <param name="set">The database set.</param>
+        /// <returns>The valid entity.</returns>
+        public static T SingleAtNow<T>(this IEnumerable<T> set)
+            where T : class, IHistoricalEntity
+        {
+            var now = DateTime.UtcNow;
+            return set.At(now).Single();
+        }
+
+        /// <summary>
+        /// Returns the query which already filters all entities which are not valid in
+        /// a given period.
+        /// </summary>
+        /// <typeparam name="T">The type of the entity.</typeparam>
+        /// <param name="set">The database set.</param>
+        /// <param name="start">The start of the period in which the entity must be valid.</param>
+        /// <param name="end">The start of the period in which the entity must be valid.</param>
+        /// <returns>The filtered query.</returns>
+        public static IEnumerable<T> Between<T>(this IEnumerable<T> set, DateTime start, DateTime end)
+            where T : class, IHistoricalEntity
+        {
+            return set
+                .Where(e =>
+                    // Entity is valid across whole period
+                    (e.ValidFrom <= start && e.ValidTo >= end) ||
+                    // Start within period
+                    (e.ValidFrom >= start && e.ValidFrom <= end) ||
+                    // End within period
+                    (e.ValidTo >= start && e.ValidTo <= end));
+        }
+
+        /// <summary>
+        /// Returns the query which already filters all entities which are not valid for
+        /// a given date and time.
+        /// </summary>
+        /// <typeparam name="T">The type of the entity.</typeparam>
+        /// <param name="set">The database set.</param>
+        /// <param name="dateTime">The date and time for which the entity must be valid.</param>
+        /// <returns>The filtered query.</returns>
+        public static IQueryable<T> At<T>(this IQueryable<T> set, DateTime dateTime)
             where T : class, IHistoricalEntity
         {
             return set
@@ -95,17 +159,17 @@
         /// <param name="start">The start of the period in which the entity must be valid.</param>
         /// <param name="end">The start of the period in which the entity must be valid.</param>
         /// <returns>The filtered query.</returns>
-        public static IQueryable<T> Between<T>(this DbSet<T> set, DateTime start, DateTime end)
+        public static IQueryable<T> Between<T>(this IQueryable<T> set, DateTime start, DateTime end)
             where T : class, IHistoricalEntity
         {
             return set
                 .Where(e =>
                     // Entity is valid across whole period
                     (e.ValidFrom <= start && e.ValidTo >= end) ||
-                    // Entity is valid at start, and becomes invalid in period
-                    (e.ValidFrom <= start && e.ValidTo >= start && e.ValidTo <= end) ||
-                    // Entity is valid not valid at start, but becomes valid in period
-                    (e.ValidFrom >= start && e.ValidFrom <= start && e.ValidTo >= end));
+                    // Start within period
+                    (e.ValidFrom >= start && e.ValidFrom <= end) ||
+                    // End within period
+                    (e.ValidTo >= start && e.ValidTo <= end));
         }
 
         /// <summary>
@@ -124,13 +188,13 @@
             if (entity.ValidTo < DateTime.MaxValue)
                 throw new InvalidOperationException("The specified entity is not currently valid.");
 
-            entity.ValidTo = context.CreationDateTime;
+            entity.ValidTo = context.CreationTime;
 
             var newEntity = (T)entity.Clone();
-            newEntity.ValidFrom = context.CreationDateTime;
+            newEntity.ValidFrom = context.CreationTime;
             newEntity.ValidTo = DateTime.MaxValue;
 
-            context.Entry(entity).State = EntityState.Added;
+            context.Entry(newEntity).State = EntityState.Added;
 
             return newEntity;
         }

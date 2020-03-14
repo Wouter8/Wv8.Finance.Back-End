@@ -1,23 +1,18 @@
 ﻿namespace PersonalFinance.Data.Models
 {
     using System;
+    using System.Collections.Generic;
     using PersonalFinance.Data.History;
 
     /// <summary>
     /// An entity representing an account. Used for different bank accounts, etc.
     /// </summary>
-    public class AccountEntity : IHistoricalEntity
+    public class AccountEntity
     {
         /// <summary>
         /// The identifier of this account.
         /// </summary>
         public int Id { get; set; }
-
-        /// <inheritdoc />
-        public DateTime ValidFrom { get; set; }
-
-        /// <inheritdoc />
-        public DateTime ValidTo { get; set; }
 
         /// <summary>
         /// The description of this account.
@@ -28,11 +23,6 @@
         /// A value indicating if this account is the default account for new transactions.
         /// </summary>
         public bool IsDefault { get; set; }
-
-        /// <summary>
-        /// The current balance of this account.
-        /// </summary>
-        public decimal CurrentBalance { get; set; }
 
         /// <summary>
         /// A value indicating if this account is obsolete. No new transactions can be created for this account.
@@ -49,10 +39,9 @@
         /// </summary>
         public IconEntity Icon { get; set; }
 
-        /// <inheritdoc />
-        public object Clone()
-        {
-            return this.MemberwiseClone();
-        }
+        /// <summary>
+        /// The historical entities for this account.
+        /// </summary>
+        public List<AccountHistoryEntity> History { get; set; }
     }
 }

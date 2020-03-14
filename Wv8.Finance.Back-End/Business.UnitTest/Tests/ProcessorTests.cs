@@ -187,6 +187,10 @@
             this.Context.SaveChanges();
 
             this.TransactionProcessor.Run();
+
+            this.RefreshContext();
+
+            rTransaction = this.Context.RecurringTransactions.Single(rt => rt.Id == rTransaction.Id);
             var instances = this.Context.Transactions
                 .Where(t => t.RecurringTransactionId == rTransaction.Id &&
                             !t.NeedsConfirmation) // Verify needs confirmation property
