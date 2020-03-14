@@ -247,18 +247,23 @@ namespace PersonalFinance.Business.Transaction.Processor
             var processedAt = context.CreationTime;
             if (!latestDate)
             {
+                // If the first entry has the same start date as the wanted date, just use that one.
+                if (historyItems[0].ValidFrom.Date == date)
+                {
+                    processedAt = historyItems[0].ValidFrom;
+                }
                 // It can be that the first historical entry starts later than the provided date. Then we insert an entity before it.
-                if (historyItems[0].ValidFrom.Date > date)
+                else if (historyItems[0].ValidFrom.Date > date)
                 {
                     var firstEntry = CreateHistoryEntityBefore(historyItems[0], date, context);
                     historyItems.Insert(0, firstEntry);
 
                     processedAt = firstEntry.ValidFrom;
                 }
+                // The first entry must contain the end of the previous day, so the second entry might be an update on the date of the to be processed transaction.
+                // If it is not the date of the transaction, we have to add a historical entry in between the first and second historical entries in the list.
                 else
                 {
-                    // The first entry must contain the end of the previous day, so the second entry might be an update on the date of the to be processed transaction.
-                    // If it is not the date of the transaction, we have to add a historical entry in between the first and second historical entries in the list.
                     var first = historyItems[0];
                     var second = historyItems[1];
                     if (second.ValidFrom.Date != date)
