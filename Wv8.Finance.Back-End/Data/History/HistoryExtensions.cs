@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Threading;
     using Microsoft.EntityFrameworkCore;
+    using Wv8.Core;
 
     /// <summary>
     /// A class providing extension methods related to historical entities.
@@ -130,9 +131,9 @@
                     // Entity is valid across whole period
                     (e.ValidFrom <= start && e.ValidTo >= end) ||
                     // Start within period
-                    (e.ValidFrom >= start && e.ValidFrom <= end) ||
+                    (e.ValidFrom >= start && e.ValidFrom < end) ||
                     // End within period
-                    (e.ValidTo >= start && e.ValidTo <= end));
+                    (e.ValidTo > start && e.ValidTo <= end));
         }
 
         /// <summary>
@@ -167,9 +168,9 @@
                     // Entity is valid across whole period
                     (e.ValidFrom <= start && e.ValidTo >= end) ||
                     // Start within period
-                    (e.ValidFrom >= start && e.ValidFrom <= end) ||
+                    (e.ValidFrom >= start && e.ValidFrom < end) ||
                     // End within period
-                    (e.ValidTo >= start && e.ValidTo <= end));
+                    (e.ValidTo > start && e.ValidTo <= end));
         }
 
         /// <summary>

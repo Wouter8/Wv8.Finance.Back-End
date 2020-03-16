@@ -233,59 +233,59 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// <returns>The list of to be updated entities and the date and the first datetime on the specified date.</returns>
         private static (DateTime, List<AccountHistoryEntity>) GetHistoricalEntriesToEdit(AccountEntity account, DateTime date, Context context)
         {
-            var currentHistoryEntry = account.History.SingleAtNow();
-
-            // If transaction has same or later date as latest account update, then we can just add another one.
-            // If transaction is in the past, we have to alter the historical entries.
-            var latestDate = currentHistoryEntry.ValidFrom.Date <= date;
-            var historyItems = latestDate
-                ? new List<AccountHistoryEntity> { currentHistoryEntry.NewHistoricalEntry(context) }
-                : account.History
-                    .Between(date, DateTime.MaxValue)
-                    .OrderBy(h => h.ValidFrom)
-                    .ToList();
-
-            var processedAt = context.CreationTime;
-            if (!latestDate)
+            // If date already has historical entry, just alter that and later entries.
+            var historicalEntryOnSameDate = account.History
+                .OrderBy(ah => ah.ValidFrom)
+                .FirstOrNone(ah => ah.ValidFrom.Date == date);
+            if (historicalEntryOnSameDate.IsSome)
             {
-                // If the first entry has the same start date as the wanted date, just use that one.
-                if (historyItems[0].ValidFrom.Date == date)
-                {
-                    processedAt = historyItems[0].ValidFrom;
-                }
-                // It can be that the first historical entry starts later than the provided date. Then we insert an entity before it.
-                else if (historyItems[0].ValidFrom.Date > date)
-                {
-                    var firstEntry = CreateHistoryEntityBefore(historyItems[0], date, context);
-                    historyItems.Insert(0, firstEntry);
-
-                    processedAt = firstEntry.ValidFrom;
-                }
-                // The first entry must contain the end of the previous day, so the second entry might be an update on the date of the to be processed transaction.
-                // If it is not the date of the transaction, we have to add a historical entry in between the first and second historical entries in the list.
-                else
-                {
-                    var first = historyItems[0];
-                    var second = historyItems[1];
-                    if (second.ValidFrom.Date != date)
-                    {
-                        var created =
-                            CreateHistoryEntityInBetween(first, second, date, context);
-
-                        // Insert at second index because the first is always the update at 00:00, which is the end balance of the previous day.
-                        // We are inserting a balance change one the following day.
-                        historyItems.Insert(1, created);
-
-                        processedAt = created.ValidFrom;
-                    }
-                    else
-                    {
-                        processedAt = second.ValidFrom;
-                    }
-                }
+                var historicalEntriesFromSameDate = account.History
+                    .Between(historicalEntryOnSameDate.Value.ValidFrom, DateTime.MaxValue)
+                    .OrderBy(ah => ah.ValidFrom)
+                    .ToList();
+                return (historicalEntriesFromSameDate.First().ValidFrom, historicalEntriesFromSameDate);
             }
 
-            return (processedAt, historyItems);
+            var currentHistoryEntry = account.History.SingleAtNow();
+
+            // If date is in the future, then we can just add another one.
+            if (date >= DateTime.Today.Date)
+                return (context.CreationTime, currentHistoryEntry.NewHistoricalEntry(context).Enumerate().ToList());
+
+            // If date is in the past, we have to alter the historical entries.
+            var historyItems = account.History
+                        .Between(date, DateTime.MaxValue)
+                        .OrderBy(h => h.ValidFrom)
+                        .ToList();
+
+            // It can be that the first historical entry starts later than the provided date. Then we insert an entity before it.
+            if (historyItems[0].ValidFrom.Date > date)
+            {
+                var firstEntry = CreateHistoryEntityBefore(historyItems[0], date, context);
+                historyItems.Insert(0, firstEntry);
+
+                return (firstEntry.ValidFrom, historyItems);
+            }
+
+            // The first entry must contain the end of the previous day, and the second entry is later than the needed date.
+            // Therefore, we need to add an entry between the two.
+            var first = historyItems[0];
+            var second = historyItems[1];
+            var changed =
+                CreateHistoryEntityInBetween(first, second, date, context);
+
+            // Replace first two with the altered entities.
+            // Skip first because this is the balance of the previous day.
+            historyItems = historyItems.Skip(2).ToList();
+            for (var i = 1; i < changed.Count; i++)
+            {
+                var entity = changed[i];
+                // Start inserting at first index, though.
+                historyItems.Insert(i - 1, entity);
+            }
+
+            // Set processed at to the valid from date of the new entity.
+            return (changed[1].ValidFrom, historyItems);
         }
 
         /// <summary>
@@ -327,21 +327,21 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// This is needed because a transaction can be added/processed with a date in the past.
         /// </summary>
         /// <typeparam name="T">The type of the historical entity.</typeparam>
-        /// <param name="a">The historical entry that will be the previous entry.</param>
-        /// <param name="b">The historical entry that will be the following entry.</param>
+        /// <param name="first">The historical entry that will be the previous entry.</param>
+        /// <param name="second">The historical entry that will be the following entry.</param>
         /// <param name="date">The date on which the entry has to be created.</param>
         /// <param name="context">The database context.</param>
-        /// <returns>The created historical entity.</returns>
-        private static T CreateHistoryEntityInBetween<T>(T a, T b, DateTime date, Context context)
+        /// <returns>The list of new historical entities.</returns>
+        private static List<T> CreateHistoryEntityInBetween<T>(T first, T second, DateTime date, Context context)
             where T : class, IHistoricalEntity
         {
-            if (a.ValidTo != b.ValidFrom)
+            if (first.ValidTo != second.ValidFrom)
             {
                 throw new InvalidOperationException(
                     "Can not create a historical entry between entries that are not next to each other.");
             }
 
-            if (b.ValidFrom.Date == date.Date)
+            if (first.ValidFrom.Date == date.Date)
             {
                 // Because this method is pretty dangerous, only allow it if it adds an entry for a new day.
                 throw new InvalidOperationException(
@@ -352,17 +352,25 @@ namespace PersonalFinance.Business.Transaction.Processor
             var startDate = new DateTime(date.Year, date.Month, date.Day, 0, 0, 1, DateTimeKind.Utc);
             var endDate = new DateTime(date.Year, date.Month, date.Day, 0, 0, 2, DateTimeKind.Utc);
 
-            a.ValidTo = startDate;
-            b.ValidFrom = endDate;
+            // Clone and remove second entity and mark cloned entity as added.
+            // This is needed because we changed the primary key.
+            var secondClone = (T)second.Clone();
+
+            first.ValidTo = startDate;
+            secondClone.ValidFrom = endDate;
+
+            context.Entry(second).State = EntityState.Deleted;
+            context.Entry(secondClone).State = EntityState.Added;
 
             // Clone the first, since we build upon that.
-            var newEntity = (T)a.Clone();
+            var newEntity = (T)first.Clone();
+
             newEntity.ValidFrom = startDate;
             newEntity.ValidTo = endDate;
 
             context.Entry(newEntity).State = EntityState.Added;
 
-            return newEntity;
+            return new List<T> { first, newEntity, secondClone };
         }
 
         /// <summary>
