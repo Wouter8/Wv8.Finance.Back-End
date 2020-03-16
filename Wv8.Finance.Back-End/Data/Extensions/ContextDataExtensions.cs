@@ -5,6 +5,7 @@
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
     using PersonalFinance.Common.Exceptions;
+    using PersonalFinance.Data.History;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
@@ -25,7 +26,8 @@
         public static IQueryable<AccountEntity> IncludeAll(this DbSet<AccountEntity> set)
         {
             return set
-                .Include(a => a.Icon);
+                .Include(a => a.Icon)
+                .Include(a => a.History);
         }
 
         /// <summary>
@@ -71,8 +73,12 @@
             return set
                 .Include(t => t.Account)
                 .ThenInclude(t => t.Icon)
+                .Include(t => t.Account)
+                .ThenInclude(t => t.History)
                 .Include(t => t.ReceivingAccount)
                 .ThenInclude(t => t.Icon)
+                .Include(t => t.ReceivingAccount)
+                .ThenInclude(t => t.History)
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Icon)
                 .Include(t => t.Category)
@@ -93,8 +99,12 @@
             return set
                 .Include(t => t.Account)
                 .ThenInclude(t => t.Icon)
+                .Include(t => t.Account)
+                .ThenInclude(t => t.History)
                 .Include(t => t.ReceivingAccount)
                 .ThenInclude(t => t.Icon)
+                .Include(t => t.ReceivingAccount)
+                .ThenInclude(t => t.History)
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Icon)
                 .Include(t => t.Category)

@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using PersonalFinance.Common.Enums;
+    using PersonalFinance.Data.History;
 
     /// <summary>
     /// An entity representing a blue print for a transaction which get created based on an interval.
@@ -104,7 +105,5 @@
         /// This can be useful when the exact date or amount is not known.
         /// </summary>
         public bool NeedsConfirmation { get; set; }
-
-        // TODO: Add Savings
     }
 }

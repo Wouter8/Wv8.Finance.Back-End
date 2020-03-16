@@ -107,7 +107,7 @@
                 endDate: endDate,
                 interval: interval,
                 intervalUnit: intervalUnit);
-            var instances = this.Context.Transactions
+            var instances = this.context.Transactions
                 .Where(t => t.RecurringTransactionId == rTransaction.Id &&
                             !t.NeedsConfirmation) // Verify needs confirmation property
                 .ToList();
@@ -139,7 +139,7 @@
                 true,
                 true);
 
-            instances = this.Context.Transactions
+            instances = this.context.Transactions
                 .Where(t => t.RecurringTransactionId == rTransaction.Id) // No check on need confirmation to see if old instances ar deleted.
                 .ToList();
 
@@ -147,7 +147,7 @@
             Assert.False(updated.NextOccurence.IsSome);
             Assert.Equal(2, instances.Count);
 
-            instances = this.Context.Transactions
+            instances = this.context.Transactions
                 .Where(t => t.RecurringTransactionId == rTransaction.Id &&
                             t.NeedsConfirmation) // Verify new instances are created
                 .ToList();
@@ -233,7 +233,7 @@
                 intervalUnit,
                 false);
 
-            var instances = this.Context.Transactions
+            var instances = this.context.Transactions
                 .Where(t => t.RecurringTransactionId == rTransaction.Id &&
                             !t.NeedsConfirmation) // Verify needs confirmation property
                 .ToList();
@@ -281,7 +281,7 @@
                 this.RecurringTransactionManager.GetRecurringTransaction(rTransaction.Id));
 
             // Verify instances are deleted and account balance is restored.
-            var instances = this.Context.Transactions.ToList();
+            var instances = this.context.Transactions.ToList();
             account = this.AccountManager.GetAccount(account.Id);
             Assert.Equal(0, account.CurrentBalance);
             Assert.Empty(instances);
@@ -305,7 +305,7 @@
                 this.RecurringTransactionManager.GetRecurringTransaction(rTransaction.Id));
 
             // Verify instances are not deleted (although link to recurring transaction is removed).
-            instances = this.Context.Transactions.ToList();
+            instances = this.context.Transactions.ToList();
             Assert.Equal(2, instances.Count);
         }
 

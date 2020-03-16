@@ -1,11 +1,13 @@
 ﻿namespace PersonalFinance.Business.Account
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
+    using PersonalFinance.Data.History;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
@@ -95,24 +97,29 @@
                 if (this.Context.Accounts.Any(a => a.Description == description && !a.IsObsolete))
                     throw new ValidationException($"An active account with description \"{description}\" already exists.");
 
-                var entity = new AccountEntity
+                var entity = new AccountHistoryEntity
                 {
-                    Description = description,
-                    CurrentBalance = 0,
-                    IsDefault = false,
-                    IsObsolete = false,
-                    Icon = new IconEntity
+                    ValidFrom = this.Context.CreationTime,
+                    ValidTo = DateTime.MaxValue,
+                    Balance = 0,
+                    Account = new AccountEntity
                     {
-                        Pack = iconPack,
-                        Name = iconName,
-                        Color = iconColor,
+                        Description = description,
+                        IsDefault = false,
+                        IsObsolete = false,
+                        Icon = new IconEntity
+                        {
+                            Pack = iconPack,
+                            Name = iconName,
+                            Color = iconColor,
+                        },
                     },
                 };
 
-                this.Context.Accounts.Add(entity);
+                this.Context.AccountHistory.Add(entity);
                 this.Context.SaveChanges();
 
-                return entity.AsAccount();
+                return entity.Account.AsAccount();
             });
         }
 
@@ -122,18 +129,27 @@
             this.ConcurrentInvoke(() =>
             {
                 var entity = this.Context.Accounts
+                    .IncludeAll()
                     .SingleOrNone(a => a.Id == id)
                     .ValueOrThrow(() => new DoesNotExistException($"Account with identifier {id} does not exist."));
 
                 if (obsolete)
                 {
-                    if (entity.CurrentBalance != 0)
+                    if (entity.History.AtNow().Single().Balance != 0)
                         throw new ValidationException("This account has a current balance which is not 0.");
 
                     // Delete any existing recurring transaction for this account
                     var recurringTransactions = this.Context.RecurringTransactions
                         .Where(rt => rt.AccountId == entity.Id || rt.ReceivingAccountId == entity.Id)
                         .ToList();
+                    var recurringIds = recurringTransactions.Select(rt => rt.Id).ToList();
+                    var instances = this.Context.Transactions
+                        .Where(t => t.RecurringTransactionId.HasValue && recurringIds.Contains(t.RecurringTransactionId.Value))
+                        .ToList();
+                    foreach (var instance in instances)
+                    {
+                        instance.RecurringTransactionId = null;
+                    }
                     this.Context.RecurringTransactions.RemoveRange(recurringTransactions);
 
                     // Obsolete account can not be the default

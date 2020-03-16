@@ -1,5 +1,9 @@
 ﻿namespace PersonalFinance.Data.Models
 {
+    using System;
+    using System.Collections.Generic;
+    using PersonalFinance.Data.History;
+
     /// <summary>
     /// An entity representing an account. Used for different bank accounts, etc.
     /// </summary>
@@ -21,11 +25,6 @@
         public bool IsDefault { get; set; }
 
         /// <summary>
-        /// The current balance of this account.
-        /// </summary>
-        public decimal CurrentBalance { get; set; }
-
-        /// <summary>
         /// A value indicating if this account is obsolete. No new transactions can be created for this account.
         /// </summary>
         public bool IsObsolete { get; set; }
@@ -39,5 +38,10 @@
         /// The icon for this account.
         /// </summary>
         public IconEntity Icon { get; set; }
+
+        /// <summary>
+        /// The historical entities for this account.
+        /// </summary>
+        public List<AccountHistoryEntity> History { get; set; }
     }
 }

@@ -75,6 +75,11 @@
         public bool Processed { get; set; }
 
         /// <summary>
+        /// The date and time at which this transaction has been processed.
+        /// </summary>
+        public DateTime? ProcessedAt { get; set; }
+
+        /// <summary>
         /// Optionally, the identifier of the recurring transaction this transaction descended from.
         /// </summary>
         public int? RecurringTransactionId { get; set; }

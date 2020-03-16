@@ -5,6 +5,7 @@
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common.Enums;
+    using PersonalFinance.Data.History;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Xunit;
@@ -30,7 +31,7 @@
             var account2 = this.GenerateAccount();
 
             // Expense - not to be processed
-            this.Context.Transactions.Add(
+            this.context.Transactions.Add(
                 new TransactionEntity
                 {
                     AccountId = account.Id,
@@ -41,7 +42,7 @@
                     Processed = false,
                     Type = TransactionType.Expense,
                 });
-            this.Context.SaveChanges();
+            this.context.SaveChanges();
 
             this.TransactionProcessor.Run();
 
@@ -54,7 +55,7 @@
             Assert.Equal(0, budget.Spent);
 
             // Expense - to be processed
-            this.Context.Transactions.Add(
+            this.context.Transactions.Add(
                 new TransactionEntity
                 {
                     AccountId = account.Id,
@@ -65,7 +66,7 @@
                     Processed = false,
                     Type = TransactionType.Expense,
                 });
-            this.Context.SaveChanges();
+            this.context.SaveChanges();
 
             this.TransactionProcessor.Run();
 
@@ -78,7 +79,7 @@
             Assert.Equal(20, budget.Spent);
 
             // Income - to be processed
-            this.Context.Transactions.Add(
+            this.context.Transactions.Add(
                 new TransactionEntity
                 {
                     AccountId = account.Id,
@@ -89,7 +90,7 @@
                     Processed = false,
                     Type = TransactionType.Income,
                 });
-            this.Context.SaveChanges();
+            this.context.SaveChanges();
 
             this.TransactionProcessor.Run();
 
@@ -102,7 +103,7 @@
             Assert.Equal(20, budget.Spent);
 
             // Transfer - to be processed
-            this.Context.Transactions.Add(
+            this.context.Transactions.Add(
                 new TransactionEntity
                 {
                     AccountId = account.Id,
@@ -113,7 +114,7 @@
                     Processed = false,
                     Type = TransactionType.Transfer,
                 });
-            this.Context.SaveChanges();
+            this.context.SaveChanges();
 
             this.TransactionProcessor.Run();
 
@@ -126,7 +127,7 @@
             Assert.Equal(20, budget.Spent);
 
             // Unconfirmed transaction - not to be processed
-            this.Context.Transactions.Add(
+            this.context.Transactions.Add(
                 new TransactionEntity
                 {
                     AccountId = account.Id,
@@ -140,7 +141,7 @@
                     NeedsConfirmation = true,
                     IsConfirmed = false,
                 });
-            this.Context.SaveChanges();
+            this.context.SaveChanges();
 
             this.TransactionProcessor.Run();
 
@@ -183,17 +184,222 @@
                 NeedsConfirmation = false,
                 NextOccurence = startDate,
             };
-            this.Context.RecurringTransactions.Add(rTransaction);
-            this.Context.SaveChanges();
+            this.context.RecurringTransactions.Add(rTransaction);
+            this.context.SaveChanges();
 
             this.TransactionProcessor.Run();
-            var instances = this.Context.Transactions
+
+            this.RefreshContext();
+
+            rTransaction = this.context.RecurringTransactions.Single(rt => rt.Id == rTransaction.Id);
+            var instances = this.context.Transactions
                 .Where(t => t.RecurringTransactionId == rTransaction.Id &&
                             !t.NeedsConfirmation) // Verify needs confirmation property
                 .ToList();
 
             Assert.True(rTransaction.Finished);
             Assert.Equal(2, instances.Count);
+        }
+
+        /// <summary>
+        /// Tests that the historical balance is created upon creating an account.
+        /// </summary>
+        [Fact]
+        public void HistoricalBalance_NewAccount()
+        {
+            var account = this.GenerateAccount();
+
+            var historicBalances = this.context.AccountHistory.Where(ah => ah.AccountId == account.Id).ToList();
+
+            Assert.Single(historicBalances);
+            Assert.Single(historicBalances.AtNow());
+            Assert.Equal(0, historicBalances.First().Balance);
+            Assert.Equal(DateTime.MaxValue, historicBalances.First().ValidTo);
+        }
+
+        /// <summary>
+        /// Tests that the historical balance is properly stored upon processing a transaction.
+        /// </summary>
+        [Fact]
+        public void HistoricalBalance_Transaction()
+        {
+            // All transaction should use alter the already existing historic entry, since it has the same date.
+            var account = this.GenerateAccount();
+            var account2 = this.GenerateAccount();
+
+            // Transaction that should be processed immediately.
+            var transaction = this.GenerateTransaction(
+                accountId: account.Id,
+                date: DateTime.Today,
+                amount: -50);
+            var historicBalances = this.context.AccountHistory.Where(ah => ah.AccountId == account.Id).ToList();
+
+            Assert.Single(historicBalances);
+            Assert.Single(historicBalances.AtNow());
+            Assert.Equal(-50, historicBalances[0].Balance);
+            Assert.Equal(DateTime.MaxValue, historicBalances[0].ValidTo);
+
+            // Income transaction that should be processed immediately.
+            transaction = this.GenerateTransaction(
+                accountId: account.Id,
+                type: TransactionType.Income,
+                date: DateTime.Today,
+                amount: 50);
+            this.RefreshContext();
+            historicBalances = this.context.AccountHistory.Where(ah => ah.AccountId == account.Id).ToList();
+
+            Assert.Single(historicBalances);
+            Assert.Single(historicBalances.AtNow());
+            Assert.Equal(0, historicBalances[0].Balance);
+            Assert.Equal(DateTime.MaxValue, historicBalances[0].ValidTo);
+
+            // Transfer transaction that should be processed immediately.
+            transaction = this.GenerateTransaction(
+                accountId: account.Id,
+                type: TransactionType.Transfer,
+                date: DateTime.Today,
+                amount: 50,
+                receivingAccountId: account2.Id);
+            this.RefreshContext();
+            historicBalances = this.context.AccountHistory.Where(ah => ah.AccountId == account.Id).ToList();
+            var historicBalances2 = this.context.AccountHistory.Where(ah => ah.AccountId == account2.Id).ToList();
+
+            Assert.Single(historicBalances);
+            Assert.Single(historicBalances.AtNow());
+            Assert.Equal(-50, historicBalances[0].Balance);
+            Assert.Equal(DateTime.MaxValue, historicBalances[0].ValidTo);
+
+            Assert.Single(historicBalances2);
+            Assert.Single(historicBalances2.AtNow());
+            Assert.Equal(50, historicBalances2[0].Balance);
+            Assert.Equal(DateTime.MaxValue, historicBalances[0].ValidTo);
+
+            // Remove last transaction. Should add historical entry.
+            this.TransactionManager.DeleteTransaction(transaction.Id);
+            this.RefreshContext();
+            historicBalances = this.context.AccountHistory.Where(ah => ah.AccountId == account.Id).ToList();
+            historicBalances2 = this.context.AccountHistory.Where(ah => ah.AccountId == account2.Id).ToList();
+
+            Assert.Single(historicBalances);
+            Assert.Single(historicBalances.AtNow());
+            Assert.Equal(0, historicBalances[0].Balance);
+            Assert.Equal(DateTime.MaxValue, historicBalances[0].ValidTo);
+
+            Assert.Single(historicBalances2);
+            Assert.Single(historicBalances2.AtNow());
+            Assert.Equal(0, historicBalances2[0].Balance);
+            Assert.Equal(DateTime.MaxValue, historicBalances[0].ValidTo);
+        }
+
+        /// <summary>
+        /// Tests that the historical balance is properly stored upon processing a transaction in the past.
+        /// </summary>
+        [Fact]
+        public void HistoricalBalance_TransactionInPast()
+        {
+            var account = this.GenerateAccount();
+            var account2 = this.GenerateAccount();
+
+            // Transaction that should be processed before account is created.
+            // Should add a historical entry to the beginning.
+            var transaction = this.GenerateTransaction(
+                accountId: account.Id,
+                date: DateTime.Today.AddDays(-2),
+                amount: -50);
+            var historicBalances = this.context.AccountHistory
+                .Where(ah => ah.AccountId == account.Id)
+                .OrderBy(ah => ah.ValidFrom)
+                .ToList();
+
+            Assert.Equal(2, historicBalances.Count);
+            Assert.Single(historicBalances.AtNow());
+            Assert.Equal(-50, historicBalances[0].Balance);
+            Assert.Equal(-50, historicBalances[1].Balance);
+            Assert.NotEqual(DateTime.MaxValue, historicBalances[0].ValidTo);
+            Assert.Equal(DateTime.MaxValue, historicBalances[1].ValidTo);
+
+            // Transaction that should be processed between the already existing historical entries.
+            transaction = this.GenerateTransaction(
+                accountId: account.Id,
+                type: TransactionType.Income,
+                date: DateTime.Today.AddDays(-1),
+                amount: 50);
+            this.RefreshContext();
+            historicBalances = this.context.AccountHistory
+                .Where(ah => ah.AccountId == account.Id)
+                .OrderBy(ah => ah.ValidFrom)
+                .ToList();
+
+            Assert.Equal(3, historicBalances.Count);
+            Assert.Single(historicBalances.AtNow());
+            Assert.Equal(-50, historicBalances[0].Balance);
+            Assert.Equal(0, historicBalances[1].Balance);
+            Assert.Equal(0, historicBalances[2].Balance);
+            Assert.NotEqual(DateTime.MaxValue, historicBalances[0].ValidTo);
+            Assert.NotEqual(DateTime.MaxValue, historicBalances[1].ValidTo);
+            Assert.Equal(DateTime.MaxValue, historicBalances[2].ValidTo);
+
+            // Transfer transaction that should be processed at the same date as previous transaction.
+            transaction = this.GenerateTransaction(
+                accountId: account.Id,
+                type: TransactionType.Transfer,
+                date: DateTime.Today.AddDays(-1),
+                amount: 50,
+                receivingAccountId: account2.Id);
+            this.RefreshContext();
+            historicBalances = this.context.AccountHistory
+                .Where(ah => ah.AccountId == account.Id)
+                .OrderBy(ah => ah.ValidFrom)
+                .ToList();
+            var historicBalances2 = this.context.AccountHistory
+                .Where(ah => ah.AccountId == account2.Id)
+                .OrderBy(ah => ah.ValidFrom)
+                .ToList();
+
+            Assert.Equal(3, historicBalances.Count);
+            Assert.Single(historicBalances.AtNow());
+            Assert.Equal(-50, historicBalances[0].Balance);
+            Assert.Equal(-50, historicBalances[1].Balance);
+            Assert.Equal(-50, historicBalances[2].Balance);
+            Assert.NotEqual(DateTime.MaxValue, historicBalances[0].ValidTo);
+            Assert.NotEqual(DateTime.MaxValue, historicBalances[1].ValidTo);
+            Assert.Equal(DateTime.MaxValue, historicBalances[2].ValidTo);
+
+            Assert.Equal(2, historicBalances2.Count);
+            Assert.Single(historicBalances2.AtNow());
+            Assert.Equal(50, historicBalances2[0].Balance);
+            Assert.Equal(50, historicBalances2[1].Balance);
+            Assert.NotEqual(DateTime.MaxValue, historicBalances2[0].ValidTo);
+            Assert.Equal(DateTime.MaxValue, historicBalances2[1].ValidTo);
+
+            // Remove last transaction. Should alter the latest historical entry.
+            // Second account should have its first entry changed.
+            this.TransactionManager.DeleteTransaction(transaction.Id);
+            this.RefreshContext();
+            historicBalances = this.context.AccountHistory
+                .Where(ah => ah.AccountId == account.Id)
+                .OrderBy(ah => ah.ValidFrom)
+                .ToList();
+            historicBalances2 = this.context.AccountHistory
+                .Where(ah => ah.AccountId == account2.Id)
+                .OrderBy(ah => ah.ValidFrom)
+                .ToList();
+
+            Assert.Equal(3, historicBalances.Count);
+            Assert.Single(historicBalances.AtNow());
+            Assert.Equal(-50, historicBalances[0].Balance);
+            Assert.Equal(0, historicBalances[1].Balance);
+            Assert.Equal(0, historicBalances[2].Balance);
+            Assert.NotEqual(DateTime.MaxValue, historicBalances[0].ValidTo);
+            Assert.NotEqual(DateTime.MaxValue, historicBalances[1].ValidTo);
+            Assert.Equal(DateTime.MaxValue, historicBalances[2].ValidTo);
+
+            Assert.Equal(2, historicBalances2.Count);
+            Assert.Single(historicBalances2.AtNow());
+            Assert.Equal(0, historicBalances2[0].Balance);
+            Assert.Equal(0, historicBalances2[1].Balance);
+            Assert.NotEqual(DateTime.MaxValue, historicBalances2[0].ValidTo);
+            Assert.Equal(DateTime.MaxValue, historicBalances2[1].ValidTo);
         }
 
         /// <summary>
