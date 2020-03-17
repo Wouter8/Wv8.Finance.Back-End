@@ -1,18 +1,13 @@
 namespace PersonalFinance.Service
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
-    using Microsoft.AspNetCore.HttpsPolicy;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.SqlServer.NodaTime.Extensions;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
     using PersonalFinance.Business.Account;
@@ -77,7 +72,9 @@ namespace PersonalFinance.Service
 
             // DbContext
             services.AddDbContext<Context>(options =>
-                options.UseSqlServer(this.Configuration.GetConnectionString("Default")));
+                    options.UseSqlServer(
+                        this.Configuration.GetConnectionString("Default"),
+                        sqlOptions => sqlOptions.UseNodaTime()));
 
             // Managers
             services.AddTransient<IAccountManager, AccountManager>();

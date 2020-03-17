@@ -3,7 +3,9 @@ namespace Business.UnitTest
     using System;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.SqlServer.NodaTime.Extensions;
     using Microsoft.Extensions.DependencyInjection;
+    using NodaTime;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Business.Category;
@@ -57,7 +59,9 @@ namespace Business.UnitTest
             {
                 services.AddDbContext<Context>(
                     options => options.UseSqlServer(
-                        "Server=(LocalDb)\\MSSQLLocalDB;Database=Wv8-Finance-Test;Integrated Security=SSPI;"), ServiceLifetime.Transient);
+                        "Server=(LocalDb)\\MSSQLLocalDB;Database=Wv8-Finance-Test;Integrated Security=SSPI;",
+                        sqlOptions => sqlOptions.UseNodaTime()),
+                    ServiceLifetime.Transient);
             }
 
             services.AddTransient<IAccountManager, AccountManager>();
@@ -197,21 +201,21 @@ namespace Business.UnitTest
         protected Budget GenerateBudget(
             int? categoryId = null,
             decimal? amount = null,
-            DateTime? startDate = null,
-            DateTime? endDate = null)
+            LocalDate? startDate = null,
+            LocalDate? endDate = null)
         {
             if (!categoryId.HasValue)
                 categoryId = this.GenerateCategory().Id;
             if (!startDate.HasValue)
-                startDate = DateTime.Today;
+                startDate = LocalDate.FromDateTime(DateTime.Today);
             if (!endDate.HasValue)
-                endDate = DateTime.Today.AddMonths(1);
+                endDate = LocalDate.FromDateTime(DateTime.Today.AddMonths(1));
 
             return this.BudgetManager.CreateBudget(
                 categoryId.Value,
                 amount ?? 100,
-                startDate.Value.ToIsoString(),
-                endDate.Value.ToIsoString());
+                startDate.Value.ToString(),
+                endDate.Value.ToString());
         }
 
         /// <summary>
@@ -230,7 +234,7 @@ namespace Business.UnitTest
             int? accountId = null,
             TransactionType type = TransactionType.Expense,
             string description = null,
-            DateTime? date = null,
+            LocalDate? date = null,
             decimal? amount = null,
             int? categoryId = null,
             int? receivingAccountId = null,
@@ -246,13 +250,13 @@ namespace Business.UnitTest
             if (!accountId.HasValue)
                 accountId = this.GenerateAccount().Id;
             if (!date.HasValue)
-                date = DateTime.Today;
+                date = LocalDate.FromDateTime(DateTime.Today);
 
             return this.TransactionManager.CreateTransaction(
                 accountId.Value,
                 type,
                 description ?? this.GetRandomString(),
-                date.Value.ToIsoString(),
+                date.Value.ToString(),
                 amount ?? (type == TransactionType.Expense ? -50 : 50),
                 categoryId.ToMaybe(),
                 receivingAccountId.ToMaybe(),
@@ -278,8 +282,8 @@ namespace Business.UnitTest
             int? accountId = null,
             TransactionType type = TransactionType.Expense,
             string description = null,
-            DateTime? startDate = null,
-            DateTime? endDate = null,
+            LocalDate? startDate = null,
+            LocalDate? endDate = null,
             decimal? amount = null,
             int? categoryId = null,
             int? receivingAccountId = null,
@@ -297,16 +301,16 @@ namespace Business.UnitTest
             if (!accountId.HasValue)
                 accountId = this.GenerateAccount().Id;
             if (!startDate.HasValue)
-                startDate = DateTime.Today;
+                startDate = LocalDate.FromDateTime(DateTime.Today);
             if (!endDate.HasValue)
-                endDate = startDate.Value.AddMonths(3);
+                endDate = startDate.Value.PlusMonths(3);
 
             return this.RecurringTransactionManager.CreateRecurringTransaction(
                 accountId.Value,
                 type,
                 description ?? this.GetRandomString(),
-                startDate.Value.ToIsoString(),
-                endDate.Value.ToIsoString(),
+                startDate.Value.ToString(),
+                endDate.Value.ToString(),
                 amount ?? (type == TransactionType.Expense ? -50 : 50),
                 categoryId.ToMaybe(),
                 receivingAccountId.ToMaybe(),

@@ -1,6 +1,7 @@
 ﻿namespace PersonalFinance.Data.Models
 {
     using System;
+    using NodaTime;
 
     /// <summary>
     /// An entity representing a budget. The amount of the budget is the goal sum of all
@@ -21,12 +22,12 @@
         /// <summary>
         /// The date from which transactions in the category are tracked.
         /// </summary>
-        public DateTime StartDate { get; set; }
+        public LocalDate StartDate { get; set; }
 
         /// <summary>
         /// The date till which transactions in the category are tracked.
         /// </summary>
-        public DateTime EndDate { get; set; }
+        public LocalDate EndDate { get; set; }
 
         /// <summary>
         /// The amount currently spent.

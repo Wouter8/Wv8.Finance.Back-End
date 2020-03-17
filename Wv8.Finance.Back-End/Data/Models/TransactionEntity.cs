@@ -1,6 +1,7 @@
 ﻿namespace PersonalFinance.Data.Models
 {
     using System;
+    using NodaTime;
     using PersonalFinance.Common.Enums;
 
     /// <summary>
@@ -21,7 +22,7 @@
         /// <summary>
         /// The date this transaction occured. Note that this can be in the future.
         /// </summary>
-        public DateTime Date { get; set; }
+        public LocalDate Date { get; set; }
 
         /// <summary>
         /// The type of this transaction.
@@ -75,11 +76,6 @@
         public bool Processed { get; set; }
 
         /// <summary>
-        /// The date and time at which this transaction has been processed.
-        /// </summary>
-        public DateTime? ProcessedAt { get; set; }
-
-        /// <summary>
         /// Optionally, the identifier of the recurring transaction this transaction descended from.
         /// </summary>
         public int? RecurringTransactionId { get; set; }
@@ -100,7 +96,5 @@
         /// Only filled if <see cref="NeedsConfirmation"/> is true.
         /// </summary>
         public bool? IsConfirmed { get; set; }
-
-        // TODO: Add Savings
     }
 }

@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using NodaTime;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
 
@@ -37,9 +38,10 @@
         /// </summary>
         private void ProcessTransactions()
         {
+            var today = LocalDate.FromDateTime(DateTime.Today);
             var transactionsToBeProcessed = this.Context.Transactions
                 .IncludeAll()
-                .Where(t => !t.Processed && t.Date <= DateTime.Today &&
+                .Where(t => !t.Processed && t.Date <= today &&
                             (!t.NeedsConfirmation || (t.NeedsConfirmation && t.IsConfirmed.Value)))
                 .ToList();
 
@@ -54,9 +56,10 @@
         /// </summary>
         private void ProcessRecurringTransactions()
         {
+            var today = LocalDate.FromDateTime(DateTime.Today);
             var recurringTransactions = this.Context.RecurringTransactions
                 .IncludeAll()
-                .Where(rt => !rt.Finished && rt.StartDate <= DateTime.Today)
+                .Where(rt => !rt.Finished && rt.StartDate <= today)
                 .ToList();
 
             foreach (var recurringTransaction in recurringTransactions)

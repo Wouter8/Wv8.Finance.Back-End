@@ -2,6 +2,8 @@
 {
     using System;
     using System.Linq;
+    using Microsoft.EntityFrameworkCore;
+    using NodaTime;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
@@ -48,8 +50,8 @@
             int take)
         {
             description.Select(d => description = d.Trim());
-            var startPeriod = startDate.Select(d => this.validator.IsoString(d, nameof(startDate)));
-            var endPeriod = endDate.Select(d => this.validator.IsoString(d, nameof(endDate)));
+            var startPeriod = startDate.Select(d => this.validator.DateString(d, nameof(startDate)));
+            var endPeriod = endDate.Select(d => this.validator.DateString(d, nameof(endDate)));
             this.validator.Pagination(skip, take);
             this.validator.Period(startPeriod, endPeriod, true);
 
@@ -63,14 +65,13 @@
                                                    (t.Category.ParentCategoryId.HasValue &&
                                                     t.Category.ParentCategoryId.Value == categoryId.Value)))
                 .WhereIf(startPeriod.IsSome, t => startPeriod.Value <= t.Date && endPeriod.Value >= t.Date)
-                .OrderByDescending(t => t.Date)
-                .ToList()
-                .WhereIf( // Not translatable
+                .WhereIf(
                     description.IsSome,
-                    t => t.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase) ||
-                         t.Account.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase) ||
-                         (t.CategoryId.HasValue && t.Category.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase)) ||
-                         (t.ReceivingAccountId.HasValue && t.ReceivingAccount.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase)))
+                    t => EF.Functions.Like(t.Description, $"%{description.Value}%") ||
+                         EF.Functions.Like(t.Account.Description, $"%{description.Value}%") ||
+                         (t.CategoryId.HasValue && EF.Functions.Like(t.Category.Description, $"%{description.Value}%")) ||
+                         (t.ReceivingAccountId.HasValue && EF.Functions.Like(t.ReceivingAccount.Description, $"%{description.Value}%")))
+                .OrderByDescending(t => t.Date)
                 .ToList();
 
             return allTransactions.Skip(skip)
@@ -80,10 +81,10 @@
         }
 
         /// <inheritdoc />
-        public Transaction UpdateTransaction(int id, int accountId, string description, string isoDate, decimal amount, Maybe<int> categoryId, Maybe<int> receivingAccountId)
+        public Transaction UpdateTransaction(int id, int accountId, string description, string dateString, decimal amount, Maybe<int> categoryId, Maybe<int> receivingAccountId)
         {
             this.validator.Description(description);
-            var date = this.validator.IsoString(isoDate, "date");
+            var date = this.validator.DateString(dateString, "date");
 
             return this.ConcurrentInvoke(() =>
             {
@@ -126,7 +127,7 @@
 
                 // Is confirmed is always filled if needs confirmation is true.
                 // ReSharper disable once PossibleInvalidOperationException
-                if (date <= DateTime.Today && (!entity.NeedsConfirmation || entity.IsConfirmed.Value))
+                if (date <= LocalDate.FromDateTime(DateTime.Today) && (!entity.NeedsConfirmation || entity.IsConfirmed.Value))
                     entity.ProcessTransaction(this.Context);
 
                 this.Context.SaveChanges();
@@ -140,14 +141,14 @@
             int accountId,
             TransactionType type,
             string description,
-            string isoDate,
+            string dateString,
             decimal amount,
             Maybe<int> categoryId,
             Maybe<int> receivingAccountId,
             bool needsConfirmation)
         {
             this.validator.Description(description);
-            var date = this.validator.IsoString(isoDate, "date");
+            var date = this.validator.DateString(dateString, "date");
             this.validator.Type(type, amount, categoryId, receivingAccountId);
 
             return this.ConcurrentInvoke(() =>
@@ -190,7 +191,7 @@
                     IsConfirmed = needsConfirmation ? false : (bool?)null,
                 };
 
-                if (date <= DateTime.Today && !needsConfirmation)
+                if (date <= LocalDate.FromDateTime(DateTime.Today) && !needsConfirmation)
                     entity.ProcessTransaction(this.Context);
 
                 this.Context.Transactions.Add(entity);
@@ -202,9 +203,9 @@
         }
 
         /// <inheritdoc />
-        public Transaction ConfirmTransaction(int id, string isoDate, decimal amount)
+        public Transaction ConfirmTransaction(int id, string dateString, decimal amount)
         {
-            var date = this.validator.IsoString(isoDate, "date");
+            var date = this.validator.DateString(dateString, "date");
 
             return this.ConcurrentInvoke(() =>
             {
@@ -225,7 +226,7 @@
                 entity.Amount = amount;
                 entity.IsConfirmed = true;
 
-                if (date <= DateTime.Today)
+                if (date <= LocalDate.FromDateTime(DateTime.Today))
                     entity.ProcessTransaction(this.Context);
 
                 this.Context.SaveChanges();

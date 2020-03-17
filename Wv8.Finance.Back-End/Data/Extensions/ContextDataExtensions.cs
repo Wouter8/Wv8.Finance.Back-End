@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
+    using NodaTime;
     using PersonalFinance.Common.Exceptions;
     using PersonalFinance.Data.History;
     using PersonalFinance.Data.Models;
@@ -211,7 +212,7 @@
         public static List<BudgetEntity> GetBudgets(
             this DbSet<BudgetEntity> set,
             int categoryId,
-            DateTime date)
+            LocalDate date)
         {
             return set
                 .IncludeAll()
@@ -228,7 +229,7 @@
         /// <param name="start">The start date of the period to search for.</param>
         /// <param name="end">The end date of the period to search for.</param>
         /// <returns>The list of transactions.</returns>
-        public static List<TransactionEntity> GetTransactions(this DbSet<TransactionEntity> set, int categoryId, DateTime start, DateTime end)
+        public static List<TransactionEntity> GetTransactions(this DbSet<TransactionEntity> set, int categoryId, LocalDate start, LocalDate end)
         {
             return set
                 .IncludeAll()
