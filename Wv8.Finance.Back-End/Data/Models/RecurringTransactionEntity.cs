@@ -1,9 +1,8 @@
 ﻿namespace PersonalFinance.Data.Models
 {
     using System;
-    using System.Collections.Generic;
+    using NodaTime;
     using PersonalFinance.Common.Enums;
-    using PersonalFinance.Data.History;
 
     /// <summary>
     /// An entity representing a blue print for a transaction which get created based on an interval.
@@ -24,12 +23,12 @@
         /// The date from which transactions should be created.
         /// If this is a date in the past, transactions will be created retroactively.
         /// </summary>
-        public DateTime StartDate { get; set; }
+        public LocalDate StartDate { get; set; }
 
         /// <summary>
         /// The date till which transactions should be created. A (final) transaction can be created on this date.
         /// </summary>
-        public DateTime EndDate { get; set; }
+        public LocalDate EndDate { get; set; }
 
         /// <summary>
         /// The type of the transaction to be created.
@@ -78,12 +77,12 @@
         /// <summary>
         /// The date for the next transaction that will be created from this blueprint.
         /// </summary>
-        public DateTime? NextOccurence { get; set; }
+        public LocalDate? NextOccurence { get; set; }
 
         /// <summary>
         /// The date of the latest transaction that was created from this blueprint.
         /// </summary>
-        public DateTime? LastOccurence { get; set; }
+        public LocalDate? LastOccurence { get; set; }
 
         /// <summary>
         /// A value indicating if the end date has passed. No more transactions will be created.

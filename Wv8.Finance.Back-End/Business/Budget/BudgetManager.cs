@@ -51,8 +51,8 @@
         /// <inheritdoc />
         public List<Budget> GetBudgetsByFilter(Maybe<int> categoryId, Maybe<string> startDate, Maybe<string> endDate)
         {
-            var periodStart = startDate.Select(d => this.validator.IsoString(d, nameof(startDate)));
-            var periodEnd = endDate.Select(d => this.validator.IsoString(d, nameof(endDate)));
+            var periodStart = startDate.Select(d => this.validator.DateString(d, nameof(startDate)));
+            var periodEnd = endDate.Select(d => this.validator.DateString(d, nameof(endDate)));
 
             return this.Context.Budgets
                 .IncludeAll()
@@ -71,8 +71,8 @@
         /// <inheritdoc />
         public Budget UpdateBudget(int id, decimal amount, string startDate, string endDate)
         {
-            var periodStart = this.validator.IsoString(startDate, nameof(startDate));
-            var periodEnd = this.validator.IsoString(endDate, nameof(endDate));
+            var periodStart = this.validator.DateString(startDate, nameof(startDate));
+            var periodEnd = this.validator.DateString(endDate, nameof(endDate));
             this.validator.Period(periodStart, periodEnd);
             this.validator.Amount(amount);
 
@@ -102,8 +102,8 @@
         /// <inheritdoc />
         public Budget CreateBudget(int categoryId, decimal amount, string startDate, string endDate)
         {
-            var periodStart = this.validator.IsoString(startDate, nameof(startDate));
-            var periodEnd = this.validator.IsoString(endDate, nameof(endDate));
+            var periodStart = this.validator.DateString(startDate, nameof(startDate));
+            var periodEnd = this.validator.DateString(endDate, nameof(endDate));
             this.validator.Period(periodStart, periodEnd);
             this.validator.Amount(amount);
 

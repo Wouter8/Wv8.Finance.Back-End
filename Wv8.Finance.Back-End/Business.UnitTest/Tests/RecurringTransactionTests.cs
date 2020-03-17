@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using NodaTime;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
@@ -52,8 +53,8 @@
             var finishedRecurringTransactions = this.GenerateRecurringTransaction(
                 accountId: account1.Id,
                 type: TransactionType.Expense,
-                startDate: DateTime.Today.AddDays(-7),
-                endDate: DateTime.Today,
+                startDate: LocalDate.FromDateTime(DateTime.Today).PlusDays(-7),
+                endDate: LocalDate.FromDateTime(DateTime.Today),
                 categoryId: category.Id);
 
             // No filters
@@ -97,8 +98,8 @@
         [Fact]
         public void UpdateRecurringTransaction()
         {
-            var startDate = DateTime.Today.AddDays(-7);
-            var endDate = DateTime.Today.AddDays(7); // 2 instances should be created, not finished
+            var startDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-7);
+            var endDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(7); // 2 instances should be created, not finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
@@ -113,13 +114,13 @@
                 .ToList();
 
             Assert.False(rTransaction.Finished);
-            Assert.Equal(endDate.ToIsoString(), rTransaction.NextOccurence.Value);
+            Assert.Equal(endDate.ToDateString(), rTransaction.NextOccurence.Value);
             Assert.Equal(2, instances.Count);
 
             var newAccount = this.GenerateAccount().Id;
             var newDescription = "Description";
-            var newStartDate = DateTime.Today.AddDays(-1).ToIsoString();
-            var newEndDate = DateTime.Today.ToIsoString();
+            var newStartDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-1).ToString();
+            var newEndDate = LocalDate.FromDateTime(DateTime.Today).ToString();
             var newAmount = -30;
             var newCategory = this.GenerateCategory().Id;
             var newInterval = 1;
@@ -164,8 +165,8 @@
             var description = "Description";
             var amount = -30;
             var category = this.GenerateCategory().Id;
-            var startDate = DateTime.Today.AddDays(-7);
-            var endDate = DateTime.Today.AddDays(7); // 2 instances should be created, not finished
+            var startDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-7);
+            var endDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(7); // 2 instances should be created, not finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
@@ -173,8 +174,8 @@
                 account,
                 TransactionType.Expense,
                 description,
-                startDate.ToIsoString(),
-                endDate.ToIsoString(),
+                startDate.ToString(),
+                endDate.ToString(),
                 amount,
                 category,
                 Maybe<int>.None,
@@ -183,15 +184,15 @@
                 false);
 
             // Try to update start date without updating instances.
-            var newStartDate = DateTime.Today.AddDays(-1);
+            var newStartDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-1);
 
             Assert.Throws<ValidationException>(() =>
                 this.RecurringTransactionManager.UpdateRecurringTransaction(
                     rTransaction.Id,
                     account,
                     description,
-                    newStartDate.ToIsoString(),
-                    endDate.ToIsoString(),
+                    newStartDate.ToString(),
+                    endDate.ToString(),
                     amount,
                     category,
                     Maybe<int>.None,
@@ -215,8 +216,8 @@
             var description = "Description";
             var amount = -30;
             var category = this.GenerateCategory().Id;
-            var startDate = DateTime.Today.AddDays(-7);
-            var endDate = DateTime.Today.AddDays(7); // 2 instances should be created, not finished
+            var startDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-7);
+            var endDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(7); // 2 instances should be created, not finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
@@ -224,8 +225,8 @@
                 account,
                 TransactionType.Expense,
                 description,
-                startDate.ToIsoString(),
-                endDate.ToIsoString(),
+                startDate.ToString(),
+                endDate.ToString(),
                 amount,
                 category,
                 Maybe<int>.None,
@@ -239,7 +240,7 @@
                 .ToList();
 
             Assert.False(rTransaction.Finished);
-            Assert.Equal(endDate.ToIsoString(), rTransaction.NextOccurence.Value);
+            Assert.Equal(endDate.ToDateString(), rTransaction.NextOccurence.Value);
             Assert.Equal(2, instances.Count);
         }
 
@@ -257,8 +258,8 @@
             var description = "Description";
             var amount = -30;
             var category = this.GenerateCategory().Id;
-            var startDate = DateTime.Today.AddDays(-7);
-            var endDate = DateTime.Today.AddDays(7); // 2 instances should be created, not finished
+            var startDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-7);
+            var endDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(7); // 2 instances should be created, not finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
@@ -266,8 +267,8 @@
                 account.Id,
                 TransactionType.Expense,
                 description,
-                startDate.ToIsoString(),
-                endDate.ToIsoString(),
+                startDate.ToString(),
+                endDate.ToString(),
                 amount,
                 category,
                 Maybe<int>.None,
@@ -290,8 +291,8 @@
                 account.Id,
                 TransactionType.Expense,
                 description,
-                startDate.ToIsoString(),
-                endDate.ToIsoString(),
+                startDate.ToString(),
+                endDate.ToString(),
                 amount,
                 category,
                 Maybe<int>.None,

@@ -3,6 +3,8 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using NodaTime;
+    using NodaTime.Text;
     using Wv8.Core;
     using Wv8.Core.EntityFramework;
     using Wv8.Core.Exceptions;
@@ -29,18 +31,20 @@
         }
 
         /// <summary>
-        /// Validates that a string can be converted to a DateTime and returns the converted value.
+        /// Validates that a string can be converted to a date and returns the converted value.
         /// </summary>
         /// <param name="input">The input.</param>
         /// <param name="parameterName">The name of the parameter.</param>
-        /// <returns>The converted DateTime.</returns>
-        public DateTime IsoString(string input, string parameterName)
+        /// <returns>The converted date.</returns>
+        public LocalDate DateString(string input, string parameterName)
         {
+            // First convert to DateTime, then to LocalDate.
             var success = DateTime.TryParse(input, out var dateTime);
             if (!success)
-                throw new ValidationException($"ISO-string for {parameterName} could not be converted to a date/time");
+                throw new ValidationException($"String for {parameterName} could not be converted to a date");
 
-            return dateTime;
+            var date = LocalDate.FromDateTime(dateTime);
+            return date;
         }
 
         /// <summary>
@@ -49,7 +53,7 @@
         /// <param name="start">The start date.</param>
         /// <param name="end">The end date.</param>
         /// <param name="canBeEqual">A value indicating if the start and end can be equal.</param>
-        public void Period(DateTime start, DateTime end, bool canBeEqual = false)
+        public void Period(LocalDate start, LocalDate end, bool canBeEqual = false)
         {
             if (canBeEqual)
             {
@@ -69,7 +73,7 @@
         /// <param name="start">The start date.</param>
         /// <param name="end">The end date.</param>
         /// <param name="canBeEqual">A value indicating if the start and end can be equal.</param>
-        public void Period(Maybe<DateTime> start, Maybe<DateTime> end, bool canBeEqual = false)
+        public void Period(Maybe<LocalDate> start, Maybe<LocalDate> end, bool canBeEqual = false)
         {
             if (start.IsSome != end.IsSome)
                 throw new ValidationException($"Both start and end of the period have to be specified.");

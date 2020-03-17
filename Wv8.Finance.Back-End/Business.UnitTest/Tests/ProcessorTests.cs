@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using NodaTime;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common.Enums;
@@ -25,8 +26,8 @@
             var category2 = this.GenerateCategory(CategoryType.Income);
             var budget = this.GenerateBudget(
                 categoryId: category.Id,
-                startDate: DateTime.Today.AddDays(-1),
-                endDate: DateTime.Today.AddDays(1));
+                startDate: LocalDate.FromDateTime(DateTime.Today).PlusDays(-1),
+                endDate: LocalDate.FromDateTime(DateTime.Today).PlusDays(1));
             var account = this.GenerateAccount();
             var account2 = this.GenerateAccount();
 
@@ -37,7 +38,7 @@
                     AccountId = account.Id,
                     Amount = -20,
                     CategoryId = category.Id,
-                    Date = DateTime.Today.AddDays(1),
+                    Date = LocalDate.FromDateTime(DateTime.Today).PlusDays(1),
                     Description = "Description",
                     Processed = false,
                     Type = TransactionType.Expense,
@@ -61,7 +62,7 @@
                     AccountId = account.Id,
                     Amount = -20,
                     CategoryId = category.Id,
-                    Date = DateTime.Today,
+                    Date = LocalDate.FromDateTime(DateTime.Today),
                     Description = "Description",
                     Processed = false,
                     Type = TransactionType.Expense,
@@ -85,7 +86,7 @@
                     AccountId = account.Id,
                     Amount = 50,
                     CategoryId = category2.Id,
-                    Date = DateTime.Today,
+                    Date = LocalDate.FromDateTime(DateTime.Today),
                     Description = "Description",
                     Processed = false,
                     Type = TransactionType.Income,
@@ -109,7 +110,7 @@
                     AccountId = account.Id,
                     Amount = 30,
                     ReceivingAccountId = account2.Id,
-                    Date = DateTime.Today,
+                    Date = LocalDate.FromDateTime(DateTime.Today),
                     Description = "Description",
                     Processed = false,
                     Type = TransactionType.Transfer,
@@ -133,7 +134,7 @@
                     AccountId = account.Id,
                     Amount = -30,
                     ReceivingAccountId = account2.Id,
-                    Date = DateTime.Today,
+                    Date = LocalDate.FromDateTime(DateTime.Today),
                     Description = "Description",
                     Processed = false,
                     CategoryId = category.Id,
@@ -164,8 +165,8 @@
             var description = "Description";
             var amount = -30;
             var category = this.GenerateCategory().Id;
-            var startDate = DateTime.Today.AddDays(-7);
-            var endDate = DateTime.Today; // 2 instances should be created, and finished
+            var startDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-7);
+            var endDate = LocalDate.FromDateTime(DateTime.Today); // 2 instances should be created, and finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
@@ -230,7 +231,7 @@
             // Transaction that should be processed immediately.
             var transaction = this.GenerateTransaction(
                 accountId: account.Id,
-                date: DateTime.Today,
+                date: LocalDate.FromDateTime(DateTime.Today),
                 amount: -50);
             var historicBalances = this.context.AccountHistory.Where(ah => ah.AccountId == account.Id).ToList();
 
@@ -243,7 +244,7 @@
             transaction = this.GenerateTransaction(
                 accountId: account.Id,
                 type: TransactionType.Income,
-                date: DateTime.Today,
+                date: LocalDate.FromDateTime(DateTime.Today),
                 amount: 50);
             this.RefreshContext();
             historicBalances = this.context.AccountHistory.Where(ah => ah.AccountId == account.Id).ToList();
@@ -257,7 +258,7 @@
             transaction = this.GenerateTransaction(
                 accountId: account.Id,
                 type: TransactionType.Transfer,
-                date: DateTime.Today,
+                date: LocalDate.FromDateTime(DateTime.Today),
                 amount: 50,
                 receivingAccountId: account2.Id);
             this.RefreshContext();
@@ -304,7 +305,7 @@
             // Should add a historical entry to the beginning.
             var transaction = this.GenerateTransaction(
                 accountId: account.Id,
-                date: DateTime.Today.AddDays(-2),
+                date: LocalDate.FromDateTime(DateTime.Today).PlusDays(-2),
                 amount: -50);
             var historicBalances = this.context.AccountHistory
                 .Where(ah => ah.AccountId == account.Id)
@@ -322,7 +323,7 @@
             transaction = this.GenerateTransaction(
                 accountId: account.Id,
                 type: TransactionType.Income,
-                date: DateTime.Today.AddDays(-1),
+                date: LocalDate.FromDateTime(DateTime.Today).PlusDays(-1),
                 amount: 50);
             this.RefreshContext();
             historicBalances = this.context.AccountHistory
@@ -343,7 +344,7 @@
             transaction = this.GenerateTransaction(
                 accountId: account.Id,
                 type: TransactionType.Transfer,
-                date: DateTime.Today.AddDays(-1),
+                date: LocalDate.FromDateTime(DateTime.Today).PlusDays(-1),
                 amount: 50,
                 receivingAccountId: account2.Id);
             this.RefreshContext();

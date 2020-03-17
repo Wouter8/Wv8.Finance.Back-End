@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using NodaTime;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common.DataTransfer;
@@ -81,8 +82,8 @@
             bool updateInstances)
         {
             this.validator.Description(description);
-            var startPeriod = this.validator.IsoString(startDate, nameof(startDate));
-            var endPeriod = this.validator.IsoString(endDate, nameof(endDate));
+            var startPeriod = this.validator.DateString(startDate, nameof(startDate));
+            var endPeriod = this.validator.DateString(endDate, nameof(endDate));
             this.validator.Period(startPeriod, endPeriod);
             this.validator.Interval(interval);
 
@@ -145,7 +146,7 @@
                     entity.Finished = false;
                 }
 
-                if (entity.StartDate <= DateTime.Today)
+                if (entity.StartDate <= LocalDate.FromDateTime(DateTime.Today))
                     entity.ProcessRecurringTransaction(this.Context);
 
                 this.Context.SaveChanges();
@@ -169,8 +170,8 @@
             bool needsConfirmation)
         {
             this.validator.Description(description);
-            var startPeriod = this.validator.IsoString(startDate, nameof(startDate));
-            var endPeriod = this.validator.IsoString(endDate, nameof(endDate));
+            var startPeriod = this.validator.DateString(startDate, nameof(startDate));
+            var endPeriod = this.validator.DateString(endDate, nameof(endDate));
             this.validator.Period(startPeriod, endPeriod);
             this.validator.Interval(interval);
 
@@ -219,7 +220,7 @@
                     NextOccurence = startPeriod,
                 };
 
-                if (entity.StartDate <= DateTime.Today)
+                if (entity.StartDate <= LocalDate.FromDateTime(DateTime.Today))
                     entity.ProcessRecurringTransaction(this.Context);
 
                 this.Context.RecurringTransactions.Add(entity);
