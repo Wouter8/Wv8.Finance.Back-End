@@ -38,7 +38,7 @@
             }
             catch (CustomException e)
             {
-                httpContext.Response.StatusCode = (int) HttpStatusCode.BadRequest;
+                httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await httpContext.Response.WriteAsync(e.Message);
             }
             catch (Exception e)
