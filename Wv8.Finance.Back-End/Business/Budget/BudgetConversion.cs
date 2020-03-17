@@ -29,8 +29,8 @@
                 Id = entity.Id,
                 Amount = entity.Amount,
                 Spent = entity.Spent,
-                StartDate = entity.StartDate.ToString("d", null),
-                EndDate = entity.EndDate.ToString("d", null),
+                StartDate = entity.StartDate.ToDateString(),
+                EndDate = entity.EndDate.ToDateString(),
                 CategoryId = entity.CategoryId,
                 Category = entity.Category.AsCategory(),
             };

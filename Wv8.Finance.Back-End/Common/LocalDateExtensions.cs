@@ -1,5 +1,6 @@
 ﻿namespace PersonalFinance.Common
 {
+    using System.Globalization;
     using NodaTime;
 
     /// <summary>
@@ -14,7 +15,7 @@
         /// <returns>The string.</returns>
         public static string ToDateString(this LocalDate date)
         {
-            return date.ToString("d", null);
+            return date.ToString("d", new CultureInfo("en-US"));
         }
     }
 }
