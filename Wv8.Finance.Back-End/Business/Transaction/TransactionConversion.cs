@@ -37,7 +37,7 @@
                 Id = entity.Id,
                 Description = entity.Description,
                 Amount = entity.Amount,
-                Date = entity.Date.ToString("d", null),
+                Date = entity.Date.ToDateString(),
                 Type = entity.Type,
                 CategoryId = entity.CategoryId.ToMaybe(),
                 Category = entity.Category.ToMaybe().Select(c => c.AsCategory()),
