@@ -41,7 +41,7 @@ namespace Business.UnitTest
         /// deploying, because the pipeline that will run does not have a local database.
         /// It can however be turned off while developing, to be able to debug database issues.
         /// </summary>
-        private readonly bool useInMemoryDatabase = false;
+        private readonly bool useInMemoryDatabase = true;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTest"/> class.

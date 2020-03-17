@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using Microsoft.EntityFrameworkCore;
     using NodaTime;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common.DataTransfer;
@@ -64,14 +65,13 @@
                                                    (t.Category.ParentCategoryId.HasValue &&
                                                     t.Category.ParentCategoryId.Value == categoryId.Value)))
                 .WhereIf(startPeriod.IsSome, t => startPeriod.Value <= t.Date && endPeriod.Value >= t.Date)
-                .OrderByDescending(t => t.Date)
-                .ToList()
-                .WhereIf( // Not translatable
+                .WhereIf(
                     description.IsSome,
-                    t => t.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase) ||
-                         t.Account.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase) ||
-                         (t.CategoryId.HasValue && t.Category.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase)) ||
-                         (t.ReceivingAccountId.HasValue && t.ReceivingAccount.Description.Contains(description.Value, StringComparison.InvariantCultureIgnoreCase)))
+                    t => EF.Functions.Like(t.Description, $"%{description.Value}%") ||
+                         EF.Functions.Like(t.Account.Description, $"%{description.Value}%") ||
+                         (t.CategoryId.HasValue && EF.Functions.Like(t.Category.Description, $"%{description.Value}%")) ||
+                         (t.ReceivingAccountId.HasValue && EF.Functions.Like(t.ReceivingAccount.Description, $"%{description.Value}%")))
+                .OrderByDescending(t => t.Date)
                 .ToList();
 
             return allTransactions.Skip(skip)
