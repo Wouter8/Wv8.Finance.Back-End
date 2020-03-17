@@ -102,15 +102,15 @@
             retrievedBudgets =
                 this.BudgetManager.GetBudgetsByFilter(
                     category1.Id,
-                    new LocalDate(2020, 01, 10).ToString(),
-                    new LocalDate(2020, 01, 15).ToString());
+                    new LocalDate(2020, 01, 10).ToDateString(),
+                    new LocalDate(2020, 01, 15).ToDateString());
             Assert.Single(retrievedBudgets);
 
             retrievedBudgets =
                 this.BudgetManager.GetBudgetsByFilter(
                     category1.Id,
-                    new LocalDate(2019, 12, 10).ToString(),
-                    new LocalDate(2020, 01, 15).ToString());
+                    new LocalDate(2019, 12, 10).ToDateString(),
+                    new LocalDate(2020, 01, 15).ToDateString());
             Assert.Single(retrievedBudgets);
         }
 
@@ -178,8 +178,8 @@
                 this.BudgetManager.UpdateBudget(
                     100,
                     100,
-                    LocalDate.FromDateTime(DateTime.Today).ToString(),
-                    LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToString()));
+                    LocalDate.FromDateTime(DateTime.Today).ToDateString(),
+                    LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToDateString()));
         }
 
         #endregion UpdateBudget
@@ -218,8 +218,8 @@
             var categoryIncome = this.GenerateCategory(CategoryType.Income);
 
             const decimal amount = 5;
-            var startDate = new LocalDate(2019, 12, 01).ToString();
-            var endDate = new LocalDate(2019, 12, 15).ToString();
+            var startDate = new LocalDate(2019, 12, 01).ToDateString();
+            var endDate = new LocalDate(2019, 12, 15).ToDateString();
 
             // Category does not exist.
             Assert.Throws<DoesNotExistException>(() =>

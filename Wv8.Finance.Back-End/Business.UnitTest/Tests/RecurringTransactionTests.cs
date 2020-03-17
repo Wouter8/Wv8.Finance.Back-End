@@ -119,8 +119,8 @@
 
             var newAccount = this.GenerateAccount().Id;
             var newDescription = "Description";
-            var newStartDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-1).ToString();
-            var newEndDate = LocalDate.FromDateTime(DateTime.Today).ToString();
+            var newStartDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-1).ToDateString();
+            var newEndDate = LocalDate.FromDateTime(DateTime.Today).ToDateString();
             var newAmount = -30;
             var newCategory = this.GenerateCategory().Id;
             var newInterval = 1;
@@ -174,8 +174,8 @@
                 account,
                 TransactionType.Expense,
                 description,
-                startDate.ToString(),
-                endDate.ToString(),
+                startDate.ToDateString(),
+                endDate.ToDateString(),
                 amount,
                 category,
                 Maybe<int>.None,
@@ -225,8 +225,8 @@
                 account,
                 TransactionType.Expense,
                 description,
-                startDate.ToString(),
-                endDate.ToString(),
+                startDate.ToDateString(),
+                endDate.ToDateString(),
                 amount,
                 category,
                 Maybe<int>.None,
@@ -267,8 +267,8 @@
                 account.Id,
                 TransactionType.Expense,
                 description,
-                startDate.ToString(),
-                endDate.ToString(),
+                startDate.ToDateString(),
+                endDate.ToDateString(),
                 amount,
                 category,
                 Maybe<int>.None,
@@ -291,8 +291,8 @@
                 account.Id,
                 TransactionType.Expense,
                 description,
-                startDate.ToString(),
-                endDate.ToString(),
+                startDate.ToDateString(),
+                endDate.ToDateString(),
                 amount,
                 category,
                 Maybe<int>.None,

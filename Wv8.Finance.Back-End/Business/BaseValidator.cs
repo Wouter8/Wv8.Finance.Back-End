@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using NodaTime;
     using NodaTime.Text;
@@ -39,7 +40,7 @@
         public LocalDate DateString(string input, string parameterName)
         {
             // First convert to DateTime, then to LocalDate.
-            var success = DateTime.TryParse(input, out var dateTime);
+            var success = DateTime.TryParse(input, new CultureInfo("en-US"), DateTimeStyles.None, out var dateTime);
             if (!success)
                 throw new ValidationException($"String for {parameterName} could not be converted to a date");
 

@@ -266,6 +266,18 @@ namespace PersonalFinance.Business.Transaction.Processor
                 return historyItems;
             }
 
+            // It can be that the latest update is before the needed date, and therefor a new historical entry should be created.
+            if (historyItems.Count == 1)
+            {
+                var newEntry = CreateHistoryEntityAfter(historyItems[0], date, context);
+                historyItems.Add(newEntry);
+
+                // Remove first item, because it is for a date in the past.
+                historyItems = historyItems.Skip(1).ToList();
+
+                return historyItems;
+            }
+
             // The first entry must contain the end of the previous day, and the second entry is later than the needed date.
             // Therefore, we need to add an entry between the two.
             var first = historyItems[0];
@@ -308,6 +320,46 @@ namespace PersonalFinance.Business.Transaction.Processor
 
             // Clone and set valid to to be the start of the existing entry.
             var newEntity = (T)first.Clone();
+            newEntity.ValidFrom = startDate;
+            newEntity.ValidTo = endDate;
+
+            context.Entry(newEntity).State = EntityState.Added;
+
+            return newEntity;
+        }
+
+        /// <summary>
+        /// Creates a historical entry after an already existing entry.
+        /// This is needed because a transaction can be added/processed with a date in the past,
+        /// while the last historical entry is further in the past.
+        /// </summary>
+        /// <typeparam name="T">The type of the historical entity.</typeparam>
+        /// <param name="last">The last historical entry.</param>
+        /// <param name="date">The date on which the entry has to be created.</param>
+        /// <param name="context">The database context.</param>
+        /// <returns>The created historical entity.</returns>
+        private static T CreateHistoryEntityAfter<T>(T last, LocalDate date, Context context)
+            where T : class, IHistoricalEntity
+        {
+            if (last.ValidTo != DateTime.MaxValue)
+            {
+                throw new InvalidOperationException(
+                    "Entity is not the last valid entry.");
+            }
+            if (LocalDate.FromDateTime(last.ValidFrom) == date)
+            {
+                // Because this method is pretty dangerous, only allow it if it adds an entry for a new day.
+                throw new InvalidOperationException(
+                    "Date is the same as the update, just update the entry on the same date.");
+            }
+
+            var startDate = date.ToDateTimeUnspecified();
+            var endDate = DateTime.MaxValue;
+
+            last.ValidTo = startDate;
+
+            // Clone and set valid to to be the start of the existing entry.
+            var newEntity = (T)last.Clone();
             newEntity.ValidFrom = startDate;
             newEntity.ValidTo = endDate;
 

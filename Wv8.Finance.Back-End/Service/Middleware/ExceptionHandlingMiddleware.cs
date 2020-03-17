@@ -36,9 +36,14 @@
             {
                 await this.next(httpContext);
             }
-            catch (Exception e) when (e is CustomException)
+            catch (CustomException e)
             {
-                httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                httpContext.Response.StatusCode = (int) HttpStatusCode.BadRequest;
+                await httpContext.Response.WriteAsync(e.Message);
+            }
+            catch (Exception e)
+            {
+                httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 await httpContext.Response.WriteAsync(e.Message);
             }
         }
