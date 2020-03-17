@@ -214,8 +214,8 @@ namespace Business.UnitTest
             return this.BudgetManager.CreateBudget(
                 categoryId.Value,
                 amount ?? 100,
-                startDate.Value.ToString(),
-                endDate.Value.ToString());
+                startDate.Value.ToDateString(),
+                endDate.Value.ToDateString());
         }
 
         /// <summary>
@@ -256,7 +256,7 @@ namespace Business.UnitTest
                 accountId.Value,
                 type,
                 description ?? this.GetRandomString(),
-                date.Value.ToString(),
+                date.Value.ToDateString(),
                 amount ?? (type == TransactionType.Expense ? -50 : 50),
                 categoryId.ToMaybe(),
                 receivingAccountId.ToMaybe(),
@@ -309,8 +309,8 @@ namespace Business.UnitTest
                 accountId.Value,
                 type,
                 description ?? this.GetRandomString(),
-                startDate.Value.ToString(),
-                endDate.Value.ToString(),
+                startDate.Value.ToDateString(),
+                endDate.Value.ToDateString(),
                 amount ?? (type == TransactionType.Expense ? -50 : 50),
                 categoryId.ToMaybe(),
                 receivingAccountId.ToMaybe(),

@@ -98,8 +98,8 @@
                 Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
-                LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToString(),
-                LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToString(),
+                LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToDateString(),
+                LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToDateString(),
                 0,
                 100);
 
@@ -130,8 +130,8 @@
                 Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
-                LocalDate.FromDateTime(DateTime.Today).PlusDays(2).ToString(),
-                LocalDate.FromDateTime(DateTime.Today).PlusDays(5).ToString(),
+                LocalDate.FromDateTime(DateTime.Today).PlusDays(2).ToDateString(),
+                LocalDate.FromDateTime(DateTime.Today).PlusDays(5).ToDateString(),
                 0,
                 100);
 
@@ -245,7 +245,7 @@
                 transaction.Id,
                 newAccountId,
                 newDescription,
-                newDate.ToString(),
+                newDate.ToDateString(),
                 newAmount,
                 newCategoryId,
                 Maybe<int>.None);
@@ -284,7 +284,7 @@
                 transferTransaction.Id,
                 sender.Id,
                 transferTransaction.Description,
-                LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToString(), // Future
+                LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToDateString(), // Future
                 transferTransaction.Amount,
                 Maybe<int>.None,
                 newReceiver.Id);
@@ -308,7 +308,7 @@
                 toBeConfirmedTransaction.Id,
                 newAccountId,
                 newDescription,
-                newDate.ToString(),
+                newDate.ToDateString(),
                 newAmount,
                 newCategoryId,
                 Maybe<int>.None);
@@ -321,18 +321,18 @@
                 toBeConfirmedTransaction.Id,
                 newAccountId,
                 newDescription,
-                LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToString(),
+                LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToDateString(),
                 newAmount,
                 newCategoryId,
                 Maybe<int>.None);
             updated = this.TransactionManager.ConfirmTransaction(
-                toBeConfirmedTransaction.Id, LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToString(), newAmount);
+                toBeConfirmedTransaction.Id, LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToDateString(), newAmount);
             // Now change date to past
             updated = this.TransactionManager.UpdateTransaction(
                 toBeConfirmedTransaction.Id,
                 newAccountId,
                 newDescription,
-                LocalDate.FromDateTime(DateTime.Today).ToString(),
+                LocalDate.FromDateTime(DateTime.Today).ToDateString(),
                 newAmount,
                 newCategoryId,
                 Maybe<int>.None);
@@ -358,7 +358,7 @@
             var transferTransaction = this.GenerateTransaction(account.Id, TransactionType.Transfer);
 
             var description = "Description";
-            var date = LocalDate.FromDateTime(DateTime.Today).ToString();
+            var date = LocalDate.FromDateTime(DateTime.Today).ToDateString();
             var amount = 20;
 
             /* Type errors */
@@ -522,7 +522,7 @@
                 accountId,
                 type,
                 description,
-                date.ToString(),
+                date.ToDateString(),
                 amount,
                 categoryId,
                 Maybe<int>.None,
@@ -550,7 +550,7 @@
                 sender.Id,
                 TransactionType.Transfer,
                 description,
-                LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToString(), // Future
+                LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToDateString(), // Future
                 50,
                 Maybe<int>.None,
                 receiver.Id,
@@ -572,7 +572,7 @@
                 sender.Id,
                 TransactionType.Transfer,
                 description,
-                LocalDate.FromDateTime(DateTime.Today).ToString(),
+                LocalDate.FromDateTime(DateTime.Today).ToDateString(),
                 50,
                 Maybe<int>.None,
                 receiver.Id,
@@ -602,7 +602,7 @@
             var account2 = this.GenerateAccount();
 
             var description = "Description";
-            var date = LocalDate.FromDateTime(DateTime.Today).ToString();
+            var date = LocalDate.FromDateTime(DateTime.Today).ToDateString();
             var amount = 20;
 
             /* Type errors */
@@ -758,7 +758,7 @@
             var confirmedDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-1);
 
             var updated = this.TransactionManager.ConfirmTransaction(
-                transaction.Id, confirmedDate.ToString(), confirmedAmount);
+                transaction.Id, confirmedDate.ToDateString(), confirmedAmount);
 
             // Assert.
             Assert.Equal(confirmedDate.ToDateString(), updated.Date);
@@ -769,7 +769,7 @@
             confirmedDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(3);
             var transaction2 = this.GenerateTransaction(needsConfirmation: true);
             updated = this.TransactionManager.ConfirmTransaction(
-                transaction2.Id, confirmedDate.ToString(), confirmedAmount);
+                transaction2.Id, confirmedDate.ToDateString(), confirmedAmount);
 
             // Assert.
             Assert.Equal(confirmedDate.ToDateString(), updated.Date);
@@ -836,27 +836,27 @@
 
             Assert.Throws<InvalidOperationException>(
                 () => this.TransactionManager.ConfirmTransaction(
-                    transactionNoConfirmation.Id, confirmedDate.ToString(), confirmedAmount));
+                    transactionNoConfirmation.Id, confirmedDate.ToDateString(), confirmedAmount));
 
             // Account obsolete
             this.AccountManager.SetAccountObsolete(account.Id, true);
             Assert.Throws<IsObsoleteException>(
                 () => this.TransactionManager.ConfirmTransaction(
-                    transaction.Id, confirmedDate.ToString(), confirmedAmount));
+                    transaction.Id, confirmedDate.ToDateString(), confirmedAmount));
             this.AccountManager.SetAccountObsolete(account.Id, false);
 
             // Receiving account obsolete
             this.AccountManager.SetAccountObsolete(receivingAccount.Id, true);
             Assert.Throws<IsObsoleteException>(
                 () => this.TransactionManager.ConfirmTransaction(
-                    transferTransaction.Id, confirmedDate.ToString(), -confirmedAmount));
+                    transferTransaction.Id, confirmedDate.ToDateString(), -confirmedAmount));
             this.AccountManager.SetAccountObsolete(receivingAccount.Id, false);
 
             // Category obsolete
             this.CategoryManager.SetCategoryObsolete(category.Id, true);
             Assert.Throws<IsObsoleteException>(
                 () => this.TransactionManager.ConfirmTransaction(
-                    transaction.Id, confirmedDate.ToString(), confirmedAmount));
+                    transaction.Id, confirmedDate.ToDateString(), confirmedAmount));
             this.CategoryManager.SetCategoryObsolete(category.Id, false);
         }
 

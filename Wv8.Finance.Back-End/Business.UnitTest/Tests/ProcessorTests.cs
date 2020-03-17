@@ -203,6 +203,46 @@
         }
 
         /// <summary>
+        /// Tests that a historical entry is added on a date in the past, while the last entry is
+        /// even further in the past.
+        /// </summary>
+        [Fact]
+        public void HistoricalBalance_OldLastEntry()
+        {
+            var account = this.GenerateAccount();
+
+            var historicBalance = this.context.AccountHistory.Single();
+
+            this.context.Remove(historicBalance);
+            this.context.AccountHistory.Add(new AccountHistoryEntity
+            {
+                ValidFrom = DateTime.Today.AddDays(-7),
+                ValidTo = DateTime.MaxValue,
+                AccountId = account.Id,
+                Balance = 0,
+            });
+            this.context.SaveChanges();
+
+            // Transaction in the past.
+            var transaction = this.GenerateTransaction(
+                accountId: account.Id,
+                date: LocalDate.FromDateTime(DateTime.Today).PlusDays(-3),
+                amount: -50);
+
+            this.RefreshContext();
+
+            var historicBalances = this.context.AccountHistory.OrderBy(ah => ah.ValidFrom).ToList();
+
+            Assert.Equal(2, historicBalances.Count);
+            Assert.Single(historicBalances.AtNow());
+            Assert.Equal(0, historicBalances[0].Balance);
+            Assert.Equal(-50, historicBalances[1].Balance);
+            Assert.NotEqual(DateTime.MaxValue, historicBalances[0].ValidTo);
+            Assert.Equal(DateTime.MaxValue, historicBalances[1].ValidTo);
+            Assert.Equal(DateTime.Today.AddDays(-3), historicBalances[1].ValidFrom);
+        }
+
+        /// <summary>
         /// Tests that the historical balance is created upon creating an account.
         /// </summary>
         [Fact]
