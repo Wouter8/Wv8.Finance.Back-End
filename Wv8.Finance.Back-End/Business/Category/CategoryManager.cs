@@ -1,5 +1,6 @@
 ﻿namespace PersonalFinance.Business.Category
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
@@ -96,11 +97,41 @@
 
                     if (parentCategory.Children.Any(c => c.Id != id && c.Description == description && !c.IsObsolete))
                         throw new ValidationException($"An active category with description \"{description}\" already exists under \"{parentCategory.Description}\".");
+
+                    if (parentCategory.ExpectedMonthlyAmount.HasValue && expectedMonthlyAmount.IsSome)
+                    {
+                        if (Math.Abs(parentCategory.ExpectedMonthlyAmount.Value) < Math.Abs(expectedMonthlyAmount.Value))
+                        {
+                            throw new ValidationException(
+                                $"Expected monthly amount can not exceed expected monthly amount of \"{parentCategory.Description}\".");
+                        }
+
+                        var totalExpectedChildren =
+                            parentCategory.Children.Sum(c => Math.Abs(c.ExpectedMonthlyAmount.GetValueOrDefault(0))) -
+                            Math.Abs(entity.ExpectedMonthlyAmount.GetValueOrDefault(0)) + Math.Abs(expectedMonthlyAmount.Value);
+                        var expectedParent = Math.Abs(parentCategory.ExpectedMonthlyAmount.Value);
+                        if (totalExpectedChildren > expectedParent)
+                        {
+                            throw new ValidationException(
+                                $"Expected monthly amount of all child categories ({totalExpectedChildren}) will exceed the expected monthly amount of \"{parentCategory.Description}\" ({expectedParent}).");
+                        }
+                    }
                 }
                 else
                 {
                     if (this.Context.Categories.Any(c => c.Id != id && !c.ParentCategoryId.HasValue && c.Description == description && !c.IsObsolete && c.Type == type))
                         throw new ValidationException($"An active category with description \"{description}\" already exists.");
+
+                    if (entity.Children.Any() && expectedMonthlyAmount.IsSome)
+                    {
+                        var totalExpectedChildren =
+                            entity.Children.Sum(c => Math.Abs(c.ExpectedMonthlyAmount.GetValueOrDefault(0)));
+                        if (totalExpectedChildren > Math.Abs(expectedMonthlyAmount.Value))
+                        {
+                            throw new ValidationException(
+                                $"Expected monthly amount of the child categories ({totalExpectedChildren}) of \"{entity.Description}\" will exceed the expected monthly amount.");
+                        }
+                    }
                 }
 
                 entity.Description = description;
@@ -151,6 +182,25 @@
 
                     if (parentCategory.Children.Any(c => c.Description == description && !c.IsObsolete))
                         throw new ValidationException($"An active category with description \"{description}\" already exists under \"{parentCategory.Description}\".");
+
+                    if (parentCategory.ExpectedMonthlyAmount.HasValue && expectedMonthlyAmount.IsSome)
+                    {
+                        if (Math.Abs(parentCategory.ExpectedMonthlyAmount.Value) < Math.Abs(expectedMonthlyAmount.Value))
+                        {
+                            throw new ValidationException(
+                                $"Expected monthly amount can not exceed expected monthly amount of \"{parentCategory.Description}\".");
+                        }
+
+                        var totalExpectedChildren =
+                            parentCategory.Children.Sum(c => Math.Abs(c.ExpectedMonthlyAmount.GetValueOrDefault(0))) +
+                            Math.Abs(expectedMonthlyAmount.Value);
+                        var expectedParent = Math.Abs(parentCategory.ExpectedMonthlyAmount.Value);
+                        if (totalExpectedChildren > expectedParent)
+                        {
+                            throw new ValidationException(
+                                $"Expected monthly amount of all child categories ({totalExpectedChildren}) will exceed the expected monthly amount of \"{parentCategory.Description}\" ({expectedParent}).");
+                        }
+                    }
                 }
                 else
                 {
