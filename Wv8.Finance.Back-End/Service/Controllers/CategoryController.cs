@@ -85,7 +85,8 @@
             string iconName,
             string iconColor)
         {
-            return this.manager.UpdateCategory(id, description, type, parentCategoryId, iconPack, iconName, iconColor);
+            return this.manager.UpdateCategory(
+                id, description, type, expectedMonthlyAmount, parentCategoryId, iconPack, iconName, iconColor);
         }
 
         /// <summary>
@@ -109,7 +110,8 @@
             string iconName,
             string iconColor)
         {
-            return this.manager.CreateCategory(description, type, parentCategoryId, iconPack, iconName, iconColor);
+            return this.manager.CreateCategory(
+                description, type, expectedMonthlyAmount, parentCategoryId, iconPack, iconName, iconColor);
         }
 
         /// <summary>
