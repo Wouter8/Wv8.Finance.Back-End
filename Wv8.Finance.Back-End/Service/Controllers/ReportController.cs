@@ -2,7 +2,7 @@
 {
     using System;
     using Microsoft.AspNetCore.Mvc;
-    using PersonalFinance.Business.Account;
+    using PersonalFinance.Business.Report;
     using PersonalFinance.Common.DataTransfer.Reports;
 
     /// <summary>
@@ -12,14 +12,13 @@
     [Route("api/reports")]
     public class ReportController : ControllerBase
     {
-        // TODO: Replace with reports manager.
-        private readonly IAccountManager manager;
+        private readonly IReportManager manager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReportController"/> class.
         /// </summary>
         /// <param name="manager">The manager.</param>
-        public ReportController(IAccountManager manager)
+        public ReportController(IReportManager manager)
         {
             this.manager = manager;
         }
