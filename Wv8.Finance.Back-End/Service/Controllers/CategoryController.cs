@@ -79,8 +79,8 @@
             int id,
             string description,
             CategoryType type,
-            Maybe<decimal> expectedMonthlyAmount,
-            Maybe<int> parentCategoryId,
+            [FromQuery] Maybe<decimal> expectedMonthlyAmount,
+            [FromQuery] Maybe<int> parentCategoryId,
             string iconPack,
             string iconName,
             string iconColor)
@@ -104,8 +104,8 @@
         public Category CreateCategory(
             string description,
             CategoryType type,
-            Maybe<decimal> expectedMonthlyAmount,
-            Maybe<int> parentCategoryId,
+            [FromQuery] Maybe<decimal> expectedMonthlyAmount,
+            [FromQuery] Maybe<int> parentCategoryId,
             string iconPack,
             string iconName,
             string iconColor)
