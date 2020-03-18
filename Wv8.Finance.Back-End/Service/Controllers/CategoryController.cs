@@ -68,15 +68,25 @@
         /// <param name="id">The identifier of the category.</param>
         /// <param name="description">The new description of the category.</param>
         /// <param name="type">The new type of the category.</param>
+        /// <param name="expectedMonthlyAmount">Optionally, the expected monthly amount for this category.</param>
         /// <param name="parentCategoryId">Optionally, the identifier of the new parent category.</param>
         /// <param name="iconPack">The new icon pack of the icon for the category.</param>
         /// <param name="iconName">The new name of the icon for the category.</param>
         /// <param name="iconColor">The new background color of the icon for the category.</param>
         /// <returns>The updated category.</returns>
         [HttpPut("{id}")]
-        public Category UpdateCategory(int id, string description, CategoryType type, Maybe<int> parentCategoryId, string iconPack, string iconName, string iconColor)
+        public Category UpdateCategory(
+            int id,
+            string description,
+            CategoryType type,
+            Maybe<decimal> expectedMonthlyAmount,
+            Maybe<int> parentCategoryId,
+            string iconPack,
+            string iconName,
+            string iconColor)
         {
-            return this.manager.UpdateCategory(id, description, type, parentCategoryId, iconPack, iconName, iconColor);
+            return this.manager.UpdateCategory(
+                id, description, type, expectedMonthlyAmount, parentCategoryId, iconPack, iconName, iconColor);
         }
 
         /// <summary>
@@ -84,15 +94,24 @@
         /// </summary>
         /// <param name="description">The description of the category.</param>
         /// <param name="type">The type of the category.</param>
+        /// <param name="expectedMonthlyAmount">Optionally, the expected monthly amount for this category.</param>
         /// <param name="parentCategoryId">Optionally, the identifier of the parent category.</param>
         /// <param name="iconPack">The icon pack of the icon for the category.</param>
         /// <param name="iconName">The name of the icon for the category.</param>
         /// <param name="iconColor">The background color of the icon for the category.</param>
         /// <returns>The created category.</returns>
         [HttpPost]
-        public Category CreateCategory(string description, CategoryType type, Maybe<int> parentCategoryId, string iconPack, string iconName, string iconColor)
+        public Category CreateCategory(
+            string description,
+            CategoryType type,
+            Maybe<decimal> expectedMonthlyAmount,
+            Maybe<int> parentCategoryId,
+            string iconPack,
+            string iconName,
+            string iconColor)
         {
-            return this.manager.CreateCategory(description, type, parentCategoryId, iconPack, iconName, iconColor);
+            return this.manager.CreateCategory(
+                description, type, expectedMonthlyAmount, parentCategoryId, iconPack, iconName, iconColor);
         }
 
         /// <summary>
