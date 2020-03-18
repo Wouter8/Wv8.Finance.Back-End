@@ -62,7 +62,15 @@
         }
 
         /// <inheritdoc />
-        public Category UpdateCategory(int id, string description, CategoryType type, Maybe<int> parentCategoryId, string iconPack, string iconName, string iconColor)
+        public Category UpdateCategory(
+            int id,
+            string description,
+            CategoryType type,
+            Maybe<decimal> expectedMonthlyAmount,
+            Maybe<int> parentCategoryId,
+            string iconPack,
+            string iconName,
+            string iconColor)
         {
             description = this.validator.Description(description);
             this.validator.Icon(iconPack, iconName, iconColor);
@@ -110,7 +118,14 @@
         }
 
         /// <inheritdoc />
-        public Category CreateCategory(string description, CategoryType type, Maybe<int> parentCategoryId, string iconPack, string iconName, string iconColor)
+        public Category CreateCategory(
+            string description,
+            CategoryType type,
+            Maybe<decimal> expectedMonthlyAmount,
+            Maybe<int> parentCategoryId,
+            string iconPack,
+            string iconName,
+            string iconColor)
         {
             description = this.validator.Description(description);
             this.validator.Icon(iconPack, iconName, iconColor);
