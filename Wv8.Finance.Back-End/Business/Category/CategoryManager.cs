@@ -100,16 +100,16 @@
 
                     if (parentCategory.ExpectedMonthlyAmount.HasValue && expectedMonthlyAmount.IsSome)
                     {
-                        if (Math.Abs(parentCategory.ExpectedMonthlyAmount.Value) < Math.Abs(expectedMonthlyAmount.Value))
+                        var expectedParent = Math.Abs(parentCategory.ExpectedMonthlyAmount.Value);
+                        if (expectedParent < Math.Abs(expectedMonthlyAmount.Value))
                         {
                             throw new ValidationException(
-                                $"Expected monthly amount can not exceed expected monthly amount of \"{parentCategory.Description}\".");
+                                $"Expected monthly amount can not exceed expected monthly amount of \"{parentCategory.Description}\" ({expectedParent}).");
                         }
 
                         var totalExpectedChildren =
                             parentCategory.Children.Sum(c => Math.Abs(c.ExpectedMonthlyAmount.GetValueOrDefault(0))) -
                             Math.Abs(entity.ExpectedMonthlyAmount.GetValueOrDefault(0)) + Math.Abs(expectedMonthlyAmount.Value);
-                        var expectedParent = Math.Abs(parentCategory.ExpectedMonthlyAmount.Value);
                         if (totalExpectedChildren > expectedParent)
                         {
                             throw new ValidationException(
@@ -185,16 +185,16 @@
 
                     if (parentCategory.ExpectedMonthlyAmount.HasValue && expectedMonthlyAmount.IsSome)
                     {
-                        if (Math.Abs(parentCategory.ExpectedMonthlyAmount.Value) < Math.Abs(expectedMonthlyAmount.Value))
+                        var expectedParent = Math.Abs(parentCategory.ExpectedMonthlyAmount.Value);
+                        if (expectedParent < Math.Abs(expectedMonthlyAmount.Value))
                         {
                             throw new ValidationException(
-                                $"Expected monthly amount can not exceed expected monthly amount of \"{parentCategory.Description}\".");
+                                $"Expected monthly amount can not exceed expected monthly amount of \"{parentCategory.Description}\" ({expectedParent}).");
                         }
 
                         var totalExpectedChildren =
                             parentCategory.Children.Sum(c => Math.Abs(c.ExpectedMonthlyAmount.GetValueOrDefault(0))) +
                             Math.Abs(expectedMonthlyAmount.Value);
-                        var expectedParent = Math.Abs(parentCategory.ExpectedMonthlyAmount.Value);
                         if (totalExpectedChildren > expectedParent)
                         {
                             throw new ValidationException(
