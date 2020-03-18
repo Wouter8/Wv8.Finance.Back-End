@@ -40,6 +40,13 @@
         public bool IsObsolete { get; set; }
 
         /// <summary>
+        /// The expected sum of transactions within a month.
+        /// This value is negative for expense categories and positive for income categories.
+        /// This value is used to determine future balances without needing to add all (unknown) transactions manually.
+        /// </summary>
+        public Maybe<decimal> ExpectedMonthlyAmount { get; set; }
+
+        /// <summary>
         /// The identifier of the icon for this account.
         /// </summary>
         public int IconId { get; set; }
