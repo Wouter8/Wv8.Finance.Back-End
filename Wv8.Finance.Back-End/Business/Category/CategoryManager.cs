@@ -74,6 +74,7 @@
         {
             description = this.validator.Description(description);
             this.validator.Icon(iconPack, iconName, iconColor);
+            this.validator.ExpectedMonthlyAmount(expectedMonthlyAmount, type);
 
             return this.ConcurrentInvoke(() =>
             {
@@ -104,6 +105,7 @@
 
                 entity.Description = description;
                 entity.Type = type;
+                entity.ExpectedMonthlyAmount = expectedMonthlyAmount.ToNullable();
                 entity.ParentCategoryId = parentCategoryId.ToNullable();
                 entity.ParentCategory = parentCategory;
 
@@ -129,6 +131,7 @@
         {
             description = this.validator.Description(description);
             this.validator.Icon(iconPack, iconName, iconColor);
+            this.validator.ExpectedMonthlyAmount(expectedMonthlyAmount, type);
 
             return this.ConcurrentInvoke(() =>
             {
@@ -159,6 +162,7 @@
                 {
                     Description = description,
                     Type = type,
+                    ExpectedMonthlyAmount = expectedMonthlyAmount.ToNullable(),
                     ParentCategoryId = parentCategoryId.ToNullable(),
                     ParentCategory = parentCategory,
                     IsObsolete = false,
