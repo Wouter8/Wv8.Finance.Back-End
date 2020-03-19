@@ -165,13 +165,13 @@ namespace PersonalFinance.Business.Transaction.Processor
                     next = start.PlusDays(transaction.Interval);
                     break;
                 case IntervalUnit.Weeks:
-                    next = start.PlusDays(7 * transaction.Interval);
+                    next = start.PlusWeeks(transaction.Interval);
                     break;
                 case IntervalUnit.Months:
-                    next = start.PlusDays(transaction.Interval);
+                    next = start.PlusMonths(transaction.Interval);
                     break;
                 case IntervalUnit.Years:
-                    next = start.PlusDays(transaction.Interval);
+                    next = start.PlusYears(transaction.Interval);
                     break;
             }
 
