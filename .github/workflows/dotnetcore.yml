@@ -1,9 +1,11 @@
-name: Pull Request - Build and Test
+name: Build and Test
 
 on:
   push:
     branches:
-      - develop
+      - '*'
+      - '*/*' # match all feature/ and fix/ branches
+      - '!master' # exclude master
 
 jobs:
   build:
