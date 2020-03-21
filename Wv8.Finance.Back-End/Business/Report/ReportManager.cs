@@ -41,10 +41,11 @@
             // because an account might be inactive but have a historical balance which is not 0.
             var accounts = allAccounts.Where(a => !a.IsObsolete).ToList();
             var netWorth = accounts.Sum(a => a.History.SingleAtNow().Balance);
+
             var historicalBalances = allAccounts
                 .SelectMany(a => a.History)
-                .ToList()
                 .Between(firstDate.ToDateTimeUnspecified(), lastDate.ToDateTimeUnspecified())
+                .OrderBy(h => h.ValidFrom)
                 .GroupBy(
                     h => h.ValidFrom,
                     h => h.Balance,

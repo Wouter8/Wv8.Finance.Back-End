@@ -190,10 +190,10 @@
             if (entity.ValidTo < DateTime.MaxValue)
                 throw new InvalidOperationException("The specified entity is not currently valid.");
 
-            entity.ValidTo = context.CreationTime;
+            entity.ValidTo = context.CreationTime.Date;
 
             var newEntity = (T)entity.Clone();
-            newEntity.ValidFrom = context.CreationTime;
+            newEntity.ValidFrom = context.CreationTime.Date;
             newEntity.ValidTo = DateTime.MaxValue;
 
             context.Entry(newEntity).State = EntityState.Added;

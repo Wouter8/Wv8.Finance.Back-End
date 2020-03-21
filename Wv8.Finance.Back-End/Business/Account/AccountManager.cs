@@ -99,7 +99,7 @@
 
                 var entity = new AccountHistoryEntity
                 {
-                    ValidFrom = this.Context.CreationTime,
+                    ValidFrom = this.Context.CreationTime.Date,
                     ValidTo = DateTime.MaxValue,
                     Balance = 0,
                     Account = new AccountEntity
