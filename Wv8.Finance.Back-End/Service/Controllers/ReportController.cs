@@ -30,7 +30,7 @@
         [HttpGet("current-date")]
         public CurrentDateReport GetCurrentDateReport()
         {
-            throw new NotImplementedException();
+            return this.manager.GetCurrentDateReport();
         }
     }
 }

@@ -108,6 +108,8 @@
             // Transaction in between
             this.GenerateTransaction(
                 accountId: account1.Id, date: DateTime.Today.AddDays(-3).ToLocalDate(), amount: -50);
+            this.GenerateTransaction(
+                accountId: account2.Id, date: DateTime.Today.AddDays(-3).ToLocalDate(), amount: -50);
             // Transaction on already existing date, but for different accounts
             this.GenerateTransaction(
                 accountId: account2.Id, date: DateTime.Today.AddDays(-7).ToLocalDate(), amount: -50);
@@ -121,10 +123,39 @@
             var report = this.ReportManager.GetCurrentDateReport();
             var historicalEntries = report.HistoricalBalance.Values.ToList();
 
-            Assert.Equal(3, report.HistoricalBalance.Count);
-            Assert.Equal(-150, historicalEntries[0]);
-            Assert.Equal(-150, historicalEntries[1]);
-            Assert.Equal(-200, historicalEntries[2]);
+            var historicalEntriesVerification = new List<dynamic>
+            {
+                new
+                {
+                    StartDay = 0,
+                    Value = 0,
+                },
+                new
+                {
+                    StartDay = 7,
+                    Value = -150,
+                },
+                new
+                {
+                    StartDay = 11,
+                    Value = -200,
+                },
+                new
+                {
+                    StartDay = 14,
+                    Value = -250,
+                },
+            };
+            historicalEntriesVerification.Reverse();
+
+            Assert.Equal(21, report.HistoricalBalance.Count);
+            for (var i = 0; i < historicalEntries.Count; i++)
+            {
+                var entry = historicalEntries[i];
+                var verification = historicalEntriesVerification.First(e => i >= e.StartDay);
+
+                Assert.Equal(verification.Value, entry);
+            }
 
             Assert.True(report.HistoricalBalance.ContainsKey(DateTime.Today.AddDays(-7).ToLocalDate().ToDateString()));
             Assert.True(report.HistoricalBalance.ContainsKey(DateTime.Today.AddDays(-3).ToLocalDate().ToDateString()));
