@@ -9,6 +9,7 @@ namespace Business.UnitTest
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Business.Category;
+    using PersonalFinance.Business.Report;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
@@ -69,6 +70,7 @@ namespace Business.UnitTest
             services.AddTransient<IBudgetManager, BudgetManager>();
             services.AddTransient<ITransactionManager, TransactionManager>();
             services.AddTransient<IRecurringTransactionManager, RecurringTransactionManager>();
+            services.AddTransient<IReportManager, ReportManager>();
             services.AddTransient<ITransactionProcessor, TransactionProcessor>();
 
             this.serviceProvider = services.BuildServiceProvider();
@@ -102,6 +104,11 @@ namespace Business.UnitTest
         /// The transaction manager.
         /// </summary>
         protected IRecurringTransactionManager RecurringTransactionManager => this.serviceProvider.GetService<IRecurringTransactionManager>();
+
+        /// <summary>
+        /// The transaction manager.
+        /// </summary>
+        protected IReportManager ReportManager => this.serviceProvider.GetService<IReportManager>();
 
         /// <summary>
         /// The periodic processor.

@@ -10,6 +10,7 @@
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
+    using Wv8.Core.EntityFramework;
     using Wv8.Core.Exceptions;
 
     /// <summary>
@@ -206,17 +207,18 @@
         /// Retrieves a list of budgets based on some filters.
         /// </summary>
         /// <param name="set">The database set.</param>
-        /// <param name="categoryId">The category identifier.</param>
+        /// <param name="categoryId">Optionally, the category identifier.</param>
         /// <param name="date">The date.</param>
         /// <returns>The list of budgets.</returns>
         public static List<BudgetEntity> GetBudgets(
             this DbSet<BudgetEntity> set,
-            int categoryId,
+            Maybe<int> categoryId,
             LocalDate date)
         {
             return set
                 .IncludeAll()
-                .Where(b => b.CategoryId == categoryId || b.Category.Children.Select(c => c.Id).Contains(categoryId))
+                .WhereIf(categoryId.IsSome, b => b.CategoryId == categoryId.Value ||
+                                                 b.Category.Children.Select(c => c.Id).Contains(categoryId.Value))
                 .Where(b => b.StartDate <= date && b.EndDate >= date)
                 .ToList();
         }

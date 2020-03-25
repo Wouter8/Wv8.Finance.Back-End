@@ -13,6 +13,7 @@ namespace PersonalFinance.Service
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Business.Category;
+    using PersonalFinance.Business.Report;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
@@ -83,6 +84,7 @@ namespace PersonalFinance.Service
             services.AddTransient<ITransactionManager, TransactionManager>();
             services.AddTransient<IRecurringTransactionManager, RecurringTransactionManager>();
             services.AddTransient<ITransactionProcessor, TransactionProcessor>();
+            services.AddTransient<IReportManager, ReportManager>();
 
             // Services
             services.AddHostedService<PeriodicService>();

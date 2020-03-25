@@ -165,13 +165,13 @@ namespace PersonalFinance.Business.Transaction.Processor
                     next = start.PlusDays(transaction.Interval);
                     break;
                 case IntervalUnit.Weeks:
-                    next = start.PlusDays(7 * transaction.Interval);
+                    next = start.PlusWeeks(transaction.Interval);
                     break;
                 case IntervalUnit.Months:
-                    next = start.PlusDays(transaction.Interval);
+                    next = start.PlusMonths(transaction.Interval);
                     break;
                 case IntervalUnit.Years:
-                    next = start.PlusDays(transaction.Interval);
+                    next = start.PlusYears(transaction.Interval);
                     break;
             }
 
@@ -261,6 +261,7 @@ namespace PersonalFinance.Business.Transaction.Processor
             if (LocalDate.FromDateTime(historyItems[0].ValidFrom) > date)
             {
                 var firstEntry = CreateHistoryEntityBefore(historyItems[0], date, context);
+                firstEntry.Balance = 0; // Set balance to 0, because it is the first entry
                 historyItems.Insert(0, firstEntry);
 
                 return historyItems;
