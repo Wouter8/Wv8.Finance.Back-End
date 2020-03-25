@@ -29,6 +29,7 @@
                 ParentCategoryId = entity.ParentCategoryId.ToMaybe(),
                 ParentCategory = entity.ParentCategory.ToMaybe().Select(pc => pc.AsCategory(includeObsoleteChilds)),
                 IsObsolete = entity.IsObsolete,
+                ExpectedMonthlyAmount = entity.ExpectedMonthlyAmount.ToMaybe(),
                 IconId = entity.IconId,
                 Icon = entity.Icon?.AsIcon(),
                 Children = entity.Children
@@ -53,6 +54,7 @@
                 ParentCategoryId = entity.ParentCategoryId.ToMaybe(),
                 ParentCategory = entity.ParentCategory.ToMaybe().Select(pc => pc.AsParentCategory()),
                 IsObsolete = entity.IsObsolete,
+                ExpectedMonthlyAmount = entity.ExpectedMonthlyAmount.ToMaybe(),
                 IconId = entity.IconId,
                 Icon = entity.Icon?.AsIcon(),
                 Children = new List<Category>(), // Set to empty to prevent infinite loop.
@@ -74,6 +76,7 @@
                 ParentCategoryId = entity.ParentCategoryId.ToMaybe(),
                 ParentCategory = entity.ParentCategory.ToMaybe().Select(pc => pc.AsParentCategory()),
                 IsObsolete = entity.IsObsolete,
+                ExpectedMonthlyAmount = entity.ExpectedMonthlyAmount.ToMaybe(),
                 IconId = entity.IconId,
                 Icon = entity.Icon?.AsIcon(),
                 Children = entity.Children.Select(c => c.AsChildCategory()).ToList(),

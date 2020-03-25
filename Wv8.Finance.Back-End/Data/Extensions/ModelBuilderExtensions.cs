@@ -68,6 +68,7 @@
             var entity = builder.Entity<CategoryEntity>();
 
             entity.Property(e => e.Description).IsRequired();
+            entity.Property(e => e.ExpectedMonthlyAmount).HasPrecision(12, 2);
         }
 
         /// <summary>

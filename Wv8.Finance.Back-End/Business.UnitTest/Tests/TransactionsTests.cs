@@ -55,8 +55,8 @@
             var account1 = this.GenerateAccount("AAA");
             var account2 = this.GenerateAccount("BBB");
 
-            var categoryIncome = this.GenerateCategory(CategoryType.Income, "CCC");
-            var categoryExpense = this.GenerateCategory(CategoryType.Expense, "DDD");
+            var categoryIncome = this.GenerateCategory(type: CategoryType.Income, description: "CCC");
+            var categoryExpense = this.GenerateCategory(type: CategoryType.Expense, description: "DDD");
             var categoryChild = this.GenerateCategory(
                 description: "FFF", parentCategoryId: categoryExpense.Id);
 

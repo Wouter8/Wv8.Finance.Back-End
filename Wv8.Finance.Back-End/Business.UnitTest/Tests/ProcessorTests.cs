@@ -441,6 +441,28 @@
             Assert.Equal(0, historicBalances2[1].Balance);
             Assert.NotEqual(DateTime.MaxValue, historicBalances2[0].ValidTo);
             Assert.Equal(DateTime.MaxValue, historicBalances2[1].ValidTo);
+
+            // Transaction before first transaction
+            transaction = this.GenerateTransaction(
+                accountId: account.Id,
+                date: LocalDate.FromDateTime(DateTime.Today).PlusDays(-4),
+                amount: -50);
+            this.RefreshContext();
+            historicBalances = this.context.AccountHistory
+                .Where(ah => ah.AccountId == account.Id)
+                .OrderBy(ah => ah.ValidFrom)
+                .ToList();
+
+            Assert.Equal(4, historicBalances.Count);
+            Assert.Single(historicBalances.AtNow());
+            Assert.Equal(-50, historicBalances[0].Balance);
+            Assert.Equal(-100, historicBalances[1].Balance);
+            Assert.Equal(-50, historicBalances[2].Balance);
+            Assert.Equal(-50, historicBalances[3].Balance);
+            Assert.NotEqual(DateTime.MaxValue, historicBalances[0].ValidTo);
+            Assert.NotEqual(DateTime.MaxValue, historicBalances[1].ValidTo);
+            Assert.NotEqual(DateTime.MaxValue, historicBalances[2].ValidTo);
+            Assert.Equal(DateTime.MaxValue, historicBalances[3].ValidTo);
         }
 
         /// <summary>

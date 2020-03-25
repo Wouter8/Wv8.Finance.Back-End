@@ -261,6 +261,7 @@ namespace PersonalFinance.Business.Transaction.Processor
             if (LocalDate.FromDateTime(historyItems[0].ValidFrom) > date)
             {
                 var firstEntry = CreateHistoryEntityBefore(historyItems[0], date, context);
+                firstEntry.Balance = 0; // Set balance to 0, because it is the first entry
                 historyItems.Insert(0, firstEntry);
 
                 return historyItems;

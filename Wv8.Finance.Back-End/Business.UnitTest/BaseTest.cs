@@ -9,6 +9,7 @@ namespace Business.UnitTest
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Business.Category;
+    using PersonalFinance.Business.Report;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
@@ -69,6 +70,7 @@ namespace Business.UnitTest
             services.AddTransient<IBudgetManager, BudgetManager>();
             services.AddTransient<ITransactionManager, TransactionManager>();
             services.AddTransient<IRecurringTransactionManager, RecurringTransactionManager>();
+            services.AddTransient<IReportManager, ReportManager>();
             services.AddTransient<ITransactionProcessor, TransactionProcessor>();
 
             this.serviceProvider = services.BuildServiceProvider();
@@ -102,6 +104,11 @@ namespace Business.UnitTest
         /// The transaction manager.
         /// </summary>
         protected IRecurringTransactionManager RecurringTransactionManager => this.serviceProvider.GetService<IRecurringTransactionManager>();
+
+        /// <summary>
+        /// The transaction manager.
+        /// </summary>
+        protected IReportManager ReportManager => this.serviceProvider.GetService<IReportManager>();
 
         /// <summary>
         /// The periodic processor.
@@ -141,6 +148,7 @@ namespace Business.UnitTest
         /// Creates a category with specified, or random values.
         /// </summary>
         /// <param name="type">The category type.</param>
+        /// <param name="expectedMonthlyAmount">The expected monthly amount.</param>
         /// <param name="description">The description.</param>
         /// <param name="parentCategoryId">The identifier of the parent category.</param>
         /// <param name="iconPack">The icon pack.</param>
@@ -149,6 +157,7 @@ namespace Business.UnitTest
         /// <returns>The created account.</returns>
         protected Category GenerateCategory(
             CategoryType type = CategoryType.Expense,
+            decimal? expectedMonthlyAmount = null,
             string description = null,
             int? parentCategoryId = null,
             string iconPack = null,
@@ -158,6 +167,7 @@ namespace Business.UnitTest
             return this.CategoryManager.CreateCategory(
                 description ?? this.GetRandomString(),
                 type,
+                expectedMonthlyAmount ?? Maybe<decimal>.None,
                 parentCategoryId.ToMaybe(),
                 iconPack ?? this.GetRandomString(3),
                 iconName ?? this.GetRandomString(6),
@@ -168,6 +178,7 @@ namespace Business.UnitTest
         /// Creates a category with a parent.
         /// </summary>
         /// <param name="type">The type of category.</param>
+        /// <param name="expectedMonthlyAmount">The expected monthly amount.</param>
         /// <param name="description">The description of the child.</param>
         /// <param name="iconPack">The icon pack.</param>
         /// <param name="iconName">The icon name.</param>
@@ -175,6 +186,7 @@ namespace Business.UnitTest
         /// <returns>The create child category.</returns>
         protected Category GenerateCategoryWithParent(
             CategoryType type = CategoryType.Expense,
+            decimal? expectedMonthlyAmount = null,
             string description = null,
             string iconPack = null,
             string iconName = null,
@@ -184,6 +196,7 @@ namespace Business.UnitTest
             return this.CategoryManager.CreateCategory(
                 description ?? this.GetRandomString(),
                 type,
+                expectedMonthlyAmount ?? (type == CategoryType.Income ? 50m : -50m),
                 parent.Id,
                 iconPack ?? this.GetRandomString(3),
                 iconName ?? this.GetRandomString(6),
