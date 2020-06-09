@@ -55,7 +55,7 @@
             this.validator.Pagination(skip, take);
             this.validator.Period(startPeriod, endPeriod, true);
 
-            var allTransactions = this.Context.Transactions
+            var query = this.Context.Transactions
                 .IncludeAll()
                 .WhereIf(type.IsSome, t => t.Type == type.Value)
                 .WhereIf(accountId.IsSome, t => t.AccountId == accountId.Value || t.ReceivingAccountId == accountId.Value)
@@ -70,14 +70,17 @@
                     t => EF.Functions.Like(t.Description, $"%{description.Value}%") ||
                          EF.Functions.Like(t.Account.Description, $"%{description.Value}%") ||
                          (t.CategoryId.HasValue && EF.Functions.Like(t.Category.Description, $"%{description.Value}%")) ||
-                         (t.ReceivingAccountId.HasValue && EF.Functions.Like(t.ReceivingAccount.Description, $"%{description.Value}%")))
+                         (t.ReceivingAccountId.HasValue && EF.Functions.Like(t.ReceivingAccount.Description, $"%{description.Value}%")));
+
+            var totalCount = query.Count();
+
+            var transactions = query
                 .OrderByDescending(t => t.Date)
+                .Skip(skip)
+                .Take(take)
                 .ToList();
 
-            return allTransactions.Skip(skip)
-                .Take(take)
-                .ToList()
-                .AsTransactionGroup(allTransactions.Count);
+            return transactions.AsTransactionGroup(totalCount);
         }
 
         /// <inheritdoc />
