@@ -10,7 +10,7 @@
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
     "PersonalFinance.Service": {
-      "commandName": "PersonalFinance.Servic",
+      "commandName": "Project",
       "launchBrowser": false,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
