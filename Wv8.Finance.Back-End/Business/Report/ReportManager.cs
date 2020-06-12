@@ -66,10 +66,11 @@
             var allTransactions = this.Context.Transactions
                 .IncludeAll()
                 .Where(t => t.Date >= firstDate && t.Date <= lastDate)
+                .OrderByDescending(t => t.Date)
+                .ThenByDescending(t => t.Id)
                 .ToList();
             var latestTransactions = allTransactions
                 .Where(t => t.Processed) // A processed transaction can never be in the future.
-                .OrderByDescending(t => t.Date)
                 .Take(5)
                 .ToList();
             var upcomingTransactions = allTransactions // TODO: Concat upcoming recurring transaction instances (with flag so they are not selectable in front-end)
