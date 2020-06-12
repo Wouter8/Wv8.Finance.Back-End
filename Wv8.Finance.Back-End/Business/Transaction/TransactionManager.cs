@@ -76,6 +76,7 @@
 
             var transactions = query
                 .OrderByDescending(t => t.Date)
+                .ThenByDescending(t => t.Id)
                 .Skip(skip)
                 .Take(take)
                 .ToList();
