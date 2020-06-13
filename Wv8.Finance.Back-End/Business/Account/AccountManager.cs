@@ -132,7 +132,7 @@
 
                 if (obsolete)
                 {
-                    if (entity.HistoricalBalances.Last().Balance != 0)
+                    if (entity.DailyBalances.Last().Balance != 0)
                         throw new ValidationException("This account has a current balance which is not 0.");
 
                     // Delete any existing recurring transaction for this account

@@ -40,7 +40,7 @@
             // Active accounts and historical balances based on all accounts,
             // because an account might be inactive but have a historical balance which is not 0.
             var accounts = allAccounts.Where(a => !a.IsObsolete).ToList();
-            var netWorth = accounts.Sum(a => a.HistoricalBalances.OrderBy(hb => hb.Date).Last().Balance);
+            var netWorth = accounts.Sum(a => a.DailyBalances.OrderBy(hb => hb.Date).Last().Balance);
 
             var historicalNetWorth = new Dictionary<LocalDate, decimal>();
             for (var i = 0; i < (lastDate - firstDate).Days; i++)
@@ -50,7 +50,7 @@
 
                 foreach (var account in allAccounts)
                 {
-                    sum += account.HistoricalBalances
+                    sum += account.DailyBalances
                         .OrderByDescending(h => h.Date)
                         .FirstOrNone(h => h.Date <= day)
                         .Select(h => h.Balance)

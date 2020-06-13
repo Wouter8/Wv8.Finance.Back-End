@@ -45,6 +45,6 @@
         /// <summary>
         /// The historical balances for this account.
         /// </summary>
-        public List<DailyBalanceEntity> HistoricalBalances { get; set; }
+        public List<DailyBalanceEntity> DailyBalances { get; set; }
     }
 }

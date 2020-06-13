@@ -19,14 +19,14 @@
         {
             if (entity.Icon == null)
                 throw new ArgumentNullException(nameof(entity.Icon));
-            if (entity.HistoricalBalances == null || !entity.HistoricalBalances.Any())
-                throw new ArgumentNullException(nameof(entity.HistoricalBalances));
+            if (entity.DailyBalances == null || !entity.DailyBalances.Any())
+                throw new ArgumentNullException(nameof(entity.DailyBalances));
 
             return new Account
             {
                 Id = entity.Id,
                 Description = entity.Description,
-                CurrentBalance = entity.HistoricalBalances.Last().Balance,
+                CurrentBalance = entity.DailyBalances.Last().Balance,
                 IsDefault = entity.IsDefault,
                 IsObsolete = entity.IsObsolete,
                 IconId = entity.IconId,

@@ -27,7 +27,7 @@
         {
             return set
                 .Include(a => a.Icon)
-                .Include(a => a.HistoricalBalances);
+                .Include(a => a.DailyBalances);
         }
 
         /// <summary>
@@ -74,11 +74,11 @@
                 .Include(t => t.Account)
                 .ThenInclude(t => t.Icon)
                 .Include(t => t.Account)
-                .ThenInclude(t => t.HistoricalBalances)
+                .ThenInclude(t => t.DailyBalances)
                 .Include(t => t.ReceivingAccount)
                 .ThenInclude(t => t.Icon)
                 .Include(t => t.ReceivingAccount)
-                .ThenInclude(t => t.HistoricalBalances)
+                .ThenInclude(t => t.DailyBalances)
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Icon)
                 .Include(t => t.Category)
@@ -100,11 +100,11 @@
                 .Include(t => t.Account)
                 .ThenInclude(t => t.Icon)
                 .Include(t => t.Account)
-                .ThenInclude(t => t.HistoricalBalances)
+                .ThenInclude(t => t.DailyBalances)
                 .Include(t => t.ReceivingAccount)
                 .ThenInclude(t => t.Icon)
                 .Include(t => t.ReceivingAccount)
-                .ThenInclude(t => t.HistoricalBalances)
+                .ThenInclude(t => t.DailyBalances)
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Icon)
                 .Include(t => t.Category)

@@ -77,7 +77,7 @@ namespace PersonalFinance.Business.Transaction.Processor
             if (!transaction.Processed)
                 throw new NotSupportedException("Transaction has not been processed.");
 
-            var historicalBalances = transaction.Account.HistoricalBalances
+            var historicalBalances = transaction.Account.DailyBalances
                 .Where(hb => hb.Date >= transaction.Date)
                 .ToList();
 
@@ -100,7 +100,7 @@ namespace PersonalFinance.Business.Transaction.Processor
 
                     break;
                 case TransactionType.Transfer:
-                    var receiverHistoricalBalances = transaction.ReceivingAccount.HistoricalBalances
+                    var receiverHistoricalBalances = transaction.ReceivingAccount.DailyBalances
                         .Where(hb => hb.Date >= transaction.Date)
                         .ToList();
 
@@ -228,13 +228,13 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// <returns>The list of to be updated entities.</returns>
         private static List<DailyBalanceEntity> GetBalanceEntriesToEdit(AccountEntity account, LocalDate date)
         {
-            var balanceEntriesAfterDate = account.HistoricalBalances
+            var balanceEntriesAfterDate = account.DailyBalances
                 .Where(hb => hb.Date >= date)
                 .OrderBy(hb => hb.Date)
                 .ToList();
 
             // If date already has historical entry, just alter that and later entries.
-            var balanceEntryOnSameDate = account.HistoricalBalances
+            var balanceEntryOnSameDate = account.DailyBalances
                 .SingleOrNone(hb => hb.Date == date);
             if (balanceEntryOnSameDate.IsSome)
             {
@@ -242,7 +242,7 @@ namespace PersonalFinance.Business.Transaction.Processor
             }
 
             // Get last entity before date
-            var lastEntry = account.HistoricalBalances
+            var lastEntry = account.DailyBalances
                 .Where(hb => hb.Date < date)
                 .OrderBy(hb => hb.Date)
                 .LastOrNone();
@@ -252,7 +252,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                 Balance = lastEntry.Select(e => e.Balance).ValueOrElse(0),
                 Date = date,
             };
-            account.HistoricalBalances.Add(newBalanceEntry);
+            account.DailyBalances.Add(newBalanceEntry);
 
             // Return all entries after the date + the new entry
             return newBalanceEntry.Enumerate()
