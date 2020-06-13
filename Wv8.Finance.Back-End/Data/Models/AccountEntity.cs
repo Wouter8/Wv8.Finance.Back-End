@@ -38,11 +38,6 @@
         public IconEntity Icon { get; set; }
 
         /// <summary>
-        /// The historical entities for this account.
-        /// </summary>
-        public List<AccountHistoryEntity> History { get; set; }
-
-        /// <summary>
         /// The historical balances for this account.
         /// </summary>
         public List<DailyBalanceEntity> DailyBalances { get; set; }

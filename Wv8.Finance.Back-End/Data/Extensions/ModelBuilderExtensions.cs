@@ -16,7 +16,6 @@
         {
             builder.BuildIconEntity();
             builder.BuildAccountEntity();
-            builder.BuildAccountHistoryEntity();
             builder.BuildCategoryEntity();
             builder.BuildBudgetEntity();
             builder.BuildTransactionEntity();
@@ -50,20 +49,6 @@
             entity.ToTable("Accounts");
 
             entity.Property(e => e.Description).IsRequired();
-        }
-
-        /// <summary>
-        /// Adds the required properties to the fields of the historical account entity.
-        /// </summary>
-        /// <param name="builder">The builder.</param>
-        private static void BuildAccountHistoryEntity(this ModelBuilder builder)
-        {
-            var entity = builder.Entity<AccountHistoryEntity>();
-
-            entity.ToTable("AccountHistory");
-
-            entity.HasKey(e => new { e.AccountId, e.ValidFrom });
-            entity.Property(e => e.Balance).HasPrecision(12, 2);
         }
 
         /// <summary>
