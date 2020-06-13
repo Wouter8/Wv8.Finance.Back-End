@@ -5,9 +5,7 @@
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.Processor;
-    using PersonalFinance.Data;
 
     /// <summary>
     /// A class for a service which handles a periodic run to process all needing objects.

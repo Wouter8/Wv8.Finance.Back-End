@@ -1,10 +1,5 @@
 namespace PersonalFinance.Common.DataTransfer
 {
-    using System;
-    using System.Collections.Generic;
-    using PersonalFinance.Common.Enums;
-    using Wv8.Core;
-
     /// <summary>
     /// A data transfer object representing a budget. The amount of the budget is the goal sum of all
     /// transactions of the category in the period of the budget.

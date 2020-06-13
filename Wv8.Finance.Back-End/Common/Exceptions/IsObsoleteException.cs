@@ -11,7 +11,7 @@
         /// Initializes a new instance of the <see cref="IsObsoleteException"/> class.
         /// </summary>
         public IsObsoleteException()
-            : base() { }
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IsObsoleteException"/> class.

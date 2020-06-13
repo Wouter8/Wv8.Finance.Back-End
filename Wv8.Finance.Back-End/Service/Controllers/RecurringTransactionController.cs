@@ -2,7 +2,6 @@
 {
     using System.Collections.Generic;
     using Microsoft.AspNetCore.Mvc;
-    using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;

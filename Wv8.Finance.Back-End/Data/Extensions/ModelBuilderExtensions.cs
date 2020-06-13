@@ -21,6 +21,7 @@
             builder.BuildBudgetEntity();
             builder.BuildTransactionEntity();
             builder.BuildRecurringTransactionEntity();
+            builder.BuildDailyBalanceEntity();
         }
 
         /// <summary>
@@ -56,6 +57,18 @@
             var entity = builder.Entity<AccountHistoryEntity>();
 
             entity.HasKey(e => new { e.AccountId, e.ValidFrom });
+            entity.Property(e => e.Balance).HasPrecision(12, 2);
+        }
+
+        /// <summary>
+        /// Adds the required properties to the fields of the daily balance entity.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        private static void BuildDailyBalanceEntity(this ModelBuilder builder)
+        {
+            var entity = builder.Entity<DailyBalanceEntity>();
+
+            entity.HasKey(e => new { e.AccountId, e.Date });
             entity.Property(e => e.Balance).HasPrecision(12, 2);
         }
 

@@ -1,12 +1,10 @@
 ﻿namespace PersonalFinance.Data.Extensions
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
     using NodaTime;
     using PersonalFinance.Common.Exceptions;
-    using PersonalFinance.Data.History;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
@@ -29,7 +27,7 @@
         {
             return set
                 .Include(a => a.Icon)
-                .Include(a => a.History);
+                .Include(a => a.HistoricalBalances);
         }
 
         /// <summary>
@@ -76,11 +74,11 @@
                 .Include(t => t.Account)
                 .ThenInclude(t => t.Icon)
                 .Include(t => t.Account)
-                .ThenInclude(t => t.History)
+                .ThenInclude(t => t.HistoricalBalances)
                 .Include(t => t.ReceivingAccount)
                 .ThenInclude(t => t.Icon)
                 .Include(t => t.ReceivingAccount)
-                .ThenInclude(t => t.History)
+                .ThenInclude(t => t.HistoricalBalances)
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Icon)
                 .Include(t => t.Category)
@@ -102,11 +100,11 @@
                 .Include(t => t.Account)
                 .ThenInclude(t => t.Icon)
                 .Include(t => t.Account)
-                .ThenInclude(t => t.History)
+                .ThenInclude(t => t.HistoricalBalances)
                 .Include(t => t.ReceivingAccount)
                 .ThenInclude(t => t.Icon)
                 .Include(t => t.ReceivingAccount)
-                .ThenInclude(t => t.History)
+                .ThenInclude(t => t.HistoricalBalances)
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Icon)
                 .Include(t => t.Category)

@@ -1,10 +1,7 @@
 ﻿namespace PersonalFinance.Business.Transaction
 {
-    using System;
-    using System.Collections.Generic;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
-    using PersonalFinance.Data.Models;
     using Wv8.Core;
 
     /// <summary>

@@ -1,8 +1,6 @@
 ﻿namespace PersonalFinance.Data.Models
 {
-    using System;
     using System.Collections.Generic;
-    using PersonalFinance.Data.History;
 
     /// <summary>
     /// An entity representing an account. Used for different bank accounts, etc.
@@ -43,5 +41,10 @@
         /// The historical entities for this account.
         /// </summary>
         public List<AccountHistoryEntity> History { get; set; }
+
+        /// <summary>
+        /// The historical balances for this account.
+        /// </summary>
+        public List<DailyBalanceEntity> HistoricalBalances { get; set; }
     }
 }

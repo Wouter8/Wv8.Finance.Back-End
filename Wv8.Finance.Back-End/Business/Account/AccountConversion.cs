@@ -3,7 +3,6 @@
     using System;
     using System.Linq;
     using PersonalFinance.Common.DataTransfer;
-    using PersonalFinance.Data.History;
     using PersonalFinance.Data.Models;
 
     /// <summary>
@@ -20,14 +19,14 @@
         {
             if (entity.Icon == null)
                 throw new ArgumentNullException(nameof(entity.Icon));
-            if (entity.History == null || !entity.History.Any())
-                throw new ArgumentNullException(nameof(entity.History));
+            if (entity.HistoricalBalances == null || !entity.HistoricalBalances.Any())
+                throw new ArgumentNullException(nameof(entity.HistoricalBalances));
 
             return new Account
             {
                 Id = entity.Id,
                 Description = entity.Description,
-                CurrentBalance = entity.History.SingleAtNow().Balance,
+                CurrentBalance = entity.HistoricalBalances.Last().Balance,
                 IsDefault = entity.IsDefault,
                 IsObsolete = entity.IsObsolete,
                 IconId = entity.IconId,

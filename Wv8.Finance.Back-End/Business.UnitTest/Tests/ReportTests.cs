@@ -3,14 +3,9 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
     using PersonalFinance.Business.Report;
     using PersonalFinance.Common;
-    using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
-    using PersonalFinance.Data.Models;
-    using Wv8.Core;
-    using Wv8.Core.Exceptions;
     using Xunit;
 
     /// <summary>
