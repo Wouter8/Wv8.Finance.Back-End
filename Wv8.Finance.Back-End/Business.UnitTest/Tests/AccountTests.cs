@@ -1,10 +1,7 @@
 ﻿namespace Business.UnitTest.Tests
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
-    using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;

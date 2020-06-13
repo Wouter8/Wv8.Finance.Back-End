@@ -3,14 +3,12 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Microsoft.EntityFrameworkCore;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
-    using Wv8.Core.Collections;
     using Wv8.Core.EntityFramework;
     using Wv8.Core.Exceptions;
 

@@ -1,13 +1,11 @@
 ﻿namespace PersonalFinance.Business.Account
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Microsoft.EntityFrameworkCore;
+    using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
-    using PersonalFinance.Data.History;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
@@ -97,10 +95,9 @@
                 if (this.Context.Accounts.Any(a => a.Description == description && !a.IsObsolete))
                     throw new ValidationException($"An active account with description \"{description}\" already exists.");
 
-                var entity = new AccountHistoryEntity
+                var entity = new DailyBalanceEntity
                 {
-                    ValidFrom = this.Context.CreationTime.Date,
-                    ValidTo = DateTime.MaxValue,
+                    Date = this.Context.CreationTime.ToLocalDate(),
                     Balance = 0,
                     Account = new AccountEntity
                     {
@@ -116,7 +113,7 @@
                     },
                 };
 
-                this.Context.AccountHistory.Add(entity);
+                this.Context.DailyBalances.Add(entity);
                 this.Context.SaveChanges();
 
                 return entity.Account.AsAccount();
@@ -135,7 +132,7 @@
 
                 if (obsolete)
                 {
-                    if (entity.History.AtNow().Single().Balance != 0)
+                    if (entity.DailyBalances.Last().Balance != 0)
                         throw new ValidationException("This account has a current balance which is not 0.");
 
                     // Delete any existing recurring transaction for this account

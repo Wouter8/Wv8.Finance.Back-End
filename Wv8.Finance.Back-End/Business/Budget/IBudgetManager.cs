@@ -1,9 +1,7 @@
 ﻿namespace PersonalFinance.Business.Budget
 {
-    using System;
     using System.Collections.Generic;
     using PersonalFinance.Common.DataTransfer;
-    using PersonalFinance.Common.Enums;
     using Wv8.Core;
 
     /// <summary>

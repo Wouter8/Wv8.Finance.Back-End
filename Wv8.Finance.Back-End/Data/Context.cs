@@ -1,7 +1,6 @@
 ﻿namespace PersonalFinance.Data
 {
     using System;
-    using System.Linq;
     using Microsoft.EntityFrameworkCore;
     using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.History;
@@ -31,6 +30,11 @@
         /// The set of historical accounts.
         /// </summary>
         public DbSet<AccountHistoryEntity> AccountHistory { get; set; }
+
+        /// <summary>
+        /// The set of daily balances.
+        /// </summary>
+        public DbSet<DailyBalanceEntity> DailyBalances { get; set; }
 
         /// <summary>
         /// The set of categories.

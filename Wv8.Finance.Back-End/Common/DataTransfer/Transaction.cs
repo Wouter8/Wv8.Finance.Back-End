@@ -1,6 +1,5 @@
 ﻿namespace PersonalFinance.Common.DataTransfer
 {
-    using System;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;
 

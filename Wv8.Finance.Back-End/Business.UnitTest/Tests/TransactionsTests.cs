@@ -1,7 +1,6 @@
 ﻿namespace Business.UnitTest.Tests
 {
     using System;
-    using System.Linq;
     using NodaTime;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Common;

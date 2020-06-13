@@ -3,7 +3,6 @@
     using System.Collections.Generic;
     using Microsoft.AspNetCore.Mvc;
     using PersonalFinance.Business.Category;
-    using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;

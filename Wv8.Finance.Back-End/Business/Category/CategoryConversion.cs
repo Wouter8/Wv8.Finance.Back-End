@@ -1,6 +1,5 @@
 ﻿namespace PersonalFinance.Business.Category
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using PersonalFinance.Common.DataTransfer;

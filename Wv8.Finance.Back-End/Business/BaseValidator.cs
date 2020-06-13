@@ -5,7 +5,6 @@
     using System.Globalization;
     using System.Linq;
     using NodaTime;
-    using NodaTime.Text;
     using Wv8.Core;
     using Wv8.Core.EntityFramework;
     using Wv8.Core.Exceptions;

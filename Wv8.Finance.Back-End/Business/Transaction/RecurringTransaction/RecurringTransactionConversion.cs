@@ -1,14 +1,10 @@
 ﻿namespace PersonalFinance.Business.Transaction.RecurringTransaction
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Category;
     using PersonalFinance.Common;
-    using PersonalFinance.Common.Comparers;
     using PersonalFinance.Common.DataTransfer;
-    using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
 

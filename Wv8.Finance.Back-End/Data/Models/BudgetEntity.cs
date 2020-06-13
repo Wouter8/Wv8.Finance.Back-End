@@ -1,6 +1,5 @@
 ﻿namespace PersonalFinance.Data.Models
 {
-    using System;
     using NodaTime;
 
     /// <summary>

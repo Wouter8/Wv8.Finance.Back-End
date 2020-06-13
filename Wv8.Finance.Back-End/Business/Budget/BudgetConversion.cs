@@ -1,13 +1,10 @@
 ﻿namespace PersonalFinance.Business.Budget
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using PersonalFinance.Business.Category;
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer;
     using PersonalFinance.Data.Models;
-    using Wv8.Core;
 
     /// <summary>
     /// Conversion class containing conversion methods.

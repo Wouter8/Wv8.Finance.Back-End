@@ -1,6 +1,5 @@
 ﻿namespace PersonalFinance.Business.Budget
 {
-    using System;
     using Wv8.Core.Exceptions;
 
     /// <summary>

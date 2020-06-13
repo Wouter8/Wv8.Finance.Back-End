@@ -1,6 +1,5 @@
 ﻿namespace PersonalFinance.Service.Controllers
 {
-    using System;
     using Microsoft.AspNetCore.Mvc;
     using PersonalFinance.Business.Report;
     using PersonalFinance.Common.DataTransfer.Reports;

@@ -3,12 +3,10 @@
     using System;
     using System.Linq;
     using NodaTime;
-    using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.Processor;
+    using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
-    using PersonalFinance.Data.History;
     using PersonalFinance.Data.Models;
-    using Wv8.Core;
     using Xunit;
 
     /// <summary>
@@ -207,62 +205,59 @@
         /// even further in the past.
         /// </summary>
         [Fact]
-        public void HistoricalBalance_OldLastEntry()
+        public void DailyBalance_OldLastEntry()
         {
             var account = this.GenerateAccount();
 
-            var historicBalance = this.context.AccountHistory.Single();
+            var historicBalance = this.context.DailyBalances.Single();
 
             this.context.Remove(historicBalance);
-            this.context.AccountHistory.Add(new AccountHistoryEntity
+            this.context.DailyBalances.Add(new DailyBalanceEntity
             {
-                ValidFrom = DateTime.Today.AddDays(-7),
-                ValidTo = DateTime.MaxValue,
+                Date = DateTime.Today.AddDays(-7).ToLocalDate(),
                 AccountId = account.Id,
                 Balance = 0,
             });
             this.context.SaveChanges();
 
+            var date = LocalDate.FromDateTime(DateTime.Today).PlusDays(-3);
             // Transaction in the past.
             var transaction = this.GenerateTransaction(
                 accountId: account.Id,
-                date: LocalDate.FromDateTime(DateTime.Today).PlusDays(-3),
+                date: date,
                 amount: -50);
 
             this.RefreshContext();
 
-            var historicBalances = this.context.AccountHistory.OrderBy(ah => ah.ValidFrom).ToList();
+            var dailyBalances = this.context.DailyBalances.OrderBy(ah => ah.Date).ToList();
 
-            Assert.Equal(2, historicBalances.Count);
-            Assert.Single(historicBalances.AtNow());
-            Assert.Equal(0, historicBalances[0].Balance);
-            Assert.Equal(-50, historicBalances[1].Balance);
-            Assert.NotEqual(DateTime.MaxValue, historicBalances[0].ValidTo);
-            Assert.Equal(DateTime.MaxValue, historicBalances[1].ValidTo);
-            Assert.Equal(DateTime.Today.AddDays(-3), historicBalances[1].ValidFrom);
+            Assert.Equal(2, dailyBalances.Count);
+            Assert.Single(dailyBalances.Where(hb => hb.Date == date));
+            Assert.Equal(0, dailyBalances[0].Balance);
+            Assert.Equal(-50, dailyBalances[1].Balance);
+            Assert.Equal(DateTime.Today.AddDays(-3).ToLocalDate(), dailyBalances[1].Date);
         }
 
         /// <summary>
         /// Tests that the historical balance is created upon creating an account.
         /// </summary>
         [Fact]
-        public void HistoricalBalance_NewAccount()
+        public void DailyBalance_NewAccount()
         {
             var account = this.GenerateAccount();
 
-            var historicBalances = this.context.AccountHistory.Where(ah => ah.AccountId == account.Id).ToList();
+            var dailyBalances = this.context.DailyBalances.Where(ah => ah.AccountId == account.Id).ToList();
 
-            Assert.Single(historicBalances);
-            Assert.Single(historicBalances.AtNow());
-            Assert.Equal(0, historicBalances.First().Balance);
-            Assert.Equal(DateTime.MaxValue, historicBalances.First().ValidTo);
+            Assert.Single(dailyBalances);
+            Assert.Single(dailyBalances.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(0, dailyBalances.First().Balance);
         }
 
         /// <summary>
         /// Tests that the historical balance is properly stored upon processing a transaction.
         /// </summary>
         [Fact]
-        public void HistoricalBalance_Transaction()
+        public void DailyBalance_Transaction()
         {
             // All transaction should use alter the already existing historic entry, since it has the same date.
             var account = this.GenerateAccount();
@@ -273,12 +268,11 @@
                 accountId: account.Id,
                 date: LocalDate.FromDateTime(DateTime.Today),
                 amount: -50);
-            var historicBalances = this.context.AccountHistory.Where(ah => ah.AccountId == account.Id).ToList();
+            var dailyBalances = this.context.DailyBalances.Where(ah => ah.AccountId == account.Id).ToList();
 
-            Assert.Single(historicBalances);
-            Assert.Single(historicBalances.AtNow());
-            Assert.Equal(-50, historicBalances[0].Balance);
-            Assert.Equal(DateTime.MaxValue, historicBalances[0].ValidTo);
+            Assert.Single(dailyBalances);
+            Assert.Single(dailyBalances.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(-50, dailyBalances[0].Balance);
 
             // Income transaction that should be processed immediately.
             transaction = this.GenerateTransaction(
@@ -287,12 +281,11 @@
                 date: LocalDate.FromDateTime(DateTime.Today),
                 amount: 50);
             this.RefreshContext();
-            historicBalances = this.context.AccountHistory.Where(ah => ah.AccountId == account.Id).ToList();
+            dailyBalances = this.context.DailyBalances.Where(ah => ah.AccountId == account.Id).ToList();
 
-            Assert.Single(historicBalances);
-            Assert.Single(historicBalances.AtNow());
-            Assert.Equal(0, historicBalances[0].Balance);
-            Assert.Equal(DateTime.MaxValue, historicBalances[0].ValidTo);
+            Assert.Single(dailyBalances);
+            Assert.Single(dailyBalances.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(0, dailyBalances[0].Balance);
 
             // Transfer transaction that should be processed immediately.
             transaction = this.GenerateTransaction(
@@ -302,41 +295,37 @@
                 amount: 50,
                 receivingAccountId: account2.Id);
             this.RefreshContext();
-            historicBalances = this.context.AccountHistory.Where(ah => ah.AccountId == account.Id).ToList();
-            var historicBalances2 = this.context.AccountHistory.Where(ah => ah.AccountId == account2.Id).ToList();
+            dailyBalances = this.context.DailyBalances.Where(ah => ah.AccountId == account.Id).ToList();
+            var dailyBalances2 = this.context.DailyBalances.Where(ah => ah.AccountId == account2.Id).ToList();
 
-            Assert.Single(historicBalances);
-            Assert.Single(historicBalances.AtNow());
-            Assert.Equal(-50, historicBalances[0].Balance);
-            Assert.Equal(DateTime.MaxValue, historicBalances[0].ValidTo);
+            Assert.Single(dailyBalances);
+            Assert.Single(dailyBalances.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(-50, dailyBalances[0].Balance);
 
-            Assert.Single(historicBalances2);
-            Assert.Single(historicBalances2.AtNow());
-            Assert.Equal(50, historicBalances2[0].Balance);
-            Assert.Equal(DateTime.MaxValue, historicBalances[0].ValidTo);
+            Assert.Single(dailyBalances2);
+            Assert.Single(dailyBalances2.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(50, dailyBalances2[0].Balance);
 
             // Remove last transaction. Should add historical entry.
             this.TransactionManager.DeleteTransaction(transaction.Id);
             this.RefreshContext();
-            historicBalances = this.context.AccountHistory.Where(ah => ah.AccountId == account.Id).ToList();
-            historicBalances2 = this.context.AccountHistory.Where(ah => ah.AccountId == account2.Id).ToList();
+            dailyBalances = this.context.DailyBalances.Where(ah => ah.AccountId == account.Id).ToList();
+            dailyBalances2 = this.context.DailyBalances.Where(ah => ah.AccountId == account2.Id).ToList();
 
-            Assert.Single(historicBalances);
-            Assert.Single(historicBalances.AtNow());
-            Assert.Equal(0, historicBalances[0].Balance);
-            Assert.Equal(DateTime.MaxValue, historicBalances[0].ValidTo);
+            Assert.Single(dailyBalances);
+            Assert.Single(dailyBalances.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(0, dailyBalances[0].Balance);
 
-            Assert.Single(historicBalances2);
-            Assert.Single(historicBalances2.AtNow());
-            Assert.Equal(0, historicBalances2[0].Balance);
-            Assert.Equal(DateTime.MaxValue, historicBalances[0].ValidTo);
+            Assert.Single(dailyBalances2);
+            Assert.Single(dailyBalances2.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(0, dailyBalances2[0].Balance);
         }
 
         /// <summary>
         /// Tests that the historical balance is properly stored upon processing a transaction in the past.
         /// </summary>
         [Fact]
-        public void HistoricalBalance_TransactionInPast()
+        public void DailyBalance_TransactionInPast()
         {
             var account = this.GenerateAccount();
             var account2 = this.GenerateAccount();
@@ -347,17 +336,15 @@
                 accountId: account.Id,
                 date: LocalDate.FromDateTime(DateTime.Today).PlusDays(-2),
                 amount: -50);
-            var historicBalances = this.context.AccountHistory
+            var dailyBalances = this.context.DailyBalances
                 .Where(ah => ah.AccountId == account.Id)
-                .OrderBy(ah => ah.ValidFrom)
+                .OrderBy(ah => ah.Date)
                 .ToList();
 
-            Assert.Equal(2, historicBalances.Count);
-            Assert.Single(historicBalances.AtNow());
-            Assert.Equal(-50, historicBalances[0].Balance);
-            Assert.Equal(-50, historicBalances[1].Balance);
-            Assert.NotEqual(DateTime.MaxValue, historicBalances[0].ValidTo);
-            Assert.Equal(DateTime.MaxValue, historicBalances[1].ValidTo);
+            Assert.Equal(2, dailyBalances.Count);
+            Assert.Single(dailyBalances.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(-50, dailyBalances[0].Balance);
+            Assert.Equal(-50, dailyBalances[1].Balance);
 
             // Transaction that should be processed between the already existing historical entries.
             transaction = this.GenerateTransaction(
@@ -366,19 +353,16 @@
                 date: LocalDate.FromDateTime(DateTime.Today).PlusDays(-1),
                 amount: 50);
             this.RefreshContext();
-            historicBalances = this.context.AccountHistory
+            dailyBalances = this.context.DailyBalances
                 .Where(ah => ah.AccountId == account.Id)
-                .OrderBy(ah => ah.ValidFrom)
+                .OrderBy(ah => ah.Date)
                 .ToList();
 
-            Assert.Equal(3, historicBalances.Count);
-            Assert.Single(historicBalances.AtNow());
-            Assert.Equal(-50, historicBalances[0].Balance);
-            Assert.Equal(0, historicBalances[1].Balance);
-            Assert.Equal(0, historicBalances[2].Balance);
-            Assert.NotEqual(DateTime.MaxValue, historicBalances[0].ValidTo);
-            Assert.NotEqual(DateTime.MaxValue, historicBalances[1].ValidTo);
-            Assert.Equal(DateTime.MaxValue, historicBalances[2].ValidTo);
+            Assert.Equal(3, dailyBalances.Count);
+            Assert.Single(dailyBalances.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(-50, dailyBalances[0].Balance);
+            Assert.Equal(0, dailyBalances[1].Balance);
+            Assert.Equal(0, dailyBalances[2].Balance);
 
             // Transfer transaction that should be processed at the same date as previous transaction.
             transaction = this.GenerateTransaction(
@@ -388,59 +372,49 @@
                 amount: 50,
                 receivingAccountId: account2.Id);
             this.RefreshContext();
-            historicBalances = this.context.AccountHistory
+            dailyBalances = this.context.DailyBalances
                 .Where(ah => ah.AccountId == account.Id)
-                .OrderBy(ah => ah.ValidFrom)
+                .OrderBy(ah => ah.Date)
                 .ToList();
-            var historicBalances2 = this.context.AccountHistory
+            var dailyBalances2 = this.context.DailyBalances
                 .Where(ah => ah.AccountId == account2.Id)
-                .OrderBy(ah => ah.ValidFrom)
+                .OrderBy(ah => ah.Date)
                 .ToList();
 
-            Assert.Equal(3, historicBalances.Count);
-            Assert.Single(historicBalances.AtNow());
-            Assert.Equal(-50, historicBalances[0].Balance);
-            Assert.Equal(-50, historicBalances[1].Balance);
-            Assert.Equal(-50, historicBalances[2].Balance);
-            Assert.NotEqual(DateTime.MaxValue, historicBalances[0].ValidTo);
-            Assert.NotEqual(DateTime.MaxValue, historicBalances[1].ValidTo);
-            Assert.Equal(DateTime.MaxValue, historicBalances[2].ValidTo);
+            Assert.Equal(3, dailyBalances.Count);
+            Assert.Single(dailyBalances.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(-50, dailyBalances[0].Balance);
+            Assert.Equal(-50, dailyBalances[1].Balance);
+            Assert.Equal(-50, dailyBalances[2].Balance);
 
-            Assert.Equal(2, historicBalances2.Count);
-            Assert.Single(historicBalances2.AtNow());
-            Assert.Equal(50, historicBalances2[0].Balance);
-            Assert.Equal(50, historicBalances2[1].Balance);
-            Assert.NotEqual(DateTime.MaxValue, historicBalances2[0].ValidTo);
-            Assert.Equal(DateTime.MaxValue, historicBalances2[1].ValidTo);
+            Assert.Equal(2, dailyBalances2.Count);
+            Assert.Single(dailyBalances2.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(50, dailyBalances2[0].Balance);
+            Assert.Equal(50, dailyBalances2[1].Balance);
 
             // Remove last transaction. Should alter the latest historical entry.
             // Second account should have its first entry changed.
             this.TransactionManager.DeleteTransaction(transaction.Id);
             this.RefreshContext();
-            historicBalances = this.context.AccountHistory
+            dailyBalances = this.context.DailyBalances
                 .Where(ah => ah.AccountId == account.Id)
-                .OrderBy(ah => ah.ValidFrom)
+                .OrderBy(ah => ah.Date)
                 .ToList();
-            historicBalances2 = this.context.AccountHistory
+            dailyBalances2 = this.context.DailyBalances
                 .Where(ah => ah.AccountId == account2.Id)
-                .OrderBy(ah => ah.ValidFrom)
+                .OrderBy(ah => ah.Date)
                 .ToList();
 
-            Assert.Equal(3, historicBalances.Count);
-            Assert.Single(historicBalances.AtNow());
-            Assert.Equal(-50, historicBalances[0].Balance);
-            Assert.Equal(0, historicBalances[1].Balance);
-            Assert.Equal(0, historicBalances[2].Balance);
-            Assert.NotEqual(DateTime.MaxValue, historicBalances[0].ValidTo);
-            Assert.NotEqual(DateTime.MaxValue, historicBalances[1].ValidTo);
-            Assert.Equal(DateTime.MaxValue, historicBalances[2].ValidTo);
+            Assert.Equal(3, dailyBalances.Count);
+            Assert.Single(dailyBalances.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(-50, dailyBalances[0].Balance);
+            Assert.Equal(0, dailyBalances[1].Balance);
+            Assert.Equal(0, dailyBalances[2].Balance);
 
-            Assert.Equal(2, historicBalances2.Count);
-            Assert.Single(historicBalances2.AtNow());
-            Assert.Equal(0, historicBalances2[0].Balance);
-            Assert.Equal(0, historicBalances2[1].Balance);
-            Assert.NotEqual(DateTime.MaxValue, historicBalances2[0].ValidTo);
-            Assert.Equal(DateTime.MaxValue, historicBalances2[1].ValidTo);
+            Assert.Equal(2, dailyBalances2.Count);
+            Assert.Single(dailyBalances2.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(0, dailyBalances2[0].Balance);
+            Assert.Equal(0, dailyBalances2[1].Balance);
 
             // Transaction before first transaction
             transaction = this.GenerateTransaction(
@@ -448,21 +422,17 @@
                 date: LocalDate.FromDateTime(DateTime.Today).PlusDays(-4),
                 amount: -50);
             this.RefreshContext();
-            historicBalances = this.context.AccountHistory
+            dailyBalances = this.context.DailyBalances
                 .Where(ah => ah.AccountId == account.Id)
-                .OrderBy(ah => ah.ValidFrom)
+                .OrderBy(ah => ah.Date)
                 .ToList();
 
-            Assert.Equal(4, historicBalances.Count);
-            Assert.Single(historicBalances.AtNow());
-            Assert.Equal(-50, historicBalances[0].Balance);
-            Assert.Equal(-100, historicBalances[1].Balance);
-            Assert.Equal(-50, historicBalances[2].Balance);
-            Assert.Equal(-50, historicBalances[3].Balance);
-            Assert.NotEqual(DateTime.MaxValue, historicBalances[0].ValidTo);
-            Assert.NotEqual(DateTime.MaxValue, historicBalances[1].ValidTo);
-            Assert.NotEqual(DateTime.MaxValue, historicBalances[2].ValidTo);
-            Assert.Equal(DateTime.MaxValue, historicBalances[3].ValidTo);
+            Assert.Equal(4, dailyBalances.Count);
+            Assert.Single(dailyBalances.Where(hb => hb.Date == DateTime.Today.ToLocalDate()));
+            Assert.Equal(-50, dailyBalances[0].Balance);
+            Assert.Equal(-100, dailyBalances[1].Balance);
+            Assert.Equal(-50, dailyBalances[2].Balance);
+            Assert.Equal(-50, dailyBalances[3].Balance);
         }
 
         /// <summary>

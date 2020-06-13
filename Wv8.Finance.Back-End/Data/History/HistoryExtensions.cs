@@ -5,8 +5,6 @@
     using System.Linq;
     using System.Threading;
     using Microsoft.EntityFrameworkCore;
-    using NodaTime;
-    using Wv8.Core;
 
     /// <summary>
     /// A class providing extension methods related to historical entities.
