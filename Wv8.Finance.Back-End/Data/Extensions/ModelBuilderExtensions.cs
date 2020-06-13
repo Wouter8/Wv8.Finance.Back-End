@@ -32,6 +32,8 @@
         {
             var entity = builder.Entity<IconEntity>();
 
+            entity.ToTable("Icons");
+
             entity.Property(e => e.Pack).IsRequired();
             entity.Property(e => e.Name).IsRequired();
             entity.Property(e => e.Color).IsRequired();
@@ -45,6 +47,8 @@
         {
             var entity = builder.Entity<AccountEntity>();
 
+            entity.ToTable("Accounts");
+
             entity.Property(e => e.Description).IsRequired();
         }
 
@@ -55,6 +59,8 @@
         private static void BuildAccountHistoryEntity(this ModelBuilder builder)
         {
             var entity = builder.Entity<AccountHistoryEntity>();
+
+            entity.ToTable("AccountHistory");
 
             entity.HasKey(e => new { e.AccountId, e.ValidFrom });
             entity.Property(e => e.Balance).HasPrecision(12, 2);
@@ -68,6 +74,8 @@
         {
             var entity = builder.Entity<DailyBalanceEntity>();
 
+            entity.ToTable("DailyBalances");
+
             entity.HasKey(e => new { e.AccountId, e.Date });
             entity.Property(e => e.Balance).HasPrecision(12, 2);
         }
@@ -79,6 +87,8 @@
         private static void BuildCategoryEntity(this ModelBuilder builder)
         {
             var entity = builder.Entity<CategoryEntity>();
+
+            entity.ToTable("Categories");
 
             entity.Property(e => e.Description).IsRequired();
             entity.Property(e => e.ExpectedMonthlyAmount).HasPrecision(12, 2);
@@ -92,6 +102,8 @@
         {
             var entity = builder.Entity<BudgetEntity>();
 
+            entity.ToTable("Budgets");
+
             entity.Property(e => e.Amount).HasPrecision(12, 2);
             entity.Property(e => e.Spent).HasPrecision(12, 2);
         }
@@ -104,6 +116,8 @@
         {
             var entity = builder.Entity<TransactionEntity>();
 
+            entity.ToTable("Transactions");
+
             entity.Property(e => e.Description).IsRequired();
             entity.Property(e => e.Amount).HasPrecision(12, 2);
         }
@@ -115,6 +129,8 @@
         private static void BuildRecurringTransactionEntity(this ModelBuilder builder)
         {
             var entity = builder.Entity<RecurringTransactionEntity>();
+
+            entity.ToTable("RecurringTransactions");
 
             entity.Property(e => e.Description).IsRequired();
             entity.Property(e => e.Amount).HasPrecision(12, 2);
