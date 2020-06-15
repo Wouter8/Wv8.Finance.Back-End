@@ -9,13 +9,21 @@
   },
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "PersonalFinance.Service": {
+    "Development.Mac": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development.Mac"
       },
-      "applicationUrl": "http://localhost:20213"
+      "applicationUrl": "http://localhost:49907"
+    },
+    "Development.Windows": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development.Windows"
+      },
+      "applicationUrl": "http://localhost:49907"
     }
   }
 }

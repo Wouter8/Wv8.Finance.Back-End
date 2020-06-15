@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PersonalFinance.Data;
 
 namespace PersonalFinance.Data.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20200613201009_FixTableNaming")]
+    partial class FixTableNaming
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -44,6 +46,25 @@ namespace PersonalFinance.Data.Migrations
                     b.HasIndex("IconId");
 
                     b.ToTable("Accounts");
+                });
+
+            modelBuilder.Entity("PersonalFinance.Data.Models.AccountHistoryEntity", b =>
+                {
+                    b.Property<int>("AccountId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<DateTime>("ValidTo")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("AccountId", "ValidFrom");
+
+                    b.ToTable("AccountHistory");
                 });
 
             modelBuilder.Entity("PersonalFinance.Data.Models.BudgetEntity", b =>
@@ -270,6 +291,15 @@ namespace PersonalFinance.Data.Migrations
                     b.HasOne("PersonalFinance.Data.Models.IconEntity", "Icon")
                         .WithMany()
                         .HasForeignKey("IconId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PersonalFinance.Data.Models.AccountHistoryEntity", b =>
+                {
+                    b.HasOne("PersonalFinance.Data.Models.AccountEntity", "Account")
+                        .WithMany("History")
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

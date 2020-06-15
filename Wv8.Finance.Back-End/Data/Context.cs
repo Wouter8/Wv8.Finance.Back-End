@@ -27,11 +27,6 @@
         public DbSet<AccountEntity> Accounts { get; set; }
 
         /// <summary>
-        /// The set of historical accounts.
-        /// </summary>
-        public DbSet<AccountHistoryEntity> AccountHistory { get; set; }
-
-        /// <summary>
         /// The set of daily balances.
         /// </summary>
         public DbSet<DailyBalanceEntity> DailyBalances { get; set; }
