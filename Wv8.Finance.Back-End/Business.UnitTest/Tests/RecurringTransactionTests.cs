@@ -44,15 +44,13 @@
             var category = this.GenerateCategory();
             var rTransaction1 = this.GenerateRecurringTransaction(
                 accountId: account1.Id,
-                type: TransactionType.Expense,
                 categoryId: category.Id);
             var rTransaction2 = this.GenerateRecurringTransaction(
                 accountId: account1.Id,
-                type: TransactionType.Transfer,
+                type: TransactionType.Internal,
                 receivingAccountId: account2.Id);
             var finishedRecurringTransactions = this.GenerateRecurringTransaction(
                 accountId: account1.Id,
-                type: TransactionType.Expense,
                 startDate: LocalDate.FromDateTime(DateTime.Today).PlusDays(-7),
                 endDate: LocalDate.FromDateTime(DateTime.Today),
                 categoryId: category.Id);
@@ -84,8 +82,8 @@
             // Type filter
             retrieved =
                 this.RecurringTransactionManager.GetRecurringTransactionsByFilter(
-                    TransactionType.Income, Maybe<int>.None, Maybe<int>.None, false);
-            Assert.Empty(retrieved);
+                    TransactionType.External, Maybe<int>.None, Maybe<int>.None, false);
+            Assert.Single(retrieved);
         }
 
         #endregion GetRecurringTransactionsByFilter
@@ -172,7 +170,6 @@
 
             var rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
                 account,
-                TransactionType.Expense,
                 description,
                 startDate.ToDateString(),
                 endDate.ToDateString(),
@@ -223,7 +220,6 @@
 
             var rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
                 account,
-                TransactionType.Expense,
                 description,
                 startDate.ToDateString(),
                 endDate.ToDateString(),
@@ -265,7 +261,6 @@
 
             var rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
                 account.Id,
-                TransactionType.Expense,
                 description,
                 startDate.ToDateString(),
                 endDate.ToDateString(),
@@ -289,7 +284,6 @@
 
             rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
                 account.Id,
-                TransactionType.Expense,
                 description,
                 startDate.ToDateString(),
                 endDate.ToDateString(),

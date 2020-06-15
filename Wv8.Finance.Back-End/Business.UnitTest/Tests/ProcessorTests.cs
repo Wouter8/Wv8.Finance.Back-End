@@ -21,7 +21,7 @@
         public void Transactions()
         {
             var category = this.GenerateCategory();
-            var category2 = this.GenerateCategory(CategoryType.Income);
+            var category2 = this.GenerateCategory();
             var budget = this.GenerateBudget(
                 categoryId: category.Id,
                 startDate: LocalDate.FromDateTime(DateTime.Today).PlusDays(-1),
@@ -39,7 +39,7 @@
                     Date = LocalDate.FromDateTime(DateTime.Today).PlusDays(1),
                     Description = "Description",
                     Processed = false,
-                    Type = TransactionType.Expense,
+                    Type = TransactionType.External,
                 });
             this.context.SaveChanges();
 
@@ -63,7 +63,7 @@
                     Date = LocalDate.FromDateTime(DateTime.Today),
                     Description = "Description",
                     Processed = false,
-                    Type = TransactionType.Expense,
+                    Type = TransactionType.External,
                 });
             this.context.SaveChanges();
 
@@ -87,7 +87,7 @@
                     Date = LocalDate.FromDateTime(DateTime.Today),
                     Description = "Description",
                     Processed = false,
-                    Type = TransactionType.Income,
+                    Type = TransactionType.External,
                 });
             this.context.SaveChanges();
 
@@ -111,7 +111,7 @@
                     Date = LocalDate.FromDateTime(DateTime.Today),
                     Description = "Description",
                     Processed = false,
-                    Type = TransactionType.Transfer,
+                    Type = TransactionType.Internal,
                 });
             this.context.SaveChanges();
 
@@ -136,9 +136,9 @@
                     Description = "Description",
                     Processed = false,
                     CategoryId = category.Id,
-                    Type = TransactionType.Expense,
                     NeedsConfirmation = true,
                     IsConfirmed = false,
+                    Type = TransactionType.External,
                 });
             this.context.SaveChanges();
 
@@ -171,7 +171,6 @@
             var rTransaction = new RecurringTransactionEntity
             {
                 Description = description,
-                Type = TransactionType.Expense,
                 Amount = amount,
                 StartDate = startDate,
                 EndDate = endDate,
@@ -182,6 +181,7 @@
                 IntervalUnit = intervalUnit,
                 NeedsConfirmation = false,
                 NextOccurence = startDate,
+                Type = TransactionType.External,
             };
             this.context.RecurringTransactions.Add(rTransaction);
             this.context.SaveChanges();
@@ -277,7 +277,6 @@
             // Income transaction that should be processed immediately.
             transaction = this.GenerateTransaction(
                 accountId: account.Id,
-                type: TransactionType.Income,
                 date: LocalDate.FromDateTime(DateTime.Today),
                 amount: 50);
             this.RefreshContext();
@@ -290,7 +289,7 @@
             // Transfer transaction that should be processed immediately.
             transaction = this.GenerateTransaction(
                 accountId: account.Id,
-                type: TransactionType.Transfer,
+                type: TransactionType.Internal,
                 date: LocalDate.FromDateTime(DateTime.Today),
                 amount: 50,
                 receivingAccountId: account2.Id);
@@ -349,7 +348,6 @@
             // Transaction that should be processed between the already existing historical entries.
             transaction = this.GenerateTransaction(
                 accountId: account.Id,
-                type: TransactionType.Income,
                 date: LocalDate.FromDateTime(DateTime.Today).PlusDays(-1),
                 amount: 50);
             this.RefreshContext();
@@ -367,7 +365,7 @@
             // Transfer transaction that should be processed at the same date as previous transaction.
             transaction = this.GenerateTransaction(
                 accountId: account.Id,
-                type: TransactionType.Transfer,
+                type: TransactionType.Internal,
                 date: LocalDate.FromDateTime(DateTime.Today).PlusDays(-1),
                 amount: 50,
                 receivingAccountId: account2.Id);

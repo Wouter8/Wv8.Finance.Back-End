@@ -109,7 +109,6 @@
         /// Creates a new recurring transaction.
         /// </summary>
         /// <param name="accountId">The identifier of the account this recurring transaction belongs to.</param>
-        /// <param name="type">The type of the recurring transaction.</param>
         /// <param name="description">The description of the recurring transaction.</param>
         /// <param name="startDate">The start date of the recurring transaction.</param>
         /// <param name="endDate">The end date of the recurring transaction.</param>
@@ -123,7 +122,6 @@
         [HttpPost]
         public RecurringTransaction CreateRecurringTransaction(
             int accountId,
-            TransactionType type,
             string description,
             string startDate,
             string endDate,
@@ -136,7 +134,6 @@
         {
             return this.manager.CreateRecurringTransaction(
                 accountId,
-                type,
                 description,
                 startDate,
                 endDate,

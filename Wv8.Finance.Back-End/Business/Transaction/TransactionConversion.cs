@@ -9,7 +9,6 @@
     using PersonalFinance.Common;
     using PersonalFinance.Common.Comparers;
     using PersonalFinance.Common.DataTransfer;
-    using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
 
@@ -76,12 +75,7 @@
                 TotalSum = transactions.Sum(t => t.Amount),
                 Transactions = transactions,
                 // Not using .ToLookup() as this will need a special JSON-converter.
-                SumPerExpenseCategory = transactionsWithCategory
-                    .Where(t => t.Category.Value.Type == CategoryType.Expense)
-                    .GroupBy(t => t.Category.Value.Id, t => t)
-                    .ToDictionary(g => g.Key, g => g.Sum(t => t.Amount)),
-                SumPerIncomeCategory = transactionsWithCategory
-                    .Where(t => t.Category.Value.Type == CategoryType.Income)
+                SumPerCategory = transactionsWithCategory
                     .GroupBy(t => t.Category.Value.Id, t => t)
                     .ToDictionary(g => g.Key, g => g.Sum(t => t.Amount)),
                 TransactionsPerCategory = transactionsWithCategory

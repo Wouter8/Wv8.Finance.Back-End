@@ -4,7 +4,6 @@
     using NodaTime;
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Common;
-    using PersonalFinance.Common.Enums;
     using PersonalFinance.Common.Exceptions;
     using Wv8.Core;
     using Wv8.Core.Exceptions;
@@ -215,7 +214,7 @@
         public void CreateBudget_Exceptions()
         {
             var category = this.GenerateCategory();
-            var categoryIncome = this.GenerateCategory(CategoryType.Income);
+            var categoryIncome = this.GenerateCategory();
 
             const decimal amount = 5;
             var startDate = new LocalDate(2019, 12, 01).ToDateString();
@@ -224,9 +223,6 @@
             // Category does not exist.
             Assert.Throws<DoesNotExistException>(() =>
                 this.BudgetManager.CreateBudget(100, amount, startDate, endDate));
-            // Category is not expense type.
-            Assert.Throws<ValidationException>(() =>
-                this.BudgetManager.CreateBudget(categoryIncome.Id, amount, startDate, endDate));
 
             this.CategoryManager.SetCategoryObsolete(category.Id, true);
             // Category is obsolete.

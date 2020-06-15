@@ -91,7 +91,6 @@
         /// Creates a new transaction.
         /// </summary>
         /// <param name="accountId">The identifier of the account this transaction belongs to.</param>
-        /// <param name="type">The type of the transaction.</param>
         /// <param name="description">The description of the transaction.</param>
         /// <param name="date">The date of the transaction.</param>
         /// <param name="amount">The amount of the transaction.</param>
@@ -102,7 +101,6 @@
         [HttpPost]
         public Transaction CreateTransaction(
             int accountId,
-            TransactionType type,
             string description,
             string date,
             decimal amount,
@@ -110,7 +108,7 @@
             [FromQuery] Maybe<int> receivingAccountId,
             bool needsConfirmation)
         {
-            return this.manager.CreateTransaction(accountId, type, description, date, amount, categoryId, receivingAccountId, needsConfirmation);
+            return this.manager.CreateTransaction(accountId, description, date, amount, categoryId, receivingAccountId, needsConfirmation);
         }
 
         /// <summary>

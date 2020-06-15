@@ -24,7 +24,6 @@
             {
                 Id = entity.Id,
                 Description = entity.Description,
-                Type = entity.Type,
                 ParentCategoryId = entity.ParentCategoryId.ToMaybe(),
                 ParentCategory = entity.ParentCategory.ToMaybe().Select(pc => pc.AsCategory(includeObsoleteChilds)),
                 IsObsolete = entity.IsObsolete,
@@ -49,7 +48,6 @@
             {
                 Id = entity.Id,
                 Description = entity.Description,
-                Type = entity.Type,
                 ParentCategoryId = entity.ParentCategoryId.ToMaybe(),
                 ParentCategory = entity.ParentCategory.ToMaybe().Select(pc => pc.AsParentCategory()),
                 IsObsolete = entity.IsObsolete,
@@ -71,7 +69,6 @@
             {
                 Id = entity.Id,
                 Description = entity.Description,
-                Type = entity.Type,
                 ParentCategoryId = entity.ParentCategoryId.ToMaybe(),
                 ParentCategory = entity.ParentCategory.ToMaybe().Select(pc => pc.AsParentCategory()),
                 IsObsolete = entity.IsObsolete,

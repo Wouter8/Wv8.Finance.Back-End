@@ -147,7 +147,6 @@ namespace Business.UnitTest
         /// <summary>
         /// Creates a category with specified, or random values.
         /// </summary>
-        /// <param name="type">The category type.</param>
         /// <param name="expectedMonthlyAmount">The expected monthly amount.</param>
         /// <param name="description">The description.</param>
         /// <param name="parentCategoryId">The identifier of the parent category.</param>
@@ -156,7 +155,6 @@ namespace Business.UnitTest
         /// <param name="iconColor">The icon color.</param>
         /// <returns>The created account.</returns>
         protected Category GenerateCategory(
-            CategoryType type = CategoryType.Expense,
             decimal? expectedMonthlyAmount = null,
             string description = null,
             int? parentCategoryId = null,
@@ -166,7 +164,6 @@ namespace Business.UnitTest
         {
             return this.CategoryManager.CreateCategory(
                 description ?? this.GetRandomString(),
-                type,
                 expectedMonthlyAmount ?? Maybe<decimal>.None,
                 parentCategoryId.ToMaybe(),
                 iconPack ?? this.GetRandomString(3),
@@ -177,7 +174,6 @@ namespace Business.UnitTest
         /// <summary>
         /// Creates a category with a parent.
         /// </summary>
-        /// <param name="type">The type of category.</param>
         /// <param name="expectedMonthlyAmount">The expected monthly amount.</param>
         /// <param name="description">The description of the child.</param>
         /// <param name="iconPack">The icon pack.</param>
@@ -185,7 +181,6 @@ namespace Business.UnitTest
         /// <param name="iconColor">The icon color.</param>
         /// <returns>The create child category.</returns>
         protected Category GenerateCategoryWithParent(
-            CategoryType type = CategoryType.Expense,
             decimal? expectedMonthlyAmount = null,
             string description = null,
             string iconPack = null,
@@ -195,8 +190,7 @@ namespace Business.UnitTest
             var parent = this.GenerateCategory();
             return this.CategoryManager.CreateCategory(
                 description ?? this.GetRandomString(),
-                type,
-                expectedMonthlyAmount ?? (type == CategoryType.Income ? 50m : -50m),
+                expectedMonthlyAmount ?? -50m,
                 parent.Id,
                 iconPack ?? this.GetRandomString(3),
                 iconName ?? this.GetRandomString(6),
@@ -245,7 +239,7 @@ namespace Business.UnitTest
         /// <returns>The created transaction.</returns>
         protected Transaction GenerateTransaction(
             int? accountId = null,
-            TransactionType type = TransactionType.Expense,
+            TransactionType type = TransactionType.External,
             string description = null,
             LocalDate? date = null,
             decimal? amount = null,
@@ -253,11 +247,9 @@ namespace Business.UnitTest
             int? receivingAccountId = null,
             bool needsConfirmation = false)
         {
-            if (type == TransactionType.Expense && !categoryId.HasValue)
+            if (type == TransactionType.External && !categoryId.HasValue)
                 categoryId = this.GenerateCategory().Id;
-            if (type == TransactionType.Income && !categoryId.HasValue)
-                categoryId = this.GenerateCategory(CategoryType.Income).Id;
-            if (type == TransactionType.Transfer && !receivingAccountId.HasValue)
+            if (type == TransactionType.Internal && !receivingAccountId.HasValue)
                 receivingAccountId = this.GenerateAccount().Id;
 
             if (!accountId.HasValue)
@@ -267,10 +259,9 @@ namespace Business.UnitTest
 
             return this.TransactionManager.CreateTransaction(
                 accountId.Value,
-                type,
                 description ?? this.GetRandomString(),
                 date.Value.ToDateString(),
-                amount ?? (type == TransactionType.Expense ? -50 : 50),
+                amount ?? (type == TransactionType.External ? -50 : 50),
                 categoryId.ToMaybe(),
                 receivingAccountId.ToMaybe(),
                 needsConfirmation);
@@ -293,7 +284,7 @@ namespace Business.UnitTest
         /// <returns>The created recurring transaction.</returns>
         protected RecurringTransaction GenerateRecurringTransaction(
             int? accountId = null,
-            TransactionType type = TransactionType.Expense,
+            TransactionType type = TransactionType.External,
             string description = null,
             LocalDate? startDate = null,
             LocalDate? endDate = null,
@@ -304,11 +295,9 @@ namespace Business.UnitTest
             int interval = 3,
             IntervalUnit intervalUnit = IntervalUnit.Months)
         {
-            if (type == TransactionType.Expense && !categoryId.HasValue)
+            if (type == TransactionType.External && !categoryId.HasValue)
                 categoryId = this.GenerateCategory().Id;
-            if (type == TransactionType.Income && !categoryId.HasValue)
-                categoryId = this.GenerateCategory(CategoryType.Income).Id;
-            if (type == TransactionType.Transfer && !receivingAccountId.HasValue)
+            if (type == TransactionType.Internal && !receivingAccountId.HasValue)
                 receivingAccountId = this.GenerateAccount().Id;
 
             if (!accountId.HasValue)
@@ -320,11 +309,10 @@ namespace Business.UnitTest
 
             return this.RecurringTransactionManager.CreateRecurringTransaction(
                 accountId.Value,
-                type,
                 description ?? this.GetRandomString(),
                 startDate.Value.ToDateString(),
                 endDate.Value.ToDateString(),
-                amount ?? (type == TransactionType.Expense ? -50 : 50),
+                amount ?? (type == TransactionType.External ? -50m : 50m),
                 categoryId.ToMaybe(),
                 receivingAccountId.ToMaybe(),
                 interval,
