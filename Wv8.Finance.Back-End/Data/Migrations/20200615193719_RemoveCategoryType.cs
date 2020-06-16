@@ -8,8 +8,25 @@ namespace PersonalFinance.Data.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // TODO: Change category of (recurring) transactions to expense counterpart if possible
-            // TODO: Delete income categories if expense counterpart exists
+            // Note that this should have taken into account parent categories and budgets, but since none exist that
+            // will be impacted by the removal of category types, they have been ignored. 
+            
+            // Determine categories that have both expense and income category
+            migrationBuilder.Sql(@"
+                CREATE TABLE #DoubleCategories (expenseId INT, incomeId INT);
+                
+                INSERT INTO #DoubleCategories
+                SELECT [c1].[Id], [c2].[Id]
+                FROM [dbo].Categories c1
+                    INNER JOIN [dbo].[Categories] c2 ON [c1].[Description] = [c2].[Description]
+                WHERE [c1].[Type] = 1 AND [c2].[Type] = 2;");
+            // Change category of (recurring) transactions to expense counterpart
+            migrationBuilder.Sql(@"
+                UPDATE dbo.Transactions SET CategoryId = (SELECT expenseId FROM #DoubleCategories WHERE CategoryId = incomeId) WHERE CategoryId IN (SELECT incomeId FROM #DoubleCategories);
+                UPDATE dbo.RecurringTransactions SET CategoryId = (SELECT expenseId FROM #DoubleCategories WHERE CategoryId = incomeId) WHERE CategoryId IN (SELECT incomeId FROM #DoubleCategories);
+            ");
+            // Delete income categories
+            migrationBuilder.Sql("DELETE FROM dbo.Categories WHERE Id IN (SELECT incomeId FROM #DoubleCategories);");
             
             migrationBuilder.DropColumn(
                 name: "Type",
