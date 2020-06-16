@@ -54,22 +54,22 @@
             var account1 = this.GenerateAccount("AAA");
             var account2 = this.GenerateAccount("BBB");
 
-            var categoryIncome = this.GenerateCategory(type: CategoryType.Income, description: "CCC");
-            var categoryExpense = this.GenerateCategory(type: CategoryType.Expense, description: "DDD");
+            var categoryIncome = this.GenerateCategory(description: "CCC");
+            var categoryExpense = this.GenerateCategory(description: "DDD");
             var categoryChild = this.GenerateCategory(
                 description: "FFF", parentCategoryId: categoryExpense.Id);
 
             // Create income transactions.
             var transaction1 = this.GenerateTransaction(
                 account1.Id,
-                TransactionType.Income,
+                TransactionType.External,
                 "Income",
                 LocalDate.FromDateTime(DateTime.Today).PlusDays(1),
                 100,
                 categoryIncome.Id);
             var transaction2 = this.GenerateTransaction(
                 account2.Id,
-                TransactionType.Income,
+                TransactionType.External,
                 "Expense",
                 LocalDate.FromDateTime(DateTime.Today),
                 200,
@@ -88,8 +88,8 @@
 
             // Assert.
             Assert.Equal(300, result.TotalSum);
-            Assert.Equal(300, result.SumPerIncomeCategory[categoryIncome.Id]);
-            Assert.Equal(2, result.TransactionsPerType[TransactionType.Income].Count);
+            Assert.Equal(300, result.SumPerCategory[categoryIncome.Id]);
+            Assert.Equal(2, result.TransactionsPerType[TransactionType.External].Count);
 
             // Retrieve by date.
             result = this.TransactionManager.GetTransactionsByFilter(
@@ -104,20 +104,20 @@
 
             // Assert.
             Assert.Equal(100, result.TotalSum);
-            Assert.Equal(100, result.SumPerIncomeCategory[categoryIncome.Id]);
-            Assert.Single(result.TransactionsPerType[TransactionType.Income]);
+            Assert.Equal(100, result.SumPerCategory[categoryIncome.Id]);
+            Assert.Single(result.TransactionsPerType[TransactionType.External]);
 
             // Create expense transactions.
             var transaction3 = this.GenerateTransaction(
                 account1.Id,
-                TransactionType.Expense,
+                TransactionType.External,
                 "DDD",
                 LocalDate.FromDateTime(DateTime.Today).PlusDays(2),
                 -200,
                 categoryExpense.Id);
             var transaction4 = this.GenerateTransaction(
                 account1.Id,
-                TransactionType.Expense,
+                TransactionType.External,
                 "FFF",
                 LocalDate.FromDateTime(DateTime.Today).PlusDays(3),
                 -20,
@@ -136,16 +136,16 @@
 
             // Assert.
             Assert.Equal(-220, result.TotalSum);
-            Assert.Equal(-200, result.SumPerExpenseCategory[categoryExpense.Id]);
+            Assert.Equal(-200, result.SumPerCategory[categoryExpense.Id]);
             Assert.Single(result.TransactionsPerCategory[categoryExpense.Id]);
-            Assert.Equal(-20, result.SumPerExpenseCategory[categoryChild.Id]);
+            Assert.Equal(-20, result.SumPerCategory[categoryChild.Id]);
             Assert.Single(result.TransactionsPerCategory[categoryChild.Id]);
-            Assert.Equal(2, result.TransactionsPerType[TransactionType.Expense].Count);
+            Assert.Equal(2, result.TransactionsPerType[TransactionType.External].Count);
             Assert.Equal(2, result.Transactions.Count);
 
             // Retrieve by type.
             result = this.TransactionManager.GetTransactionsByFilter(
-                TransactionType.Expense,
+                TransactionType.External,
                 Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
@@ -153,11 +153,11 @@
                 Maybe<string>.None,
                 0,
                 100);
-            Assert.Equal(2, result.Transactions.Count);
+            Assert.Equal(4, result.Transactions.Count);
 
             // Retrieve with pagination.
             result = this.TransactionManager.GetTransactionsByFilter(
-                TransactionType.Expense,
+                TransactionType.External,
                 Maybe<int>.None,
                 Maybe<string>.None,
                 Maybe<int>.None,
@@ -194,7 +194,7 @@
             // Create transfer transaction.
             var transaction5 = this.GenerateTransaction(
                 accountId: account1.Id,
-                type: TransactionType.Transfer,
+                type: TransactionType.Internal,
                 date: LocalDate.FromDateTime(DateTime.Today),
                 amount: 200,
                 receivingAccountId: account2.Id);
@@ -272,7 +272,7 @@
             var receiver = this.GenerateAccount();
             var transferTransaction = this.GenerateTransaction(
                 accountId: sender.Id,
-                type: TransactionType.Transfer,
+                type: TransactionType.Internal,
                 amount: 50,
                 receivingAccountId: receiver.Id);
 
@@ -345,31 +345,23 @@
         public void UpdateTransaction_Exceptions()
         {
             var expenseCategory = this.GenerateCategory();
-            var incomeCategory = this.GenerateCategory(CategoryType.Income);
+            var incomeCategory = this.GenerateCategory();
             var account = this.GenerateAccount();
             var account2 = this.GenerateAccount();
 
             var expenseTransaction = this.GenerateTransaction(account.Id);
             var incomeTransaction = this.GenerateTransaction(
                 accountId: account.Id,
-                type: TransactionType.Income,
+                type: TransactionType.External,
+                amount: 50,
                 categoryId: incomeCategory.Id);
-            var transferTransaction = this.GenerateTransaction(account.Id, TransactionType.Transfer);
+            var transferTransaction = this.GenerateTransaction(account.Id, TransactionType.Internal);
 
             var description = "Description";
             var date = LocalDate.FromDateTime(DateTime.Today).ToDateString();
             var amount = 20;
 
             /* Type errors */
-            // Amount positive on expense transaction.
-            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(
-                expenseTransaction.Id,
-                account.Id,
-                description,
-                date,
-                amount,
-                expenseCategory.Id,
-                Maybe<int>.None));
             // No category specified on expense.
             Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(
                 expenseTransaction.Id,
@@ -378,15 +370,6 @@
                 date,
                 -amount,
                 Maybe<int>.None,
-                Maybe<int>.None));
-            // Amount negative on income transaction.
-            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(
-                incomeTransaction.Id,
-                account.Id,
-                description,
-                date,
-                -amount,
-                incomeCategory.Id,
                 Maybe<int>.None));
             // No category specified on income.
             Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(
@@ -420,7 +403,8 @@
             // Fix current balance to 0 with new transaction
             var fixTransaction = this.GenerateTransaction(
                 accountId: account.Id,
-                type: TransactionType.Income,
+                type: TransactionType.External,
+                amount: 50,
                 categoryId: incomeCategory.Id);
             this.AccountManager.SetAccountObsolete(account.Id, true);
             Assert.Throws<IsObsoleteException>(() => this.TransactionManager.UpdateTransaction(
@@ -434,28 +418,7 @@
             this.AccountManager.SetAccountObsolete(account.Id, false);
             this.TransactionManager.DeleteTransaction(fixTransaction.Id);
 
-            /* Category mismatch */
-            // Income category on expense transaction.
-            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(
-                expenseTransaction.Id,
-                account.Id,
-                description,
-                date,
-                -amount,
-                incomeCategory.Id,
-                Maybe<int>.None));
-            // Expense category on income transaction.
-            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(
-                incomeTransaction.Id,
-                account.Id,
-                description,
-                date,
-                amount,
-                expenseCategory.Id,
-                Maybe<int>.None));
-
             /* Category obsolete */
-            // Income category on expense transaction.
             this.CategoryManager.SetCategoryObsolete(expenseCategory.Id, true);
             Assert.Throws<IsObsoleteException>(() => this.TransactionManager.UpdateTransaction(
                 expenseTransaction.Id,
@@ -488,6 +451,17 @@
                 -amount,
                 Maybe<int>.None,
                 account.Id));
+
+            /* Try to update type of transaction */
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(
+                transferTransaction.Id,
+                account.Id,
+                description,
+                date,
+                -amount,
+                expenseCategory.Id,
+                Maybe<int>.None));
         }
 
         #endregion UpdateTransaction
@@ -507,7 +481,7 @@
 
             // Values.
             var accountId = this.GenerateAccount().Id;
-            var type = TransactionType.Expense;
+            var type = TransactionType.External;
             var description = "Description";
             var date = LocalDate.FromDateTime(DateTime.Today).PlusDays(-1);
             var amount = -10;
@@ -519,7 +493,6 @@
             // Create.
             var created = this.TransactionManager.CreateTransaction(
                 accountId,
-                type,
                 description,
                 date.ToDateString(),
                 amount,
@@ -547,7 +520,6 @@
             // Create.
             created = this.TransactionManager.CreateTransaction(
                 sender.Id,
-                TransactionType.Transfer,
                 description,
                 LocalDate.FromDateTime(DateTime.Today).PlusDays(1).ToDateString(), // Future
                 50,
@@ -569,7 +541,6 @@
             // Create.
             created = this.TransactionManager.CreateTransaction(
                 sender.Id,
-                TransactionType.Transfer,
                 description,
                 LocalDate.FromDateTime(DateTime.Today).ToDateString(),
                 50,
@@ -596,7 +567,7 @@
         public void CreateTransaction_Exceptions()
         {
             var expenseCategory = this.GenerateCategory();
-            var incomeCategory = this.GenerateCategory(CategoryType.Income);
+            var incomeCategory = this.GenerateCategory();
             var account = this.GenerateAccount();
             var account2 = this.GenerateAccount();
 
@@ -605,40 +576,18 @@
             var amount = 20;
 
             /* Type errors */
-            // Amount positive on expense transaction.
-            Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
-                account.Id,
-                TransactionType.Expense,
-                description,
-                date,
-                amount,
-                expenseCategory.Id,
-                Maybe<int>.None,
-                false));
             // No category specified on expense.
             Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
-                TransactionType.Expense,
                 description,
                 date,
                 -amount,
                 Maybe<int>.None,
-                Maybe<int>.None,
-                false));
-            // Amount negative on income transaction.
-            Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
-                account.Id,
-                TransactionType.Income,
-                description,
-                date,
-                -amount,
-                incomeCategory.Id,
                 Maybe<int>.None,
                 false));
             // No category specified on income.
             Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
-                TransactionType.Income,
                 description,
                 date,
                 amount,
@@ -648,7 +597,6 @@
             // Amount negative on transfer transaction.
             Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
-                TransactionType.Transfer,
                 description,
                 date,
                 -amount,
@@ -658,7 +606,6 @@
             // No receiver specified on transfer.
             Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
-                TransactionType.Transfer,
                 description,
                 date,
                 amount,
@@ -670,7 +617,6 @@
             this.AccountManager.SetAccountObsolete(account.Id, true);
             Assert.Throws<IsObsoleteException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
-                TransactionType.Expense,
                 description,
                 date,
                 -amount,
@@ -679,34 +625,10 @@
                 false));
             this.AccountManager.SetAccountObsolete(account.Id, false);
 
-            /* Category mismatch */
-            // Income category on expense transaction.
-            Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
-                account.Id,
-                TransactionType.Expense,
-                description,
-                date,
-                -amount,
-                incomeCategory.Id,
-                Maybe<int>.None,
-                false));
-            // Expense category on income transaction.
-            Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
-                account.Id,
-                TransactionType.Income,
-                description,
-                date,
-                amount,
-                expenseCategory.Id,
-                Maybe<int>.None,
-                false));
-
             /* Category obsolete */
-            // Income category on expense transaction.
             this.CategoryManager.SetCategoryObsolete(expenseCategory.Id, true);
             Assert.Throws<IsObsoleteException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
-                TransactionType.Expense,
                 description,
                 date,
                 -amount,
@@ -719,7 +641,6 @@
             this.AccountManager.SetAccountObsolete(account2.Id, true);
             Assert.Throws<IsObsoleteException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
-                TransactionType.Transfer,
                 description,
                 date,
                 amount,
@@ -731,7 +652,6 @@
             /* Sender same as receiver */
             Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(
                 account.Id,
-                TransactionType.Transfer,
                 description,
                 date,
                 -amount,
@@ -797,7 +717,7 @@
                 IsConfirmed = false,
                 NeedsConfirmation = true,
                 Processed = false,
-                Type = TransactionType.Expense,
+                Type = TransactionType.External,
             };
             // Transaction that doesn't need confirmation
             var transactionNoConfirmation = new TransactionEntity
@@ -809,7 +729,7 @@
                 Description = "Description",
                 NeedsConfirmation = false,
                 Processed = false,
-                Type = TransactionType.Expense,
+                Type = TransactionType.External,
             };
             // Transfer transaction
             var transferTransaction = new TransactionEntity
@@ -822,7 +742,7 @@
                 IsConfirmed = false,
                 NeedsConfirmation = true,
                 Processed = false,
-                Type = TransactionType.Transfer,
+                Type = TransactionType.Internal,
             };
 
             this.context.Transactions.Add(transaction);

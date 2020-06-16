@@ -44,15 +44,13 @@
             var category = this.GenerateCategory();
             var rTransaction1 = this.GenerateRecurringTransaction(
                 accountId: account1.Id,
-                type: TransactionType.Expense,
                 categoryId: category.Id);
             var rTransaction2 = this.GenerateRecurringTransaction(
                 accountId: account1.Id,
-                type: TransactionType.Transfer,
+                type: TransactionType.Internal,
                 receivingAccountId: account2.Id);
             var finishedRecurringTransactions = this.GenerateRecurringTransaction(
                 accountId: account1.Id,
-                type: TransactionType.Expense,
                 startDate: LocalDate.FromDateTime(DateTime.Today).PlusDays(-7),
                 endDate: LocalDate.FromDateTime(DateTime.Today),
                 categoryId: category.Id);
@@ -84,8 +82,8 @@
             // Type filter
             retrieved =
                 this.RecurringTransactionManager.GetRecurringTransactionsByFilter(
-                    TransactionType.Income, Maybe<int>.None, Maybe<int>.None, false);
-            Assert.Empty(retrieved);
+                    TransactionType.External, Maybe<int>.None, Maybe<int>.None, false);
+            Assert.Single(retrieved);
         }
 
         #endregion GetRecurringTransactionsByFilter
@@ -162,6 +160,7 @@
         public void UpdateRecurringTransaction_Exceptions()
         {
             var account = this.GenerateAccount().Id;
+            var account2 = this.GenerateAccount().Id;
             var description = "Description";
             var amount = -30;
             var category = this.GenerateCategory().Id;
@@ -172,7 +171,6 @@
 
             var rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
                 account,
-                TransactionType.Expense,
                 description,
                 startDate.ToDateString(),
                 endDate.ToDateString(),
@@ -200,6 +198,22 @@
                     intervalUnit,
                     false,
                     false));
+
+            // Try to update type of transaction
+            Assert.Throws<ValidationException>(() =>
+                this.RecurringTransactionManager.UpdateRecurringTransaction(
+                    rTransaction.Id,
+                    account,
+                    description,
+                    newStartDate.ToString(),
+                    endDate.ToString(),
+                    amount,
+                    Maybe<int>.None,
+                    account2,
+                    interval,
+                    intervalUnit,
+                    false,
+                    false));
         }
 
         #endregion UpdateRecurringTransaction
@@ -223,7 +237,6 @@
 
             var rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
                 account,
-                TransactionType.Expense,
                 description,
                 startDate.ToDateString(),
                 endDate.ToDateString(),
@@ -265,7 +278,6 @@
 
             var rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
                 account.Id,
-                TransactionType.Expense,
                 description,
                 startDate.ToDateString(),
                 endDate.ToDateString(),
@@ -289,7 +301,6 @@
 
             rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
                 account.Id,
-                TransactionType.Expense,
                 description,
                 startDate.ToDateString(),
                 endDate.ToDateString(),

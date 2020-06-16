@@ -32,22 +32,20 @@ namespace PersonalFinance.Business.Transaction.Processor
 
             switch (transaction.Type)
             {
-                case TransactionType.Expense:
-                    foreach (var entry in historicalEntriesToEdit)
-                        entry.Balance -= Math.Abs(transaction.Amount);
-
-                    // Update budgets.
-                    var budgets = context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
-                    foreach (var budget in budgets)
-                        budget.Spent += Math.Abs(transaction.Amount);
-
-                    break;
-                case TransactionType.Income:
+                case TransactionType.External:
                     foreach (var entry in historicalEntriesToEdit)
                         entry.Balance += transaction.Amount;
 
+                    // Update budgets.
+                    if (transaction.Amount < 0)
+                    {
+                        var budgets = context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
+                        foreach (var budget in budgets)
+                            budget.Spent += Math.Abs(transaction.Amount);
+                    }
+
                     break;
-                case TransactionType.Transfer:
+                case TransactionType.Internal:
                     var receiverEntriesToEdit =
                         GetBalanceEntriesToEdit(transaction.ReceivingAccount, transaction.Date);
 
@@ -57,6 +55,8 @@ namespace PersonalFinance.Business.Transaction.Processor
                         entry.Balance += transaction.Amount;
 
                     break;
+                default:
+                    throw new InvalidOperationException("Unknown transaction type.");
             }
 
             transaction.Processed = true;
@@ -83,23 +83,20 @@ namespace PersonalFinance.Business.Transaction.Processor
 
             switch (transaction.Type)
             {
-                case TransactionType.Expense:
-                    foreach (var historicalBalance in historicalBalances)
-                        historicalBalance.Balance += Math.Abs(transaction.Amount);
-
-                    // Update budgets.
-                    var budgets = context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
-
-                    foreach (var budget in budgets)
-                        budget.Spent -= Math.Abs(transaction.Amount);
-
-                    break;
-                case TransactionType.Income:
+                case TransactionType.External:
                     foreach (var historicalBalance in historicalBalances)
                         historicalBalance.Balance -= transaction.Amount;
 
+                    // Update budgets.
+                    if (transaction.Amount < 0)
+                    {
+                        var budgets = context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
+                        foreach (var budget in budgets)
+                            budget.Spent -= Math.Abs(transaction.Amount);
+                    }
+
                     break;
-                case TransactionType.Transfer:
+                case TransactionType.Internal:
                     var receiverHistoricalBalances = transaction.ReceivingAccount.DailyBalances
                         .Where(hb => hb.Date >= transaction.Date)
                         .ToList();

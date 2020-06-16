@@ -20,14 +20,9 @@
         public decimal TotalSum { get; set; }
 
         /// <summary>
-        /// The sum of the transactions grouped by category for all income categories.
+        /// The sum of the transactions grouped by category.
         /// </summary>
-        public Dictionary<int, decimal> SumPerIncomeCategory { get; set; }
-
-        /// <summary>
-        /// The sum of the transactions grouped by category for all expense categories.
-        /// </summary>
-        public Dictionary<int, decimal> SumPerExpenseCategory { get; set; }
+        public Dictionary<int, decimal> SumPerCategory { get; set; }
 
         /// <summary>
         /// The transactions grouped by category.

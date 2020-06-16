@@ -2,7 +2,6 @@
 {
     using System.Collections.Generic;
     using PersonalFinance.Common.DataTransfer;
-    using PersonalFinance.Common.Enums;
     using Wv8.Core;
 
     /// <summary>
@@ -29,37 +28,34 @@
         /// Retrieves categories from the database with a specified filter.
         /// </summary>
         /// <param name="includeObsolete">Value indicating if obsolete categories should also be retrieved.</param>
-        /// <param name="type">The type of categories to retrieve.</param>
         /// <param name="group">A value indicating if the categories have to be grouped by parent category.</param>
         /// <returns>The list of filtered categories.</returns>
-        List<Category> GetCategoriesByFilter(bool includeObsolete, CategoryType type, bool group);
+        List<Category> GetCategoriesByFilter(bool includeObsolete, bool group);
 
         /// <summary>
         /// Updates an category.
         /// </summary>
         /// <param name="id">The identifier of the category.</param>
         /// <param name="description">The new description of the category.</param>
-        /// <param name="type">The new type of the category.</param>
         /// <param name="expectedMonthlyAmount">Optionally, the expected monthly amount for this category.</param>
         /// <param name="parentCategoryId">Optionally, the identifier of the new parent category.</param>
         /// <param name="iconPack">The new icon pack of the icon for the category.</param>
         /// <param name="iconName">The new name of the icon for the category.</param>
         /// <param name="iconColor">The new background color of the icon for the category.</param>
         /// <returns>The updated category.</returns>
-        Category UpdateCategory(int id, string description, CategoryType type, Maybe<decimal> expectedMonthlyAmount, Maybe<int> parentCategoryId, string iconPack, string iconName, string iconColor);
+        Category UpdateCategory(int id, string description, Maybe<decimal> expectedMonthlyAmount, Maybe<int> parentCategoryId, string iconPack, string iconName, string iconColor);
 
         /// <summary>
         /// Creates a new category.
         /// </summary>
         /// <param name="description">The description of the category.</param>
-        /// <param name="type">The type of the category.</param>
         /// <param name="expectedMonthlyAmount">Optionally, the expected monthly amount for this category.</param>
         /// <param name="parentCategoryId">Optionally, the identifier of the parent category.</param>
         /// <param name="iconPack">The icon pack of the icon for the category.</param>
         /// <param name="iconName">The name of the icon for the category.</param>
         /// <param name="iconColor">The background color of the icon for the category.</param>
         /// <returns>The created category.</returns>
-        Category CreateCategory(string description, CategoryType type, Maybe<decimal> expectedMonthlyAmount, Maybe<int> parentCategoryId, string iconPack, string iconName, string iconColor);
+        Category CreateCategory(string description, Maybe<decimal> expectedMonthlyAmount, Maybe<int> parentCategoryId, string iconPack, string iconName, string iconColor);
 
         /// <summary>
         /// Sets the obsolete value of an category.

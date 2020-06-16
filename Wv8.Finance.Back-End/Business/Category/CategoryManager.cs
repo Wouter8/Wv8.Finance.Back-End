@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using PersonalFinance.Common.DataTransfer;
-    using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.Models;
@@ -48,12 +47,11 @@
         }
 
         /// <inheritdoc />
-        public List<Category> GetCategoriesByFilter(bool includeObsolete, CategoryType type, bool group)
+        public List<Category> GetCategoriesByFilter(bool includeObsolete, bool group)
         {
             return this.Context.Categories
                 .IncludeAll()
                 .WhereIf(!includeObsolete, c => !c.IsObsolete)
-                .Where(c => c.Type == type)
                 .WhereIf(group, c => !c.ParentCategoryId.HasValue)
                 .OrderBy(c => c.Description)
                 .Select(c => c.AsCategory(includeObsolete))
@@ -64,7 +62,6 @@
         public Category UpdateCategory(
             int id,
             string description,
-            CategoryType type,
             Maybe<decimal> expectedMonthlyAmount,
             Maybe<int> parentCategoryId,
             string iconPack,
@@ -73,7 +70,6 @@
         {
             description = this.validator.Description(description);
             this.validator.Icon(iconPack, iconName, iconColor);
-            this.validator.ExpectedMonthlyAmount(expectedMonthlyAmount, type);
 
             return this.ConcurrentInvoke(() =>
             {
@@ -86,9 +82,6 @@
 
                     if (parentCategory.IsObsolete)
                         throw new ValidationException($"Parent category \"{parentCategory.Description}\" is obsolete.");
-
-                    if (parentCategory.Type != type)
-                        throw new ValidationException($"Parent category has different category type.");
 
                     if (parentCategory.Description == description)
                         throw new ValidationException($"The same description as parent \"{parentCategory.Description}\" is not allowed.");
@@ -117,7 +110,7 @@
                 }
                 else
                 {
-                    if (this.Context.Categories.Any(c => c.Id != id && !c.ParentCategoryId.HasValue && c.Description == description && !c.IsObsolete && c.Type == type))
+                    if (this.Context.Categories.Any(c => c.Id != id && !c.ParentCategoryId.HasValue && c.Description == description && !c.IsObsolete))
                         throw new ValidationException($"An active category with description \"{description}\" already exists.");
 
                     if (entity.Children.Any() && expectedMonthlyAmount.IsSome)
@@ -133,7 +126,6 @@
                 }
 
                 entity.Description = description;
-                entity.Type = type;
                 entity.ExpectedMonthlyAmount = expectedMonthlyAmount.ToNullable();
                 entity.ParentCategoryId = parentCategoryId.ToNullable();
                 entity.ParentCategory = parentCategory;
@@ -151,7 +143,6 @@
         /// <inheritdoc />
         public Category CreateCategory(
             string description,
-            CategoryType type,
             Maybe<decimal> expectedMonthlyAmount,
             Maybe<int> parentCategoryId,
             string iconPack,
@@ -160,7 +151,6 @@
         {
             description = this.validator.Description(description);
             this.validator.Icon(iconPack, iconName, iconColor);
-            this.validator.ExpectedMonthlyAmount(expectedMonthlyAmount, type);
 
             return this.ConcurrentInvoke(() =>
             {
@@ -171,9 +161,6 @@
 
                     if (parentCategory.IsObsolete)
                         throw new ValidationException($"Parent category \"{parentCategory.Description}\" is obsolete.");
-
-                    if (parentCategory.Type != type)
-                        throw new ValidationException($"Parent category has different category type.");
 
                     if (parentCategory.Description == description)
                         throw new ValidationException($"The same description as parent \"{parentCategory.Description}\" is not allowed.");
@@ -202,14 +189,13 @@
                 }
                 else
                 {
-                    if (this.Context.Categories.Any(c => !c.ParentCategoryId.HasValue && c.Description == description && !c.IsObsolete && c.Type == type))
+                    if (this.Context.Categories.Any(c => !c.ParentCategoryId.HasValue && c.Description == description && !c.IsObsolete))
                         throw new ValidationException($"An active category with description \"{description}\" already exists.");
                 }
 
                 var entity = new CategoryEntity
                 {
                     Description = description,
-                    Type = type,
                     ExpectedMonthlyAmount = expectedMonthlyAmount.ToNullable(),
                     ParentCategoryId = parentCategoryId.ToNullable(),
                     ParentCategory = parentCategory,
@@ -257,7 +243,6 @@
                         c.Id != entity.Id &&
                         c.ParentCategoryId == entity.ParentCategoryId &&
                         c.Description == entity.Description &&
-                        c.Type == entity.Type &&
                         !c.IsObsolete))
                     {
                         throw new ValidationException(

@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using PersonalFinance.Common.DataTransfer;
-    using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.Models;
@@ -108,9 +107,6 @@
             return this.ConcurrentInvoke(() =>
             {
                 var category = this.Context.Categories.GetEntity(categoryId, false);
-
-                if (category.Type != CategoryType.Expense)
-                    throw new ValidationException("Budgets can only be created for expense categories.");
 
                 var entity = new BudgetEntity
                 {

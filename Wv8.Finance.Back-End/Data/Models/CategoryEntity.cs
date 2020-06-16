@@ -1,7 +1,6 @@
 ﻿namespace PersonalFinance.Data.Models
 {
     using System.Collections.Generic;
-    using PersonalFinance.Common.Enums;
 
     /// <summary>
     /// An entity representing a category. A transaction belongs to a category.
@@ -25,11 +24,6 @@
         /// The description of this account.
         /// </summary>
         public string Description { get; set; }
-
-        /// <summary>
-        /// Value representing the type of category.
-        /// </summary>
-        public CategoryType Type { get; set; }
 
         /// <summary>
         /// The optional identifier of the parent category of this category.
