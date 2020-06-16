@@ -1,8 +1,6 @@
 ﻿namespace PersonalFinance.Business.Transaction
 {
-    using System;
     using PersonalFinance.Common.Enums;
-    using Wv8.Core;
     using Wv8.Core.Exceptions;
 
     /// <summary>
@@ -44,32 +42,11 @@
         /// </summary>
         /// <param name="type">The transaction type.</param>
         /// <param name="amount">The amount of the transaction.</param>
-        /// <param name="categoryId">The category identifier.</param>
-        /// <param name="receivingAccountId">The receiving account identifier.</param>
-        public void Type(TransactionType type, decimal amount, Maybe<int> categoryId, Maybe<int> receivingAccountId)
+        public void Type(TransactionType type, decimal amount)
         {
-            switch (type)
+            if (type == TransactionType.Internal && amount <= 0)
             {
-                case TransactionType.Expense:
-                    if (amount > 0)
-                        throw new ValidationException($"The amount has to be negative.");
-                    if (categoryId.IsNone)
-                        throw new ValidationException($"A category has to be specified for an income or expense transaction.");
-                    break;
-                case TransactionType.Income:
-                    if (amount <= 0)
-                        throw new ValidationException($"The amount has to be greater than 0.");
-                    if (categoryId.IsNone)
-                        throw new ValidationException($"A category has to be specified for an income or expense transaction.");
-                    break;
-                case TransactionType.Transfer:
-                    if (amount <= 0)
-                        throw new ValidationException($"The amount has to be greater than 0.");
-                    if (receivingAccountId.IsNone)
-                        throw new ValidationException($"A receiving account has to be specified for a transfer transaction.");
-                    break;
-                default:
-                    throw new InvalidOperationException($"Unknown transaction type.");
+                throw new ValidationException($"The amount has to be greater than 0.");
             }
         }
     }

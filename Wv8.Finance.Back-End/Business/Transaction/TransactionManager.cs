@@ -89,35 +89,25 @@
         {
             this.validator.Description(description);
             var date = this.validator.DateString(dateString, "date");
+            var type = this.GetTransactionType(categoryId, receivingAccountId);
+            this.validator.Type(type, amount);
 
             return this.ConcurrentInvoke(() =>
             {
                 var entity = this.Context.Transactions.GetEntity(id);
-                this.validator.Type(entity.Type, amount, categoryId, receivingAccountId);
+                if (type != entity.Type)
+                    throw new ValidationException("Changing the type of transaction is not possible.");
 
                 var account = this.Context.Accounts.GetEntity(accountId, false);
 
                 if (entity.Processed)
                     entity.RevertProcessedTransaction(this.Context);
 
-                CategoryEntity category = null;
-                if (categoryId.IsSome)
-                {
-                    category = this.Context.Categories.GetEntity(categoryId.Value, false);
-                    if (entity.Type == TransactionType.Expense && category.Type != CategoryType.Expense)
-                        throw new ValidationException($"Category \"{category.Description}\" is not an expense category.");
-                    if (entity.Type == TransactionType.Income && category.Type != CategoryType.Income)
-                        throw new ValidationException($"Category \"{category.Description}\" is not an income category.");
-                }
+                var category = categoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
-                AccountEntity receivingAccount = null;
-                if (receivingAccountId.IsSome)
-                {
-                    receivingAccount = this.Context.Accounts.GetEntity(receivingAccountId.Value, false);
-
-                    if (receivingAccount.Id == account.Id)
-                        throw new ValidationException("Sender account can not be the same as receiver account.");
-                }
+                var receivingAccount = receivingAccountId.Select(aId => this.Context.Accounts.GetEntity(aId, false));
+                if (receivingAccount.IsSome && receivingAccount.Value.Id == account.Id)
+                    throw new ValidationException("Sender account can not be the same as receiver account.");
 
                 entity.AccountId = accountId;
                 entity.Account = account;
@@ -125,9 +115,9 @@
                 entity.Date = date;
                 entity.Amount = amount;
                 entity.CategoryId = categoryId.ToNullable();
-                entity.Category = category;
+                entity.Category = category.ToNullIfNone();
                 entity.ReceivingAccountId = receivingAccountId.ToNullable();
-                entity.ReceivingAccount = receivingAccount;
+                entity.ReceivingAccount = receivingAccount.ToNullIfNone();
 
                 // Is confirmed is always filled if needs confirmation is true.
                 // ReSharper disable once PossibleInvalidOperationException
@@ -143,7 +133,6 @@
         /// <inheritdoc />
         public Transaction CreateTransaction(
             int accountId,
-            TransactionType type,
             string description,
             string dateString,
             decimal amount,
@@ -153,30 +142,18 @@
         {
             this.validator.Description(description);
             var date = this.validator.DateString(dateString, "date");
-            this.validator.Type(type, amount, categoryId, receivingAccountId);
+            var type = this.GetTransactionType(categoryId, receivingAccountId);
+            this.validator.Type(type, amount);
 
             return this.ConcurrentInvoke(() =>
             {
                 var account = this.Context.Accounts.GetEntity(accountId, false);
 
-                CategoryEntity category = null;
-                if (categoryId.IsSome)
-                {
-                    category = this.Context.Categories.GetEntity(categoryId.Value, false);
-                    if (type == TransactionType.Expense && category.Type != CategoryType.Expense)
-                        throw new ValidationException($"Category \"{category.Description}\" is not an expense category.");
-                    if (type == TransactionType.Income && category.Type != CategoryType.Income)
-                        throw new ValidationException($"Category \"{category.Description}\" is not an income category.");
-                }
+                var category = categoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
-                AccountEntity receivingAccount = null;
-                if (receivingAccountId.IsSome)
-                {
-                    receivingAccount = this.Context.Accounts.GetEntity(receivingAccountId.Value, false);
-
-                    if (receivingAccount.Id == account.Id)
-                        throw new ValidationException("Sender account can not be the same as receiver account.");
-                }
+                var receivingAccount = receivingAccountId.Select(aId => this.Context.Accounts.GetEntity(aId, false));
+                if (receivingAccount.IsSome && receivingAccount.Value.Id == account.Id)
+                    throw new ValidationException("Sender account can not be the same as receiver account.");
 
                 var entity = new TransactionEntity
                 {
@@ -188,9 +165,9 @@
                     Account = account,
                     Processed = false,
                     CategoryId = categoryId.ToNullable(),
-                    Category = category,
+                    Category = category.ToNullIfNone(),
                     ReceivingAccountId = receivingAccountId.ToNullable(),
-                    ReceivingAccount = receivingAccount,
+                    ReceivingAccount = receivingAccount.ToNullIfNone(),
                     NeedsConfirmation = needsConfirmation,
                     IsConfirmed = needsConfirmation ? false : (bool?)null,
                 };
@@ -214,7 +191,7 @@
             return this.ConcurrentInvoke(() =>
             {
                 var entity = this.Context.Transactions.GetEntity(id);
-                this.validator.Type(entity.Type, amount, entity.CategoryId.ToMaybe(), entity.ReceivingAccountId.ToMaybe());
+                this.validator.Type(entity.Type, amount);
 
                 if (!entity.NeedsConfirmation)
                     throw new InvalidOperationException($"This transaction does not need to be confirmed.");

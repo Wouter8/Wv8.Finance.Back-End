@@ -4,7 +4,6 @@
     using Microsoft.AspNetCore.Mvc;
     using PersonalFinance.Business.Category;
     using PersonalFinance.Common.DataTransfer;
-    using PersonalFinance.Common.Enums;
     using Wv8.Core;
 
     /// <summary>
@@ -52,13 +51,12 @@
         /// Retrieves categories from the database with a specified filter.
         /// </summary>
         /// <param name="includeObsolete">Value indicating if obsolete categories should also be retrieved.</param>
-        /// <param name="type">The type of categories to retrieve.</param>
         /// <param name="group">A value indicating if the categories have to be grouped by parent category.</param>
         /// <returns>The list of filtered categories.</returns>
         [HttpGet("filter")]
-        public List<Category> GetCategoriesByFilter(bool includeObsolete, CategoryType type, bool group)
+        public List<Category> GetCategoriesByFilter(bool includeObsolete, bool group)
         {
-            return this.manager.GetCategoriesByFilter(includeObsolete, type, group);
+            return this.manager.GetCategoriesByFilter(includeObsolete, group);
         }
 
         /// <summary>
@@ -66,7 +64,6 @@
         /// </summary>
         /// <param name="id">The identifier of the category.</param>
         /// <param name="description">The new description of the category.</param>
-        /// <param name="type">The new type of the category.</param>
         /// <param name="expectedMonthlyAmount">Optionally, the expected monthly amount for this category.</param>
         /// <param name="parentCategoryId">Optionally, the identifier of the new parent category.</param>
         /// <param name="iconPack">The new icon pack of the icon for the category.</param>
@@ -77,7 +74,6 @@
         public Category UpdateCategory(
             int id,
             string description,
-            CategoryType type,
             [FromQuery] Maybe<decimal> expectedMonthlyAmount,
             [FromQuery] Maybe<int> parentCategoryId,
             string iconPack,
@@ -85,14 +81,13 @@
             string iconColor)
         {
             return this.manager.UpdateCategory(
-                id, description, type, expectedMonthlyAmount, parentCategoryId, iconPack, iconName, iconColor);
+                id, description, expectedMonthlyAmount, parentCategoryId, iconPack, iconName, iconColor);
         }
 
         /// <summary>
         /// Creates a new category.
         /// </summary>
         /// <param name="description">The description of the category.</param>
-        /// <param name="type">The type of the category.</param>
         /// <param name="expectedMonthlyAmount">Optionally, the expected monthly amount for this category.</param>
         /// <param name="parentCategoryId">Optionally, the identifier of the parent category.</param>
         /// <param name="iconPack">The icon pack of the icon for the category.</param>
@@ -102,7 +97,6 @@
         [HttpPost]
         public Category CreateCategory(
             string description,
-            CategoryType type,
             [FromQuery] Maybe<decimal> expectedMonthlyAmount,
             [FromQuery] Maybe<int> parentCategoryId,
             string iconPack,
@@ -110,7 +104,7 @@
             string iconColor)
         {
             return this.manager.CreateCategory(
-                description, type, expectedMonthlyAmount, parentCategoryId, iconPack, iconName, iconColor);
+                description, expectedMonthlyAmount, parentCategoryId, iconPack, iconName, iconColor);
         }
 
         /// <summary>

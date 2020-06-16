@@ -3,7 +3,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using PersonalFinance.Common.DataTransfer;
-    using PersonalFinance.Common.Enums;
     using Wv8.Core;
     using Wv8.Core.Exceptions;
     using Xunit;
@@ -166,22 +165,17 @@
         {
             var category1 = this.GenerateCategory();
             var category2 = this.GenerateCategory();
-            var category3 = this.GenerateCategory(CategoryType.Income);
+            var category3 = this.GenerateCategory();
             var child = this.GenerateCategory(parentCategoryId: category1.Id);
 
             this.CategoryManager.SetCategoryObsolete(category2.Id, true);
 
-            var retrievedCategories = this.CategoryManager.GetCategoriesByFilter(true, CategoryType.Expense, true);
-            Assert.Equal(2, retrievedCategories.Count);
-            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(true, CategoryType.Expense, false);
+            var retrievedCategories = this.CategoryManager.GetCategoriesByFilter(true, true);
             Assert.Equal(3, retrievedCategories.Count);
-            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(false, CategoryType.Expense, true);
-            Assert.Single(retrievedCategories);
-
-            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(true, CategoryType.Income, true);
-            Assert.Single(retrievedCategories);
-            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(false, CategoryType.Income, true);
-            Assert.Single(retrievedCategories);
+            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(true, false);
+            Assert.Equal(4, retrievedCategories.Count);
+            retrievedCategories = this.CategoryManager.GetCategoriesByFilter(false, true);
+            Assert.Equal(2, retrievedCategories.Count);
         }
 
         #endregion GetCategoriesByFilter
@@ -199,16 +193,14 @@
 
             const string newDescription = "Description";
             const decimal newExpectedMonthlyAmount = -50;
-            const CategoryType newType = CategoryType.Expense;
             const string newIconPack = "fas";
             const string newIconName = "circle";
             const string newIconColor = "#FFFFFF";
 
             var updated = this.CategoryManager.UpdateCategory(
-                category.Id, newDescription, newType, newExpectedMonthlyAmount, parent.Id, newIconPack, newIconName, newIconColor);
+                category.Id, newDescription, newExpectedMonthlyAmount, parent.Id, newIconPack, newIconName, newIconColor);
 
             Assert.Equal(newDescription, updated.Description);
-            Assert.Equal(newType, updated.Type);
             Assert.Equal(newExpectedMonthlyAmount, updated.ExpectedMonthlyAmount.Value);
             Assert.Equal(parent.Id, updated.ParentCategoryId);
             Assert.Equal(updated.Icon.Pack, newIconPack);
@@ -229,60 +221,53 @@
             const string newIconPack = "fas";
             const string newIconName = "circle";
             const string newIconColor = "#FFFFFF";
-            const CategoryType newType = CategoryType.Expense;
-            const CategoryType wrongType = CategoryType.Income;
             const string diffDescription = "Description2";
 
             // Description already exists.
             Assert.Throws<ValidationException>(
                 () => this.CategoryManager.UpdateCategory(
-                    category.Id, newDescription, newType, Maybe<decimal>.None, Maybe<int>.None, newIconPack, newIconName, newIconColor));
+                    category.Id, newDescription, Maybe<decimal>.None, Maybe<int>.None, newIconPack, newIconName, newIconColor));
 
             // Description already exists, but on parent.
             Assert.Throws<ValidationException>(
                 () => this.CategoryManager.UpdateCategory(
-                    category.Id, newDescription, newType, Maybe<decimal>.None, category2.Id, newIconPack, newIconName, newIconColor));
-
-            // Parent category has different type.
-            Assert.Throws<ValidationException>(
-                () => this.CategoryManager.UpdateCategory(
-                    category.Id, diffDescription, wrongType, Maybe<decimal>.None, category2.Id, newIconPack, newIconName, newIconColor));
+                    category.Id, newDescription, Maybe<decimal>.None, category2.Id, newIconPack, newIconName, newIconColor));
 
             // Expected monthly amount exceeds parents' expected monthly amount.
             this.CategoryManager.UpdateCategory(
-                category2.Id, category2.Description, category2.Type, -5, Maybe<int>.None, category2.Icon.Pack, category2.Icon.Name, category2.Icon.Color);
+                category2.Id, category2.Description, -5, Maybe<int>.None, category2.Icon.Pack, category2.Icon.Name, category2.Icon.Color);
             Assert.Throws<ValidationException>(
                 () => this.CategoryManager.UpdateCategory(
-                    category.Id, diffDescription, newType, -10, category2.Id, newIconPack, newIconName, newIconColor));
+                    category.Id, diffDescription, -10, category2.Id, newIconPack, newIconName, newIconColor));
 
             // Expected monthly amount of all children exceeds parents' expected monthly amount.
             this.CategoryManager.CreateCategory(
-                "Description3", newType, -4, category2.Id, newIconPack, newIconName, newIconColor);
+                "Description3", -4, category2.Id, newIconPack, newIconName, newIconColor);
             Assert.Throws<ValidationException>(
                 () => this.CategoryManager.UpdateCategory(
-                    category.Id, diffDescription, newType, -2, category2.Id, newIconPack, newIconName, newIconColor));
+                    category.Id, diffDescription, -2, category2.Id, newIconPack, newIconName, newIconColor));
 
             // Expected monthly amount of children exceeds expected monthly amount.
             this.CategoryManager.UpdateCategory(
-                category.Id, category.Description, category.Type, Maybe<decimal>.None, category2.Id, category.Icon.Pack, category.Icon.Name, category.Icon.Color);
+                category.Id, category.Description, Maybe<decimal>.None, category2.Id, category.Icon.Pack, category.Icon.Name, category.Icon.Color);
             Assert.Throws<ValidationException>(
                 () => this.CategoryManager.UpdateCategory(
-                    category2.Id, category2.Description, category2.Type, -3, Maybe<int>.None, category2.Icon.Pack, category2.Icon.Name, category2.Icon.Color));
+                    category2.Id, category2.Description, -3, Maybe<int>.None, category2.Icon.Pack, category2.Icon.Name, category2.Icon.Color));
 
             // Category with same description is obsolete.
             this.CategoryManager.SetCategoryObsolete(category2.Id, true);
             this.CategoryManager.UpdateCategory(
-                category.Id, newDescription, newType, Maybe<decimal>.None, Maybe<int>.None, newIconPack, newIconName, newIconColor);
+                category.Id, newDescription, Maybe<decimal>.None, Maybe<int>.None, newIconPack, newIconName, newIconColor);
 
             // Parent category is obsolete.
             Assert.Throws<ValidationException>(
                 () => this.CategoryManager.UpdateCategory(
-                    category.Id, diffDescription, newType, Maybe<decimal>.None, category2.Id, newIconPack, newIconName, newIconColor));
+                    category.Id, diffDescription, Maybe<decimal>.None, category2.Id, newIconPack, newIconName, newIconColor));
 
             // Category doesn't exist.
             Assert.Throws<DoesNotExistException>(
                 () => this.CategoryManager.UpdateCategory(
-                    100, diffDescription, newType, Maybe<decimal>.None, Maybe<int>.None, newIconPack, newIconName, newIconColor));
+                    100, diffDescription, Maybe<decimal>.None, Maybe<int>.None, newIconPack, newIconName, newIconColor));
         }
 
         #endregion UpdateCategory
@@ -297,16 +282,14 @@
         {
             const string description = "Description";
             const decimal expectedMonthlyAmount = -50;
-            const CategoryType type = CategoryType.Expense;
             const string iconPack = "fas";
             const string iconName = "circle";
             const string iconColor = "#FFFFFF";
 
             var parent = this.CategoryManager.CreateCategory(
-                description, type, expectedMonthlyAmount, Maybe<int>.None, iconPack, iconName, iconColor);
+                description, expectedMonthlyAmount, Maybe<int>.None, iconPack, iconName, iconColor);
 
             Assert.Equal(description, parent.Description);
-            Assert.Equal(type, parent.Type);
             Assert.Equal(expectedMonthlyAmount, parent.ExpectedMonthlyAmount.Value);
             Assert.Equal(iconPack, parent.Icon.Pack);
             Assert.Equal(iconName, parent.Icon.Name);
@@ -318,7 +301,7 @@
             // Create new category with first category as parent.
             const string description2 = "Description2";
             var child = this.CategoryManager.CreateCategory(
-                description2, type, expectedMonthlyAmount, parent.Id, iconPack, iconName, iconColor);
+                description2, expectedMonthlyAmount, parent.Id, iconPack, iconName, iconColor);
 
             Assert.True(child.ParentCategoryId.IsSome);
             Assert.True(child.ParentCategory.IsSome);
@@ -336,8 +319,6 @@
             var parent = this.GenerateCategory(description: "Description");
 
             const string description = "Description2";
-            const CategoryType type = CategoryType.Expense;
-            const CategoryType diffType = CategoryType.Income;
             const string iconPack = "fas";
             const string iconName = "circle";
             const string iconColor = "#FFFFFF";
@@ -345,26 +326,21 @@
             // Description already exists.
             Assert.Throws<ValidationException>(
                 () => this.CategoryManager.CreateCategory(
-                    "Description", type, Maybe<decimal>.None, Maybe<int>.None, iconPack, iconName, iconColor));
-
-            // Parent has different type.
-            Assert.Throws<ValidationException>(
-                () => this.CategoryManager.CreateCategory(
-                    description, diffType, Maybe<decimal>.None, parent.Id, iconPack, iconName, iconColor));
+                    "Description", Maybe<decimal>.None, Maybe<int>.None, iconPack, iconName, iconColor));
 
             // Expected monthly amount exceeds parents' expected monthly amount.
             this.CategoryManager.UpdateCategory(
-                parent.Id, parent.Description, parent.Type, -5, Maybe<int>.None, parent.Icon.Pack, parent.Icon.Name, parent.Icon.Color);
+                parent.Id, parent.Description, -5, Maybe<int>.None, parent.Icon.Pack, parent.Icon.Name, parent.Icon.Color);
             Assert.Throws<ValidationException>(
                 () => this.CategoryManager.CreateCategory(
-                    description, type, -10, parent.Id, iconPack, iconName, iconColor));
+                    description, -10, parent.Id, iconPack, iconName, iconColor));
 
             // Expected monthly amount of all children exceeds parents' expected monthly amount.
             this.CategoryManager.CreateCategory(
-                "Description3", type, -4, parent.Id, iconPack, iconName, iconColor);
+                "Description3", -4, parent.Id, iconPack, iconName, iconColor);
             Assert.Throws<ValidationException>(
                 () => this.CategoryManager.CreateCategory(
-                    "Description3", type, -10, parent.Id, iconPack, iconName, iconColor));
+                    "Description3", -10, parent.Id, iconPack, iconName, iconColor));
 
             // Mark parent obsolete.
             this.CategoryManager.SetCategoryObsolete(parent.Id, true);
@@ -372,7 +348,7 @@
             // Parent is obsolete.
             Assert.Throws<ValidationException>(
                 () => this.CategoryManager.CreateCategory(
-                    description, type, Maybe<decimal>.None, parent.Id, iconPack, iconName, iconColor));
+                    description, Maybe<decimal>.None, parent.Id, iconPack, iconName, iconColor));
         }
 
         #endregion CreateCategory

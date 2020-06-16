@@ -86,27 +86,21 @@
             var endPeriod = this.validator.DateString(endDate, nameof(endDate));
             this.validator.Period(startPeriod, endPeriod);
             this.validator.Interval(interval);
+            var type = this.GetTransactionType(categoryId, receivingAccountId);
+            this.validator.Type(type, amount);
 
             return this.ConcurrentInvoke(() =>
             {
                 var entity = this.Context.RecurringTransactions.GetEntity(id);
-                this.validator.Type(entity.Type, amount, categoryId, receivingAccountId);
+                if (type != entity.Type) // TODO: Add test for this case
+                    throw new ValidationException("Changing the type of transaction is not possible.");
 
                 if (!updateInstances && startPeriod != entity.StartDate)
                     throw new ValidationException($"Updating the start date without updating already created instances is not supported.");
 
                 var account = this.Context.Accounts.GetEntity(accountId, false);
 
-                CategoryEntity category = null;
-                if (categoryId.IsSome)
-                {
-                    category = this.Context.Categories.GetEntity(categoryId.Value, false);
-
-                    if (entity.Type == TransactionType.Expense && category.Type != CategoryType.Expense)
-                        throw new ValidationException($"Category \"{category.Description}\" is not an expense category.");
-                    if (entity.Type == TransactionType.Income && category.Type != CategoryType.Income)
-                        throw new ValidationException($"Category \"{category.Description}\" is not an income category.");
-                }
+                var category = categoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
                 AccountEntity receivingAccount = null;
                 if (receivingAccountId.IsSome)
@@ -124,7 +118,7 @@
                 entity.EndDate = endPeriod;
                 entity.Amount = amount;
                 entity.CategoryId = categoryId.ToNullable();
-                entity.Category = category;
+                entity.Category = category.ToNullIfNone();
                 entity.ReceivingAccountId = receivingAccountId.ToNullable();
                 entity.ReceivingAccount = receivingAccount;
                 entity.NeedsConfirmation = needsConfirmation;
@@ -158,7 +152,6 @@
         /// <inheritdoc />
         public RecurringTransaction CreateRecurringTransaction(
             int accountId,
-            TransactionType type,
             string description,
             string startDate,
             string endDate,
@@ -174,23 +167,14 @@
             var endPeriod = this.validator.DateString(endDate, nameof(endDate));
             this.validator.Period(startPeriod, endPeriod);
             this.validator.Interval(interval);
+            var type = this.GetTransactionType(categoryId, receivingAccountId);
+            this.validator.Type(type, amount);
 
             return this.ConcurrentInvoke(() =>
             {
-                this.validator.Type(type, amount, categoryId, receivingAccountId);
-
                 var account = this.Context.Accounts.GetEntity(accountId, false);
 
-                CategoryEntity category = null;
-                if (categoryId.IsSome)
-                {
-                    category = this.Context.Categories.GetEntity(categoryId.Value, false);
-
-                    if (type == TransactionType.Expense && category.Type != CategoryType.Expense)
-                        throw new ValidationException($"Category \"{category.Description}\" is not an expense category.");
-                    if (type == TransactionType.Income && category.Type != CategoryType.Income)
-                        throw new ValidationException($"Category \"{category.Description}\" is not an income category.");
-                }
+                var category = categoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
                 AccountEntity receivingAccount = null;
                 if (receivingAccountId.IsSome)
@@ -211,7 +195,7 @@
                     AccountId = accountId,
                     Account = account,
                     CategoryId = categoryId.ToNullable(),
-                    Category = category,
+                    Category = category.ToNullIfNone(),
                     ReceivingAccountId = receivingAccountId.ToNullable(),
                     ReceivingAccount = receivingAccount,
                     Interval = interval,

@@ -1,7 +1,6 @@
 ﻿namespace PersonalFinance.Common.DataTransfer
 {
     using System.Collections.Generic;
-    using PersonalFinance.Common.Enums;
     using Wv8.Core;
 
     /// <summary>
@@ -18,11 +17,6 @@
         /// The description of this account.
         /// </summary>
         public string Description { get; set; }
-
-        /// <summary>
-        /// Value representing the type of category.
-        /// </summary>
-        public CategoryType Type { get; set; }
 
         /// <summary>
         /// The optional identifier of the parent category of this category.
