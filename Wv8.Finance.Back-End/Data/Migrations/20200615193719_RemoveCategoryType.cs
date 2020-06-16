@@ -20,10 +20,11 @@ namespace PersonalFinance.Data.Migrations
                 FROM [dbo].Categories c1
                     INNER JOIN [dbo].[Categories] c2 ON [c1].[Description] = [c2].[Description]
                 WHERE [c1].[Type] = 1 AND [c2].[Type] = 2;");
-            // Change category of (recurring) transactions to expense counterpart
+            // Change (parent) category of categories or (recurring) transactions to expense counterpart
             migrationBuilder.Sql(@"
                 UPDATE dbo.Transactions SET CategoryId = (SELECT expenseId FROM #DoubleCategories WHERE CategoryId = incomeId) WHERE CategoryId IN (SELECT incomeId FROM #DoubleCategories);
                 UPDATE dbo.RecurringTransactions SET CategoryId = (SELECT expenseId FROM #DoubleCategories WHERE CategoryId = incomeId) WHERE CategoryId IN (SELECT incomeId FROM #DoubleCategories);
+                UPDATE dbo.Categories SET ParentCategoryId = (SELECT expenseId FROM #DoubleCategories WHERE ParentCategoryId = incomeId) WHERE ParentCategoryId IN (SELECT incomeId FROM #DoubleCategories);
             ");
             // Delete income categories
             migrationBuilder.Sql("DELETE FROM dbo.Categories WHERE Id IN (SELECT incomeId FROM #DoubleCategories);");
