@@ -451,6 +451,17 @@
                 -amount,
                 Maybe<int>.None,
                 account.Id));
+
+            /* Try to update type of transaction */
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(
+                transferTransaction.Id,
+                account.Id,
+                description,
+                date,
+                -amount,
+                expenseCategory.Id,
+                Maybe<int>.None));
         }
 
         #endregion UpdateTransaction

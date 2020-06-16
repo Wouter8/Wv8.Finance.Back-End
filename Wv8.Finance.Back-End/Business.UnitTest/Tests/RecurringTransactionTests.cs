@@ -160,6 +160,7 @@
         public void UpdateRecurringTransaction_Exceptions()
         {
             var account = this.GenerateAccount().Id;
+            var account2 = this.GenerateAccount().Id;
             var description = "Description";
             var amount = -30;
             var category = this.GenerateCategory().Id;
@@ -193,6 +194,22 @@
                     amount,
                     category,
                     Maybe<int>.None,
+                    interval,
+                    intervalUnit,
+                    false,
+                    false));
+
+            // Try to update type of transaction
+            Assert.Throws<ValidationException>(() =>
+                this.RecurringTransactionManager.UpdateRecurringTransaction(
+                    rTransaction.Id,
+                    account,
+                    description,
+                    newStartDate.ToString(),
+                    endDate.ToString(),
+                    amount,
+                    Maybe<int>.None,
+                    account2,
                     interval,
                     intervalUnit,
                     false,

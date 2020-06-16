@@ -95,7 +95,7 @@
             return this.ConcurrentInvoke(() =>
             {
                 var entity = this.Context.Transactions.GetEntity(id);
-                if (type != entity.Type) // TODO: Add test for this case
+                if (type != entity.Type)
                     throw new ValidationException("Changing the type of transaction is not possible.");
 
                 var account = this.Context.Accounts.GetEntity(accountId, false);

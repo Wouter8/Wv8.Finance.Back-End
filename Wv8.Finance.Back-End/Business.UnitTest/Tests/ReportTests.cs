@@ -42,7 +42,7 @@
                 type: TransactionType.Internal,
                 amount: 50,
                 date: DateTime.Today.AddDays(-4).ToLocalDate(),
-                receivingAccountId: account2. Id); // -100
+                receivingAccountId: account2.Id); // -100
             this.GenerateTransaction(accountId: account1.Id, amount: -50, date: DateTime.Today.AddDays(-3).ToLocalDate()); // -150
             this.GenerateTransaction(accountId: account1.Id, amount: -50, date: DateTime.Today.AddDays(-2).ToLocalDate()); // -200
             this.GenerateTransaction(accountId: account1.Id, amount: -50, date: DateTime.Today.AddDays(-1).ToLocalDate()); // -250
