@@ -4,6 +4,7 @@ namespace PersonalFinance.Business.Transaction.Processor
     using System.Collections.Generic;
     using System.Linq;
     using NodaTime;
+    using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Common.Exceptions;
     using PersonalFinance.Data;
@@ -129,14 +130,15 @@ namespace PersonalFinance.Business.Transaction.Processor
             var instances = new List<TransactionEntity>();
             while (!transaction.Finished)
             {
-                // No more transactions need to be created.
-                if (transaction.NextOccurence > LocalDate.FromDateTime(DateTime.Today))
+                // Create transactions until a couple days in the future.
+                if (transaction.NextOccurence > DateTime.Today.AddDays(7).ToLocalDate())
                     break;
 
                 var instance = transaction.CreateOccurence();
+                var isFuture = instance.Date > DateTime.Today.ToLocalDate();
 
                 // Immediately process if transaction does not need to be confirmed.
-                if (!instance.NeedsConfirmation)
+                if (!instance.NeedsConfirmation && !isFuture)
                     instance.ProcessTransaction(context);
 
                 instances.Add(instance);
