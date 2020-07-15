@@ -25,9 +25,10 @@
         public LocalDate StartDate { get; set; }
 
         /// <summary>
-        /// The date till which transactions should be created. A (final) transaction can be created on this date.
+        /// The inclusive date till which transactions should be created.
+        /// If <c>null</c>, then transactions are created indefinitely.
         /// </summary>
-        public LocalDate EndDate { get; set; }
+        public LocalDate? EndDate { get; set; }
 
         /// <summary>
         /// The type of the transaction to be created.
