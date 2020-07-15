@@ -169,7 +169,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                     break;
             }
 
-            if (next <= transaction.EndDate)
+            if (!transaction.EndDate.HasValue || next <= transaction.EndDate)
             {
                 transaction.NextOccurence = next;
             }

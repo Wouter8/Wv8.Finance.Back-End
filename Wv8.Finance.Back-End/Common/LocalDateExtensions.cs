@@ -3,6 +3,7 @@
     using System;
     using System.Globalization;
     using NodaTime;
+    using Wv8.Core;
 
     /// <summary>
     /// A class providing extension methods for a local date object.
@@ -17,6 +18,16 @@
         public static string ToDateString(this LocalDate date)
         {
             return date.ToString("d", new CultureInfo("en-US"));
+        }
+
+        /// <summary>
+        /// Converts a date to a string in a normal format.
+        /// </summary>
+        /// <param name="date">The date to be converted.</param>
+        /// <returns>The string.</returns>
+        public static Maybe<string> ToDateString(this LocalDate? date)
+        {
+            return date.ToMaybe().Select(d => d.ToDateString());
         }
 
         /// <summary>

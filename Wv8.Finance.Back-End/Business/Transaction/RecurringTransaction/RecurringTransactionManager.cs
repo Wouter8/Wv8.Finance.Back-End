@@ -72,7 +72,7 @@
             int accountId,
             string description,
             string startDate,
-            string endDate,
+            Maybe<string> endDate,
             decimal amount,
             Maybe<int> categoryId,
             Maybe<int> receivingAccountId,
@@ -83,8 +83,9 @@
         {
             this.validator.Description(description);
             var startPeriod = this.validator.DateString(startDate, nameof(startDate));
-            var endPeriod = this.validator.DateString(endDate, nameof(endDate));
-            this.validator.Period(startPeriod, endPeriod);
+            var endPeriod = endDate.Select(d => this.validator.DateString(d, nameof(endDate)));
+            if (endPeriod.IsSome)
+                this.validator.Period(startPeriod, endPeriod);
             this.validator.Interval(interval);
             var type = this.GetTransactionType(categoryId, receivingAccountId);
             this.validator.Type(type, amount);
@@ -115,7 +116,7 @@
                 entity.Account = account;
                 entity.Description = description;
                 entity.StartDate = startPeriod;
-                entity.EndDate = endPeriod;
+                entity.EndDate = endPeriod.ToNullable();
                 entity.Amount = amount;
                 entity.CategoryId = categoryId.ToNullable();
                 entity.Category = category.ToNullIfNone();
@@ -154,7 +155,7 @@
             int accountId,
             string description,
             string startDate,
-            string endDate,
+            Maybe<string> endDate,
             decimal amount,
             Maybe<int> categoryId,
             Maybe<int> receivingAccountId,
@@ -164,8 +165,9 @@
         {
             this.validator.Description(description);
             var startPeriod = this.validator.DateString(startDate, nameof(startDate));
-            var endPeriod = this.validator.DateString(endDate, nameof(endDate));
-            this.validator.Period(startPeriod, endPeriod);
+            var endPeriod = endDate.Select(d => this.validator.DateString(d, nameof(endDate)));
+            if (endPeriod.IsSome)
+                this.validator.Period(startPeriod, endPeriod);
             this.validator.Interval(interval);
             var type = this.GetTransactionType(categoryId, receivingAccountId);
             this.validator.Type(type, amount);
@@ -191,7 +193,7 @@
                     Type = type,
                     Amount = amount,
                     StartDate = startPeriod,
-                    EndDate = endPeriod,
+                    EndDate = endPeriod.ToNullable(),
                     AccountId = accountId,
                     Account = account,
                     CategoryId = categoryId.ToNullable(),

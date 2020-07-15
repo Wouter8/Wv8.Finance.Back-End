@@ -154,6 +154,69 @@
         }
 
         /// <summary>
+        /// Tests the good flow of the <see cref="RecurringTransactionManager.UpdateRecurringTransaction"/> method.
+        /// </summary>
+        [Fact]
+        public void UpdateRecurringTransaction_NoEndDate()
+        {
+            var startDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-7);
+            var endDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(7); // 2 instances should be created, not finished
+            var interval = 1;
+            var intervalUnit = IntervalUnit.Weeks;
+
+            var rTransaction = this.GenerateRecurringTransaction(
+                startDate: startDate,
+                endDate: endDate,
+                interval: interval,
+                intervalUnit: intervalUnit);
+            var instances = this.context.Transactions
+                .Where(t => t.RecurringTransactionId == rTransaction.Id &&
+                            !t.NeedsConfirmation) // Verify needs confirmation property
+                .ToList();
+
+            Assert.False(rTransaction.Finished);
+            Assert.Equal(endDate.ToDateString(), rTransaction.NextOccurence.Value);
+            Assert.Equal(2, instances.Count);
+
+            var newAccount = this.GenerateAccount().Id;
+            var newDescription = "Description";
+            var newStartDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-1).ToDateString();
+            var newEndDate = Maybe<string>.None;
+            var newAmount = -30;
+            var newCategory = this.GenerateCategory().Id;
+            var newInterval = 1;
+            var newIntervalUnit = IntervalUnit.Days; // Should be 2 instances created
+
+            var updated = this.RecurringTransactionManager.UpdateRecurringTransaction(
+                rTransaction.Id,
+                newAccount,
+                newDescription,
+                newStartDate,
+                newEndDate,
+                newAmount,
+                newCategory,
+                Maybe<int>.None,
+                newInterval,
+                newIntervalUnit,
+                true,
+                true);
+
+            instances = this.context.Transactions
+                .Where(t => t.RecurringTransactionId == rTransaction.Id) // No check on need confirmation to see if old instances ar deleted.
+                .ToList();
+
+            Assert.False(updated.Finished);
+            Assert.True(updated.NextOccurence.IsSome);
+            Assert.Equal(2, instances.Count);
+
+            instances = this.context.Transactions
+                .Where(t => t.RecurringTransactionId == rTransaction.Id &&
+                            t.NeedsConfirmation) // Verify new instances are created
+                .ToList();
+            Assert.Equal(2, instances.Count);
+        }
+
+        /// <summary>
         /// Tests the exceptional flow of the <see cref="RecurringTransactionManager.UpdateRecurringTransaction"/> method.
         /// </summary>
         [Fact]
@@ -254,6 +317,43 @@
 
             Assert.False(rTransaction.Finished);
             Assert.Equal(endDate.ToDateString(), rTransaction.NextOccurence.Value);
+            Assert.Equal(2, instances.Count);
+        }
+
+        /// <summary>
+        /// Tests the good flow of the <see cref="RecurringTransactionManager.CreateRecurringTransaction"/> method.
+        /// </summary>
+        [Fact]
+        public void CreateRecurringTransaction_NoEndDate()
+        {
+            var account = this.GenerateAccount().Id;
+            var description = "Description";
+            var amount = -30;
+            var category = this.GenerateCategory().Id;
+            var startDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-7);
+            var endDate = Maybe<string>.None; // 2 instances should be created, not finished
+            var interval = 1;
+            var intervalUnit = IntervalUnit.Weeks;
+
+            var rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
+                account,
+                description,
+                startDate.ToDateString(),
+                endDate,
+                amount,
+                category,
+                Maybe<int>.None,
+                interval,
+                intervalUnit,
+                false);
+
+            var instances = this.context.Transactions
+                .Where(t => t.RecurringTransactionId == rTransaction.Id &&
+                            !t.NeedsConfirmation) // Verify needs confirmation property
+                .ToList();
+
+            Assert.False(rTransaction.Finished);
+            Assert.Equal(endDate, rTransaction.EndDate);
             Assert.Equal(2, instances.Count);
         }
 

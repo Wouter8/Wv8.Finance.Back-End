@@ -25,9 +25,10 @@
         public string StartDate { get; set; }
 
         /// <summary>
-        /// The date till which transactions should be created. A (final) transaction can be created on this date.
+        /// The inclusive date till which transactions should be created.
+        /// If <c>None</c>, transactions will be created indefinitely.
         /// </summary>
-        public string EndDate { get; set; }
+        public Maybe<string> EndDate { get; set; }
 
         /// <summary>
         /// The type of the transaction to be created.
