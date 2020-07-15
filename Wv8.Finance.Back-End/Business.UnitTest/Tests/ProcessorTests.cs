@@ -201,6 +201,55 @@
         }
 
         /// <summary>
+        /// Tests that transaction instances in the future get created, but not processed.
+        /// </summary>
+        [Fact]
+        public void RecurringTransactions_Future()
+        {
+            var account = this.GenerateAccount().Id;
+            var description = "Description";
+            var amount = -30;
+            var category = this.GenerateCategory().Id;
+            var startDate = LocalDate.FromDateTime(DateTime.Today);
+            var endDate = LocalDate.FromDateTime(DateTime.Today.AddDays(14)); // 8 instances should be created
+            var interval = 1;
+            var intervalUnit = IntervalUnit.Days;
+
+            var rTransaction = new RecurringTransactionEntity
+            {
+                Description = description,
+                Amount = amount,
+                StartDate = startDate,
+                EndDate = endDate,
+                AccountId = account,
+                CategoryId = category,
+                ReceivingAccountId = null,
+                Interval = interval,
+                IntervalUnit = intervalUnit,
+                NeedsConfirmation = false,
+                NextOccurence = startDate,
+                Type = TransactionType.External,
+            };
+            this.context.RecurringTransactions.Add(rTransaction);
+            this.context.SaveChanges();
+
+            this.TransactionProcessor.Run();
+
+            this.RefreshContext();
+
+            rTransaction = this.context.RecurringTransactions.Single(rt => rt.Id == rTransaction.Id);
+            var instances = this.context.Transactions
+                .Where(t => t.RecurringTransactionId == rTransaction.Id &&
+                            !t.NeedsConfirmation) // Verify needs confirmation property
+                .ToList();
+
+            Assert.False(rTransaction.Finished);
+            Assert.Equal(8, instances.Count);
+            Assert.Equal(1, instances.Count(t => t.Processed));
+            Assert.Equal(7, instances.Count(t => !t.Processed));
+        }
+
+        /// <summary>
         /// Tests that a historical entry is added on a date in the past, while the last entry is
         /// even further in the past.
         /// </summary>

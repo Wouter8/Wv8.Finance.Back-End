@@ -97,7 +97,7 @@
         public void UpdateRecurringTransaction()
         {
             var startDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-7);
-            var endDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(7); // 2 instances should be created, not finished
+            var endDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(7); // 3 instances should be created, finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
@@ -111,9 +111,8 @@
                             !t.NeedsConfirmation) // Verify needs confirmation property
                 .ToList();
 
-            Assert.False(rTransaction.Finished);
-            Assert.Equal(endDate.ToDateString(), rTransaction.NextOccurence.Value);
-            Assert.Equal(2, instances.Count);
+            Assert.True(rTransaction.Finished);
+            Assert.Equal(3, instances.Count);
 
             var newAccount = this.GenerateAccount().Id;
             var newDescription = "Description";
@@ -160,7 +159,7 @@
         public void UpdateRecurringTransaction_NoEndDate()
         {
             var startDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-7);
-            var endDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(7); // 2 instances should be created, not finished
+            var endDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(7); // 3 instances should be created, finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
@@ -174,9 +173,8 @@
                             !t.NeedsConfirmation) // Verify needs confirmation property
                 .ToList();
 
-            Assert.False(rTransaction.Finished);
-            Assert.Equal(endDate.ToDateString(), rTransaction.NextOccurence.Value);
-            Assert.Equal(2, instances.Count);
+            Assert.True(rTransaction.Finished);
+            Assert.Equal(3, instances.Count);
 
             var newAccount = this.GenerateAccount().Id;
             var newDescription = "Description";
@@ -185,7 +183,7 @@
             var newAmount = -30;
             var newCategory = this.GenerateCategory().Id;
             var newInterval = 1;
-            var newIntervalUnit = IntervalUnit.Days; // Should be 2 instances created
+            var newIntervalUnit = IntervalUnit.Days; // Should be 9 instances created
 
             var updated = this.RecurringTransactionManager.UpdateRecurringTransaction(
                 rTransaction.Id,
@@ -207,13 +205,13 @@
 
             Assert.False(updated.Finished);
             Assert.True(updated.NextOccurence.IsSome);
-            Assert.Equal(2, instances.Count);
+            Assert.Equal(9, instances.Count);
 
             instances = this.context.Transactions
                 .Where(t => t.RecurringTransactionId == rTransaction.Id &&
                             t.NeedsConfirmation) // Verify new instances are created
                 .ToList();
-            Assert.Equal(2, instances.Count);
+            Assert.Equal(9, instances.Count);
         }
 
         /// <summary>
@@ -294,7 +292,7 @@
             var amount = -30;
             var category = this.GenerateCategory().Id;
             var startDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-7);
-            var endDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(7); // 2 instances should be created, not finished
+            var endDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(7); // 3 instances should be created, finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
@@ -315,9 +313,8 @@
                             !t.NeedsConfirmation) // Verify needs confirmation property
                 .ToList();
 
-            Assert.False(rTransaction.Finished);
-            Assert.Equal(endDate.ToDateString(), rTransaction.NextOccurence.Value);
-            Assert.Equal(2, instances.Count);
+            Assert.True(rTransaction.Finished);
+            Assert.Equal(3, instances.Count);
         }
 
         /// <summary>
@@ -331,7 +328,7 @@
             var amount = -30;
             var category = this.GenerateCategory().Id;
             var startDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-7);
-            var endDate = Maybe<string>.None; // 2 instances should be created, not finished
+            var endDate = Maybe<string>.None; // 3 instances should be created, finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
@@ -354,7 +351,7 @@
 
             Assert.False(rTransaction.Finished);
             Assert.Equal(endDate, rTransaction.EndDate);
-            Assert.Equal(2, instances.Count);
+            Assert.Equal(3, instances.Count);
         }
 
         #endregion CreateRecurringTransaction
@@ -372,7 +369,7 @@
             var amount = -30;
             var category = this.GenerateCategory().Id;
             var startDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-7);
-            var endDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(7); // 2 instances should be created, not finished
+            var endDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(7); // 3 instances should be created, finished
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
@@ -418,7 +415,7 @@
 
             // Verify instances are not deleted (although link to recurring transaction is removed).
             instances = this.context.Transactions.ToList();
-            Assert.Equal(2, instances.Count);
+            Assert.Equal(3, instances.Count);
         }
 
         #endregion DeleteRecurringTransaction
