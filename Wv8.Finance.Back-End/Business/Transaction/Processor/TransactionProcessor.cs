@@ -23,7 +23,6 @@
         /// <inheritdoc />
         public void Run()
         {
-            Console.WriteLine("Starting processor...");
             this.ConcurrentInvoke(() =>
             {
                 this.ProcessTransactions();
