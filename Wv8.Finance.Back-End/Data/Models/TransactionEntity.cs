@@ -1,5 +1,6 @@
 ﻿namespace PersonalFinance.Data.Models
 {
+    using System.Collections.Generic;
     using NodaTime;
     using PersonalFinance.Common.Enums;
 
@@ -95,5 +96,10 @@
         /// Only filled if <see cref="NeedsConfirmation"/> is true.
         /// </summary>
         public bool? IsConfirmed { get; set; }
+
+        /// <summary>
+        /// The collection of payment requests which are linked to this transaction.
+        /// </summary>
+        public List<PaymentRequestEntity> PaymentRequests { get; set; }
     }
 }

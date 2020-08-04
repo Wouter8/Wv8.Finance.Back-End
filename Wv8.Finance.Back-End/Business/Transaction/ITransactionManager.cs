@@ -1,6 +1,7 @@
 ﻿namespace PersonalFinance.Business.Transaction
 {
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Input;
+    using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;
 
@@ -35,35 +36,16 @@
         /// <summary>
         /// Updates an transaction.
         /// </summary>
-        /// <param name="id">The identifier of the transaction to be updated.</param>
-        /// <param name="accountId">The new identifier of the account this transaction belongs to.</param>
-        /// <param name="description">The new description of the transaction.</param>
-        /// <param name="date">The new date of the transaction.</param>
-        /// <param name="amount">The new amount of the transaction.</param>
-        /// <param name="categoryId">The new identifier of the category the transaction belongs to.</param>
-        /// <param name="receivingAccountId">The new identifier of the receiving account.</param>
+        /// <param name="input">The input with the values for the to be updated transaction.</param>
         /// <returns>The updated transaction.</returns>
-        Transaction UpdateTransaction(int id, int accountId, string description, string date, decimal amount, Maybe<int> categoryId, Maybe<int> receivingAccountId);
+        Transaction UpdateTransaction(EditTransaction input);
 
         /// <summary>
         /// Creates a new transaction.
         /// </summary>
-        /// <param name="accountId">The identifier of the account this transaction belongs to.</param>
-        /// <param name="description">The description of the transaction.</param>
-        /// <param name="date">The date of the transaction.</param>
-        /// <param name="amount">The amount of the transaction.</param>
-        /// <param name="categoryId">The identifier of the category the transaction belongs to.</param>
-        /// <param name="receivingAccountId">The identifier of the receiving account.</param>
-        /// <param name="needsConfirmation">A value indicating if the transaction still needs to be confirmed.</param>
+        /// <param name="input">The input with the values for the to be created transaction.</param>
         /// <returns>The created transaction.</returns>
-        Transaction CreateTransaction(
-            int accountId,
-            string description,
-            string date,
-            decimal amount,
-            Maybe<int> categoryId,
-            Maybe<int> receivingAccountId,
-            bool needsConfirmation);
+        Transaction CreateTransaction(InputTransaction input);
 
         /// <summary>
         /// Confirms a transaction so that it can be processed.
@@ -79,5 +61,22 @@
         /// </summary>
         /// <param name="id">The identifier of the transaction.</param>
         void DeleteTransaction(int id);
+
+        /// <summary>
+        /// Fulfills a payment request once. This means that a payment request which contains multiple requests
+        /// (<see cref="PaymentRequest.Count"/> > 1) has to be fulfilled multiple times.
+        /// This method essentially increments the <see cref="PaymentRequest.PaidCount"/> with 1.
+        /// </summary>
+        /// <param name="id">The identifier of the payment request.</param>
+        /// <returns>The updated payment request.</returns>
+        PaymentRequest FulfillPaymentRequest(int id);
+
+        /// <summary>
+        /// Reverts the fulfillment of a payment request. This essentially means decreases the
+        /// <see cref="PaymentRequest.PaidCount"/> by 1.
+        /// </summary>
+        /// <param name="id">The identifier of the payment request.</param>
+        /// <returns>The updated payment request.</returns>
+        PaymentRequest RevertPaymentPaymentRequest(int id);
     }
 }

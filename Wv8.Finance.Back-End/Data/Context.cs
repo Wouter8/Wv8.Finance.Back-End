@@ -56,6 +56,11 @@
         /// </summary>
         public DbSet<IconEntity> Icons { get; set; }
 
+        /// <summary>
+        /// The set of payment requests.
+        /// </summary>
+        public DbSet<PaymentRequestEntity> PaymentRequests { get; set; }
+
         /// <inheritdoc/>
         public DateTime CreationTime { get; set; }
 

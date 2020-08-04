@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Linq;
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;
     using Wv8.Core.Exceptions;
@@ -271,7 +271,7 @@
             // Account has current balance of -50.
             Assert.Throws<ValidationException>(() => this.AccountManager.SetAccountObsolete(account.Id, true));
 
-            var transaction2 = this.GenerateTransaction(accountId: account.Id, type: TransactionType.External, amount: 50);
+            var transaction2 = this.GenerateTransaction(accountId: account.Id, type: TransactionType.Income, amount: 50);
 
             this.AccountManager.SetAccountObsolete(account.Id, true);
 

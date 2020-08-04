@@ -39,7 +39,7 @@
                     Date = LocalDate.FromDateTime(DateTime.Today).PlusDays(1),
                     Description = "Description",
                     Processed = false,
-                    Type = TransactionType.External,
+                    Type = TransactionType.Expense,
                 });
             this.context.SaveChanges();
 
@@ -63,7 +63,7 @@
                     Date = LocalDate.FromDateTime(DateTime.Today),
                     Description = "Description",
                     Processed = false,
-                    Type = TransactionType.External,
+                    Type = TransactionType.Expense,
                 });
             this.context.SaveChanges();
 
@@ -87,7 +87,7 @@
                     Date = LocalDate.FromDateTime(DateTime.Today),
                     Description = "Description",
                     Processed = false,
-                    Type = TransactionType.External,
+                    Type = TransactionType.Income,
                 });
             this.context.SaveChanges();
 
@@ -138,7 +138,7 @@
                     CategoryId = category.Id,
                     NeedsConfirmation = true,
                     IsConfirmed = false,
-                    Type = TransactionType.External,
+                    Type = TransactionType.Expense,
                 });
             this.context.SaveChanges();
 
@@ -181,7 +181,7 @@
                 IntervalUnit = intervalUnit,
                 NeedsConfirmation = false,
                 NextOccurence = startDate,
-                Type = TransactionType.External,
+                Type = TransactionType.Expense,
             };
             this.context.RecurringTransactions.Add(rTransaction);
             this.context.SaveChanges();
@@ -228,7 +228,7 @@
                 IntervalUnit = intervalUnit,
                 NeedsConfirmation = false,
                 NextOccurence = startDate,
-                Type = TransactionType.External,
+                Type = TransactionType.Expense,
             };
             this.context.RecurringTransactions.Add(rTransaction);
             this.context.SaveChanges();

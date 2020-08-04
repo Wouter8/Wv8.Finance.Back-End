@@ -82,7 +82,7 @@
             // Type filter
             retrieved =
                 this.RecurringTransactionManager.GetRecurringTransactionsByFilter(
-                    TransactionType.External, Maybe<int>.None, Maybe<int>.None, false);
+                    TransactionType.Expense, Maybe<int>.None, Maybe<int>.None, false);
             Assert.Single(retrieved);
         }
 

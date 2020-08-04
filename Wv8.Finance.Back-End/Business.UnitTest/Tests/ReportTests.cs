@@ -29,7 +29,7 @@
             // Add transactions to account and mark obsolete later
             this.GenerateTransaction(accountId: account3.Id, amount: -50, date: DateTime.Today.AddDays(-3).ToLocalDate());
             this.GenerateTransaction(
-                accountId: account3.Id, type: TransactionType.External, amount: 50, date: DateTime.Today.AddDays(-2).ToLocalDate());
+                accountId: account3.Id, type: TransactionType.Income, amount: 50, date: DateTime.Today.AddDays(-2).ToLocalDate());
             this.AccountManager.SetAccountObsolete(account3.Id, true);
 
             this.GenerateTransaction(accountId: account1.Id, amount: -50, date: DateTime.Today.AddDays(-7).ToLocalDate()); // -50

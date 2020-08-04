@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Linq;
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.EntityFramework;

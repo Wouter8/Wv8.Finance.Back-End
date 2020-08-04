@@ -86,7 +86,8 @@
                 .ThenInclude(c => c.Icon)
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Children)
-                .ThenInclude(c => c.Icon);
+                .ThenInclude(c => c.Icon)
+                .Include(t => t.PaymentRequests);
         }
 
         /// <summary>
@@ -113,6 +114,17 @@
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Children)
                 .ThenInclude(c => c.Icon);
+        }
+
+        /// <summary>
+        /// Generates a query with all includes.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <returns>The base query.</returns>
+        public static IQueryable<PaymentRequestEntity> IncludeAll(this DbSet<PaymentRequestEntity> set)
+        {
+            return set
+                .Include(pr => pr.Transaction);
         }
 
         #endregion Query Extensions
@@ -177,7 +189,7 @@
         /// Retrieves a transaction entity.
         /// </summary>
         /// <param name="set">The database set.</param>
-        /// <param name="id">The identifier of the transaction to be retrieved..</param>
+        /// <param name="id">The identifier of the transaction to be retrieved.</param>
         /// <returns>The transaction.</returns>
         public static TransactionEntity GetEntity(this DbSet<TransactionEntity> set, int id)
         {
@@ -191,7 +203,7 @@
         /// Retrieves a transaction entity.
         /// </summary>
         /// <param name="set">The database set.</param>
-        /// <param name="id">The identifier of the transaction to be retrieved..</param>
+        /// <param name="id">The identifier of the transaction to be retrieved.</param>
         /// <returns>The transaction.</returns>
         public static RecurringTransactionEntity GetEntity(this DbSet<RecurringTransactionEntity> set, int id)
         {
@@ -199,6 +211,20 @@
                 .IncludeAll()
                 .SingleOrNone(c => c.Id == id)
                 .ValueOrThrow(() => new DoesNotExistException($"Recurring transaction with identifier {id} does not exist."));
+        }
+
+        /// <summary>
+        /// Retrieves a payment request entity.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <param name="id">The identifier of the payment request to be retrieved.</param>
+        /// <returns>The transaction.</returns>
+        public static PaymentRequestEntity GetEntity(this DbSet<PaymentRequestEntity> set, int id)
+        {
+            return set
+                .IncludeAll()
+                .SingleOrNone(c => c.Id == id)
+                .ValueOrThrow(() => new DoesNotExistException($"Payment request with identifier {id} does not exist."));
         }
 
         /// <summary>

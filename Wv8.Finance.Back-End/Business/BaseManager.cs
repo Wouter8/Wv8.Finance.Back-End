@@ -55,20 +55,30 @@
 
         /// <summary>
         /// Validates the input to determine the transaction type and return the appropriate one.
-        /// A transaction with a category is an external category,
+        /// A transaction with a category is an external transaction,
         /// while a transaction with a receiving account is an internal account.
         /// </summary>
         /// <param name="categoryId">The category id input.</param>
         /// <param name="receivingAccountId">The receiving account id input.</param>
+        /// <param name="amount">The amount input.</param>
         /// <returns>The transaction type that corresponds to the input.</returns>
-        protected TransactionType GetTransactionType(Maybe<int> categoryId, Maybe<int> receivingAccountId)
+        protected TransactionType GetTransactionType(Maybe<int> categoryId, Maybe<int> receivingAccountId, decimal amount)
         {
             if (categoryId.IsSome && receivingAccountId.IsSome)
                 throw new ValidationException("A transaction can not specify a category and receiving account.");
             if (categoryId.IsNone && receivingAccountId.IsNone)
                 throw new ValidationException("A transaction must specify either a category or receiving account.");
 
-            return categoryId.IsSome ? TransactionType.External : TransactionType.Internal;
+            var type = categoryId.IsSome
+                ? amount < 0
+                    ? TransactionType.Expense
+                    : TransactionType.Income
+                : TransactionType.Internal;
+
+            if (type == TransactionType.Internal && amount <= 0)
+                throw new ValidationException($"The amount has to be greater than 0.");
+
+            return type;
         }
     }
 }

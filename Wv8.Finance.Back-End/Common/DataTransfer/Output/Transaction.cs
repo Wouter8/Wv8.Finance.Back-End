@@ -1,5 +1,6 @@
-﻿namespace PersonalFinance.Common.DataTransfer
+﻿namespace PersonalFinance.Common.DataTransfer.Output
 {
+    using System.Collections.Generic;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;
 
@@ -95,6 +96,16 @@
         /// Only filled if <see cref="NeedsConfirmation"/> is true.
         /// </summary>
         public Maybe<bool> IsConfirmed { get; set; }
+
+        /// <summary>
+        /// The collection of payment requests which are linked to this transaction.
+        /// </summary>
+        public List<PaymentRequest> PaymentRequests { get; set; }
+
+        /// <summary>
+        /// The personal amount (amount - payment requests) of the transaction.
+        /// </summary>
+        public decimal PersonalAmount { get; set; }
 
         // TODO: Add Savings
     }

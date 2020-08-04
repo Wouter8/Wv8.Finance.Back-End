@@ -1,6 +1,7 @@
 namespace Business.UnitTest
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.SqlServer.NodaTime.Extensions;
@@ -14,7 +15,8 @@ namespace Business.UnitTest
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common;
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Input;
+    using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
     using Wv8.Core;
@@ -122,6 +124,7 @@ namespace Business.UnitTest
         }
 
         #region CreateHelpers
+        // TODO: These method should not call manager/controller methods, but rather add entities directly to the database.
 
         /// <summary>
         /// Creates an account with specified, or random values.
@@ -236,18 +239,20 @@ namespace Business.UnitTest
         /// <param name="categoryId">The identifier of the category.</param>
         /// <param name="receivingAccountId">The identifier of the receiving account.</param>
         /// <param name="needsConfirmation">A value indicating if the transaction has to be confirmed.</param>
+        /// <param name="paymentRequests">The payment requests of the transaction.</param>
         /// <returns>The created transaction.</returns>
         protected Transaction GenerateTransaction(
             int? accountId = null,
-            TransactionType type = TransactionType.External,
+            TransactionType type = TransactionType.Expense,
             string description = null,
             LocalDate? date = null,
             decimal? amount = null,
             int? categoryId = null,
             int? receivingAccountId = null,
-            bool needsConfirmation = false)
+            bool needsConfirmation = false,
+            List<InputPaymentRequest> paymentRequests = null)
         {
-            if (type == TransactionType.External && !categoryId.HasValue)
+            if ((type == TransactionType.Income || type == TransactionType.Expense) && !categoryId.HasValue)
                 categoryId = this.GenerateCategory().Id;
             if (type == TransactionType.Internal && !receivingAccountId.HasValue)
                 receivingAccountId = this.GenerateAccount().Id;
@@ -257,14 +262,19 @@ namespace Business.UnitTest
             if (!date.HasValue)
                 date = LocalDate.FromDateTime(DateTime.Today);
 
-            return this.TransactionManager.CreateTransaction(
-                accountId.Value,
-                description ?? this.GetRandomString(),
-                date.Value.ToDateString(),
-                amount ?? (type == TransactionType.External ? -50 : 50),
-                categoryId.ToMaybe(),
-                receivingAccountId.ToMaybe(),
-                needsConfirmation);
+            var input = new InputTransaction
+            {
+                AccountId = accountId.Value,
+                Amount = amount ?? (type == TransactionType.Expense ? -50 : 50),
+                Description = description ?? this.GetRandomString(),
+                DateString = date.Value.ToDateString(),
+                CategoryId = categoryId.ToMaybe(),
+                ReceivingAccountId = receivingAccountId.ToMaybe(),
+                NeedsConfirmation = needsConfirmation,
+                PaymentRequests = paymentRequests ?? new List<InputPaymentRequest>(),
+            };
+
+            return this.TransactionManager.CreateTransaction(input);
         }
 
         /// <summary>
@@ -284,7 +294,7 @@ namespace Business.UnitTest
         /// <returns>The created recurring transaction.</returns>
         protected RecurringTransaction GenerateRecurringTransaction(
             int? accountId = null,
-            TransactionType type = TransactionType.External,
+            TransactionType type = TransactionType.Expense,
             string description = null,
             LocalDate? startDate = null,
             LocalDate? endDate = null,
@@ -295,7 +305,7 @@ namespace Business.UnitTest
             int interval = 3,
             IntervalUnit intervalUnit = IntervalUnit.Months)
         {
-            if (type == TransactionType.External && !categoryId.HasValue)
+            if ((type == TransactionType.Income || type == TransactionType.Expense) && !categoryId.HasValue)
                 categoryId = this.GenerateCategory().Id;
             if (type == TransactionType.Internal && !receivingAccountId.HasValue)
                 receivingAccountId = this.GenerateAccount().Id;
@@ -312,7 +322,7 @@ namespace Business.UnitTest
                 description ?? this.GetRandomString(),
                 startDate.Value.ToDateString(),
                 endDate.Value.ToDateString(),
-                amount ?? (type == TransactionType.External ? -50m : 50m),
+                amount ?? (type == TransactionType.Expense ? -50m : 50m),
                 categoryId.ToMaybe(),
                 receivingAccountId.ToMaybe(),
                 interval,

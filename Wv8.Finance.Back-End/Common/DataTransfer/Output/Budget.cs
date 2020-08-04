@@ -1,4 +1,4 @@
-namespace PersonalFinance.Common.DataTransfer
+namespace PersonalFinance.Common.DataTransfer.Output
 {
     /// <summary>
     /// A data transfer object representing a budget. The amount of the budget is the goal sum of all

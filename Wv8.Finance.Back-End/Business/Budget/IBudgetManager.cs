@@ -1,7 +1,7 @@
 ﻿namespace PersonalFinance.Business.Budget
 {
     using System.Collections.Generic;
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Output;
     using Wv8.Core;
 
     /// <summary>

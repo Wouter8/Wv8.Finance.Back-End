@@ -3,7 +3,7 @@
     using System.Collections.Generic;
     using Microsoft.AspNetCore.Mvc;
     using PersonalFinance.Business.Account;
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Output;
 
     /// <summary>
     /// Service endpoint for actions related to accounts.

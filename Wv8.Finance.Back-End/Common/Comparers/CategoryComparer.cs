@@ -1,7 +1,7 @@
 ﻿namespace PersonalFinance.Common.Comparers
 {
     using System.Collections.Generic;
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Output;
 
     /// <summary>
     /// An equality comparer for two transactions.

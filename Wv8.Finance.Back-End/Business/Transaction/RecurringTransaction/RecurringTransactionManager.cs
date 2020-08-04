@@ -6,7 +6,7 @@
     using NodaTime;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
@@ -87,8 +87,7 @@
             if (endPeriod.IsSome)
                 this.validator.Period(startPeriod, endPeriod);
             this.validator.Interval(interval);
-            var type = this.GetTransactionType(categoryId, receivingAccountId);
-            this.validator.Type(type, amount);
+            var type = this.GetTransactionType(categoryId, receivingAccountId, amount);
 
             return this.ConcurrentInvoke(() =>
             {
@@ -169,8 +168,7 @@
             if (endPeriod.IsSome)
                 this.validator.Period(startPeriod, endPeriod);
             this.validator.Interval(interval);
-            var type = this.GetTransactionType(categoryId, receivingAccountId);
-            this.validator.Type(type, amount);
+            var type = this.GetTransactionType(categoryId, receivingAccountId, amount);
 
             return this.ConcurrentInvoke(() =>
             {

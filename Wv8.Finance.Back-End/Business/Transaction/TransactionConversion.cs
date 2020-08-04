@@ -8,7 +8,7 @@
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Comparers;
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
 
@@ -30,6 +30,8 @@
                 throw new ArgumentNullException(nameof(entity.Account));
             if (entity.ReceivingAccountId.HasValue && entity.ReceivingAccount == null)
                 throw new ArgumentNullException(nameof(entity.ReceivingAccount));
+            if (entity.PaymentRequests == null)
+                throw new ArgumentNullException(nameof(entity.PaymentRequests));
 
             return new Transaction
             {
@@ -49,6 +51,31 @@
                 RecurringTransaction = entity.RecurringTransaction.ToMaybe().Select(t => t.AsRecurringTransaction()),
                 NeedsConfirmation = entity.NeedsConfirmation,
                 IsConfirmed = entity.IsConfirmed.ToMaybe(),
+                PaymentRequests = entity.PaymentRequests.Select(pr => pr.AsPaymentRequest()).ToList(),
+                PersonalAmount = entity.GetPersonalAmount(),
+            };
+        }
+
+        /// <summary>
+        /// Converts the entity to a data transfer object.
+        /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="includeTransaction"><c>true</c> if the transaction of the payment request needs to be added to
+        /// the data transfer object.</param>
+        /// <returns>The data transfer object.</returns>
+        public static PaymentRequest AsPaymentRequest(this PaymentRequestEntity entity, bool includeTransaction = false)
+        {
+            return new PaymentRequest
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                Amount = entity.Amount,
+                Count = entity.Count,
+                PaidCount = entity.PaidCount,
+                TransactionId = entity.TransactionId,
+                AmountDue = (entity.Count - entity.PaidCount) * entity.Amount,
+                Complete = entity.PaidCount == entity.Count,
+                Transaction = includeTransaction ? entity.Transaction.AsTransaction() : null,
             };
         }
 

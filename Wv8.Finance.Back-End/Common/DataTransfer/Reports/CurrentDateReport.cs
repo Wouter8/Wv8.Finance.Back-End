@@ -1,6 +1,7 @@
 ﻿namespace PersonalFinance.Common.DataTransfer.Reports
 {
     using System.Collections.Generic;
+    using PersonalFinance.Common.DataTransfer.Output;
 
     /// <summary>
     /// A data transfer class containing the report for the current date.

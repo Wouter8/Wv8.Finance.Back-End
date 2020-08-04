@@ -31,6 +31,26 @@
         }
 
         /// <summary>
+        /// Converts a date to a string in a normal format.
+        /// </summary>
+        /// <param name="date">The date to be converted.</param>
+        /// <returns>The string.</returns>
+        public static string ToDateString(this DateTime date)
+        {
+            return date.ToLocalDate().ToDateString();
+        }
+
+        /// <summary>
+        /// Converts a date to a string in a normal format.
+        /// </summary>
+        /// <param name="date">The date to be converted.</param>
+        /// <returns>The string.</returns>
+        public static Maybe<string> ToDateString(this DateTime? date)
+        {
+            return date.ToMaybe().Select(d => d.ToDateString());
+        }
+
+        /// <summary>
         /// Converts a date time object to a local date object.
         /// </summary>
         /// <param name="dateTime">The date time object.</param>

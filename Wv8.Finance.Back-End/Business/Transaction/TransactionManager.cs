@@ -1,17 +1,20 @@
 ﻿namespace PersonalFinance.Business.Transaction
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
     using NodaTime;
     using PersonalFinance.Business.Transaction.Processor;
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Input;
+    using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Common.Exceptions;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
+    using Wv8.Core.Collections;
     using Wv8.Core.EntityFramework;
     using Wv8.Core.Exceptions;
 
@@ -85,39 +88,71 @@
         }
 
         /// <inheritdoc />
-        public Transaction UpdateTransaction(int id, int accountId, string description, string dateString, decimal amount, Maybe<int> categoryId, Maybe<int> receivingAccountId)
+        public Transaction UpdateTransaction(EditTransaction input)
         {
-            this.validator.Description(description);
-            var date = this.validator.DateString(dateString, "date");
-            var type = this.GetTransactionType(categoryId, receivingAccountId);
-            this.validator.Type(type, amount);
+            this.validator.Description(input.Description);
+            var date = this.validator.DateString(input.DateString, "date");
+            var type = this.GetTransactionType(input.CategoryId, input.ReceivingAccountId, input.Amount);
+            this.validator.PaymentRequests(input.PaymentRequests, type, input.Amount);
 
             return this.ConcurrentInvoke(() =>
             {
-                var entity = this.Context.Transactions.GetEntity(id);
+                var entity = this.Context.Transactions.GetEntity(input.Id);
                 if (type != entity.Type)
                     throw new ValidationException("Changing the type of transaction is not possible.");
 
-                var account = this.Context.Accounts.GetEntity(accountId, false);
+                var account = this.Context.Accounts.GetEntity(input.AccountId, false);
 
                 if (entity.Processed)
                     entity.RevertProcessedTransaction(this.Context);
 
-                var category = categoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
+                var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
-                var receivingAccount = receivingAccountId.Select(aId => this.Context.Accounts.GetEntity(aId, false));
+                var receivingAccount = input.ReceivingAccountId.Select(aId => this.Context.Accounts.GetEntity(aId, false));
                 if (receivingAccount.IsSome && receivingAccount.Value.Id == account.Id)
                     throw new ValidationException("Sender account can not be the same as receiver account.");
 
-                entity.AccountId = accountId;
+                entity.AccountId = input.AccountId;
                 entity.Account = account;
-                entity.Description = description;
+                entity.Description = input.Description;
                 entity.Date = date;
-                entity.Amount = amount;
-                entity.CategoryId = categoryId.ToNullable();
+                entity.Amount = input.Amount;
+                entity.CategoryId = input.CategoryId.ToNullable();
                 entity.Category = category.ToNullIfNone();
-                entity.ReceivingAccountId = receivingAccountId.ToNullable();
+                entity.ReceivingAccountId = input.ReceivingAccountId.ToNullable();
                 entity.ReceivingAccount = receivingAccount.ToNullIfNone();
+
+                var existingPaymentRequestIds = input.PaymentRequests
+                    .SelectSome(pr => pr.Id)
+                    .ToSet();
+                var existingPaymentRequests = entity.PaymentRequests
+                    .Where(pr => existingPaymentRequestIds.Contains(pr.Id))
+                    .ToDictionary(pr => pr.Id);
+
+                var updatedPaymentRequests = new List<PaymentRequestEntity>();
+
+                foreach (var inputPr in input.PaymentRequests)
+                {
+                    var updatedPr = inputPr.Id
+                        .Select(id => existingPaymentRequests[id])
+                        .ValueOrElse(new PaymentRequestEntity());
+
+                    if (updatedPr.PaidCount > inputPr.Count)
+                        throw new ValidationException("A payment request can not be updated resulting in more payments than requested.");
+
+                    updatedPr.Amount = inputPr.Amount;
+                    updatedPr.Count = inputPr.Count;
+                    updatedPr.Name = inputPr.Name;
+
+                    updatedPaymentRequests.Add(updatedPr);
+                }
+
+                var updatedPaymentRequestIds = updatedPaymentRequests.Select(pr => pr.Id).ToSet();
+                var removedPaymentRequests =
+                    entity.PaymentRequests.Where(pr => !updatedPaymentRequestIds.Contains(pr.Id));
+
+                this.Context.PaymentRequests.RemoveRange(removedPaymentRequests);
+                entity.PaymentRequests = updatedPaymentRequests;
 
                 // Is confirmed is always filled if needs confirmation is true.
                 // ReSharper disable once PossibleInvalidOperationException
@@ -131,48 +166,47 @@
         }
 
         /// <inheritdoc />
-        public Transaction CreateTransaction(
-            int accountId,
-            string description,
-            string dateString,
-            decimal amount,
-            Maybe<int> categoryId,
-            Maybe<int> receivingAccountId,
-            bool needsConfirmation)
+        public Transaction CreateTransaction(InputTransaction input)
         {
-            this.validator.Description(description);
-            var date = this.validator.DateString(dateString, "date");
-            var type = this.GetTransactionType(categoryId, receivingAccountId);
-            this.validator.Type(type, amount);
+            this.validator.Description(input.Description);
+            var date = this.validator.DateString(input.DateString, "date");
+            var type = this.GetTransactionType(input.CategoryId, input.ReceivingAccountId, input.Amount);
+            this.validator.PaymentRequests(input.PaymentRequests, type, input.Amount);
 
             return this.ConcurrentInvoke(() =>
             {
-                var account = this.Context.Accounts.GetEntity(accountId, false);
+                var account = this.Context.Accounts.GetEntity(input.AccountId, false);
 
-                var category = categoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
+                var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
-                var receivingAccount = receivingAccountId.Select(aId => this.Context.Accounts.GetEntity(aId, false));
+                var receivingAccount = input.ReceivingAccountId.Select(aId => this.Context.Accounts.GetEntity(aId, false));
                 if (receivingAccount.IsSome && receivingAccount.Value.Id == account.Id)
                     throw new ValidationException("Sender account can not be the same as receiver account.");
 
                 var entity = new TransactionEntity
                 {
-                    Description = description,
+                    Description = input.Description,
                     Type = type,
-                    Amount = amount,
+                    Amount = input.Amount,
                     Date = date,
-                    AccountId = accountId,
+                    AccountId = input.AccountId,
                     Account = account,
                     Processed = false,
-                    CategoryId = categoryId.ToNullable(),
+                    CategoryId = input.CategoryId.ToNullable(),
                     Category = category.ToNullIfNone(),
-                    ReceivingAccountId = receivingAccountId.ToNullable(),
+                    ReceivingAccountId = input.ReceivingAccountId.ToNullable(),
                     ReceivingAccount = receivingAccount.ToNullIfNone(),
-                    NeedsConfirmation = needsConfirmation,
-                    IsConfirmed = needsConfirmation ? false : (bool?)null,
+                    NeedsConfirmation = input.NeedsConfirmation,
+                    IsConfirmed = input.NeedsConfirmation ? false : (bool?)null,
+                    PaymentRequests = input.PaymentRequests.Select(pr => new PaymentRequestEntity
+                    {
+                        Amount = pr.Amount,
+                        Name = pr.Name,
+                        Count = pr.Count,
+                    }).ToList(),
                 };
 
-                if (date <= LocalDate.FromDateTime(DateTime.Today) && !needsConfirmation)
+                if (date <= LocalDate.FromDateTime(DateTime.Today) && !input.NeedsConfirmation)
                     entity.ProcessTransaction(this.Context);
 
                 this.Context.Transactions.Add(entity);
@@ -191,7 +225,7 @@
             return this.ConcurrentInvoke(() =>
             {
                 var entity = this.Context.Transactions.GetEntity(id);
-                this.validator.Type(entity.Type, amount);
+                this.validator.Amount(amount, entity.Type);
 
                 if (!entity.NeedsConfirmation)
                     throw new InvalidOperationException($"This transaction does not need to be confirmed.");
@@ -229,6 +263,42 @@
                 this.Context.Remove(entity);
 
                 this.Context.SaveChanges();
+            });
+        }
+
+        /// <inheritdoc />
+        public PaymentRequest FulfillPaymentRequest(int id)
+        {
+            return this.ConcurrentInvoke(() =>
+            {
+                var entity = this.Context.PaymentRequests.GetEntity(id);
+
+                if (entity.Completed)
+                    throw new ValidationException("This payment request is already completed.");
+
+                entity.PaidCount++;
+
+                this.Context.SaveChanges();
+
+                return entity.AsPaymentRequest();
+            });
+        }
+
+        /// <inheritdoc />
+        public PaymentRequest RevertPaymentPaymentRequest(int id)
+        {
+            return this.ConcurrentInvoke(() =>
+            {
+                var entity = this.Context.PaymentRequests.GetEntity(id);
+
+                if (entity.PaidCount == 0)
+                    throw new ValidationException("This payment request has not yet been paid.");
+
+                entity.PaidCount--;
+
+                this.Context.SaveChanges();
+
+                return entity.AsPaymentRequest();
             });
         }
     }

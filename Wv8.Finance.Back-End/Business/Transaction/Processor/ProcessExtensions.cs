@@ -30,20 +30,23 @@ namespace PersonalFinance.Business.Transaction.Processor
             transaction.VerifyEntitiesNotObsolete();
 
             var historicalEntriesToEdit = GetBalanceEntriesToEdit(transaction.Account, transaction.Date);
+            var amount = transaction.GetPersonalAmount();
 
             switch (transaction.Type)
             {
-                case TransactionType.External:
+                case TransactionType.Expense:
                     foreach (var entry in historicalEntriesToEdit)
-                        entry.Balance += transaction.Amount;
+                        entry.Balance += amount;
 
                     // Update budgets.
-                    if (transaction.Amount < 0)
-                    {
-                        var budgets = context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
-                        foreach (var budget in budgets)
-                            budget.Spent += Math.Abs(transaction.Amount);
-                    }
+                    var budgets = context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
+                    foreach (var budget in budgets)
+                        budget.Spent += Math.Abs(amount);
+
+                    break;
+                case TransactionType.Income:
+                    foreach (var entry in historicalEntriesToEdit)
+                        entry.Balance += amount;
 
                     break;
                 case TransactionType.Internal:
@@ -51,9 +54,9 @@ namespace PersonalFinance.Business.Transaction.Processor
                         GetBalanceEntriesToEdit(transaction.ReceivingAccount, transaction.Date);
 
                     foreach (var entry in historicalEntriesToEdit)
-                        entry.Balance -= transaction.Amount;
+                        entry.Balance -= amount;
                     foreach (var entry in receiverEntriesToEdit)
-                        entry.Balance += transaction.Amount;
+                        entry.Balance += amount;
 
                     break;
                 default:
@@ -81,20 +84,23 @@ namespace PersonalFinance.Business.Transaction.Processor
             var historicalBalances = transaction.Account.DailyBalances
                 .Where(hb => hb.Date >= transaction.Date)
                 .ToList();
+            var amount = transaction.GetPersonalAmount();
 
             switch (transaction.Type)
             {
-                case TransactionType.External:
+                case TransactionType.Expense:
                     foreach (var historicalBalance in historicalBalances)
-                        historicalBalance.Balance -= transaction.Amount;
+                        historicalBalance.Balance -= amount;
 
                     // Update budgets.
-                    if (transaction.Amount < 0)
-                    {
-                        var budgets = context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
-                        foreach (var budget in budgets)
-                            budget.Spent -= Math.Abs(transaction.Amount);
-                    }
+                    var budgets = context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
+                    foreach (var budget in budgets)
+                        budget.Spent -= Math.Abs(amount);
+
+                    break;
+                case TransactionType.Income:
+                    foreach (var historicalBalance in historicalBalances)
+                        historicalBalance.Balance -= amount;
 
                     break;
                 case TransactionType.Internal:
@@ -103,9 +109,9 @@ namespace PersonalFinance.Business.Transaction.Processor
                         .ToList();
 
                     foreach (var historicalBalance in historicalBalances)
-                        historicalBalance.Balance += transaction.Amount;
+                        historicalBalance.Balance += amount;
                     foreach (var historicalBalance in receiverHistoricalBalances)
-                        historicalBalance.Balance -= transaction.Amount;
+                        historicalBalance.Balance -= amount;
 
                     break;
             }
@@ -210,6 +216,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                 NeedsConfirmation = transaction.NeedsConfirmation,
                 IsConfirmed = transaction.NeedsConfirmation ? false : (bool?)null,
                 Type = transaction.Type,
+                PaymentRequests = new List<PaymentRequestEntity>(),
             };
             transaction.LastOccurence = transaction.NextOccurence.Value;
 
