@@ -226,7 +226,7 @@
             // Create 2 recurring transactions for account.
             var rTransaction1 = this.GenerateRecurringTransaction(account.Id);
             var rTransaction2 = this.GenerateRecurringTransaction(
-                accountId: account2.Id, type: TransactionType.Internal, receivingAccountId: account.Id);
+                accountId: account2.Id, type: TransactionType.Transfer, receivingAccountId: account.Id);
 
             // Set as default and obsolete.
             this.AccountManager.UpdateAccount(

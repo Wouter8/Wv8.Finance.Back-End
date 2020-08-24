@@ -111,7 +111,7 @@
                     Date = LocalDate.FromDateTime(DateTime.Today),
                     Description = "Description",
                     Processed = false,
-                    Type = TransactionType.Internal,
+                    Type = TransactionType.Transfer,
                 });
             this.context.SaveChanges();
 
@@ -338,7 +338,7 @@
             // Transfer transaction that should be processed immediately.
             transaction = this.GenerateTransaction(
                 accountId: account.Id,
-                type: TransactionType.Internal,
+                type: TransactionType.Transfer,
                 date: LocalDate.FromDateTime(DateTime.Today),
                 amount: 50,
                 receivingAccountId: account2.Id);
@@ -414,7 +414,7 @@
             // Transfer transaction that should be processed at the same date as previous transaction.
             transaction = this.GenerateTransaction(
                 accountId: account.Id,
-                type: TransactionType.Internal,
+                type: TransactionType.Transfer,
                 date: LocalDate.FromDateTime(DateTime.Today).PlusDays(-1),
                 amount: 50,
                 receivingAccountId: account2.Id);

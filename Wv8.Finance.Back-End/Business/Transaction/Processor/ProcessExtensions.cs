@@ -49,7 +49,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                         entry.Balance += amount;
 
                     break;
-                case TransactionType.Internal:
+                case TransactionType.Transfer:
                     var receiverEntriesToEdit =
                         GetBalanceEntriesToEdit(transaction.ReceivingAccount, transaction.Date);
 
@@ -103,7 +103,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                         historicalBalance.Balance -= amount;
 
                     break;
-                case TransactionType.Internal:
+                case TransactionType.Transfer:
                     var receiverHistoricalBalances = transaction.ReceivingAccount.DailyBalances
                         .Where(hb => hb.Date >= transaction.Date)
                         .ToList();

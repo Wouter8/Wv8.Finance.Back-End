@@ -18,6 +18,6 @@
         /// <summary>
         /// A transaction that transfers money from one account to another.
         /// </summary>
-        Internal = 3,
+        Transfer = 3,
     }
 }

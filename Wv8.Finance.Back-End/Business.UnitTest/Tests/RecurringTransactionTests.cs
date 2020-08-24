@@ -47,7 +47,7 @@
                 categoryId: category.Id);
             var rTransaction2 = this.GenerateRecurringTransaction(
                 accountId: account1.Id,
-                type: TransactionType.Internal,
+                type: TransactionType.Transfer,
                 receivingAccountId: account2.Id);
             var finishedRecurringTransactions = this.GenerateRecurringTransaction(
                 accountId: account1.Id,

@@ -254,7 +254,7 @@ namespace Business.UnitTest
         {
             if ((type == TransactionType.Income || type == TransactionType.Expense) && !categoryId.HasValue)
                 categoryId = this.GenerateCategory().Id;
-            if (type == TransactionType.Internal && !receivingAccountId.HasValue)
+            if (type == TransactionType.Transfer && !receivingAccountId.HasValue)
                 receivingAccountId = this.GenerateAccount().Id;
 
             if (!accountId.HasValue)
@@ -307,7 +307,7 @@ namespace Business.UnitTest
         {
             if ((type == TransactionType.Income || type == TransactionType.Expense) && !categoryId.HasValue)
                 categoryId = this.GenerateCategory().Id;
-            if (type == TransactionType.Internal && !receivingAccountId.HasValue)
+            if (type == TransactionType.Transfer && !receivingAccountId.HasValue)
                 receivingAccountId = this.GenerateAccount().Id;
 
             if (!accountId.HasValue)

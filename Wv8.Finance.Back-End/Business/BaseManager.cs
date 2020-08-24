@@ -73,9 +73,9 @@
                 ? amount < 0
                     ? TransactionType.Expense
                     : TransactionType.Income
-                : TransactionType.Internal;
+                : TransactionType.Transfer;
 
-            if (type == TransactionType.Internal && amount <= 0)
+            if (type == TransactionType.Transfer && amount <= 0)
                 throw new ValidationException($"The amount has to be greater than 0.");
 
             return type;

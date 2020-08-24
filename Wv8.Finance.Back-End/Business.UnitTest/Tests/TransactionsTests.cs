@@ -200,7 +200,7 @@
             // Create transfer transaction.
             var transaction5 = this.GenerateTransaction(
                 accountId: account1.Id,
-                type: TransactionType.Internal,
+                type: TransactionType.Transfer,
                 date: LocalDate.FromDateTime(DateTime.Today),
                 amount: 200,
                 receivingAccountId: account2.Id);
@@ -278,7 +278,7 @@
             var receiver = this.GenerateAccount();
             var transferTransaction = this.GenerateTransaction(
                 accountId: sender.Id,
-                type: TransactionType.Internal,
+                type: TransactionType.Transfer,
                 amount: 50,
                 receivingAccountId: receiver.Id);
 
@@ -361,7 +361,7 @@
                 type: TransactionType.Income,
                 amount: 50,
                 categoryId: incomeCategory.Id);
-            var transferTransaction = this.GenerateTransaction(account.Id, TransactionType.Internal);
+            var transferTransaction = this.GenerateTransaction(account.Id, TransactionType.Transfer);
 
             var description = "Description";
             var date = LocalDate.FromDateTime(DateTime.Today).ToDateString();
@@ -748,7 +748,7 @@
                 IsConfirmed = false,
                 NeedsConfirmation = true,
                 Processed = false,
-                Type = TransactionType.Internal,
+                Type = TransactionType.Transfer,
             };
 
             this.context.Transactions.Add(transaction);
@@ -917,16 +917,16 @@
                 CategoryId = transaction.CategoryId,
                 DateString = transaction.Date,
                 ReceivingAccountId = Maybe<int>.None,
-                PaymentRequests = new List<EditPaymentRequest>
+                PaymentRequests = new List<InputPaymentRequest>
                 {
-                    new EditPaymentRequest
+                    new InputPaymentRequest
                     {
                         Id = prGroup.Id,
                         Amount = 50,
                         Count = 6,
                         Name = "Group",
                     },
-                    new EditPaymentRequest
+                    new InputPaymentRequest
                     {
                         Id = Maybe<int>.None,
                         Amount = 100,
@@ -1038,7 +1038,7 @@
                 Amount = amount,
                 CategoryId = categoryId,
                 ReceivingAccountId = receivingAccountId,
-                PaymentRequests = new List<EditPaymentRequest>(),
+                PaymentRequests = new List<InputPaymentRequest>(),
             };
 
             return this.TransactionManager.UpdateTransaction(input);

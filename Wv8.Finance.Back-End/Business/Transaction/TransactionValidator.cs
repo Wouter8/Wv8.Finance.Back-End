@@ -97,17 +97,5 @@
                     throw new ValidationException("A payment request must have an amount greater than 0.");
             }
         }
-
-        /// <summary>
-        /// Validates a list of payment requests.
-        /// </summary>
-        /// <param name="paymentRequests">The list of payment requests.</param>
-        /// <param name="type">The type of the transaction.</param>
-        /// <param name="transactionAmount">The amount of the transaction.</param>
-        public void PaymentRequests(
-            List<EditPaymentRequest> paymentRequests, TransactionType type, decimal transactionAmount)
-        {
-            this.PaymentRequests(new List<InputPaymentRequest>(paymentRequests), type, transactionAmount);
-        }
     }
 }

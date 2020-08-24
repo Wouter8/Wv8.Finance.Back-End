@@ -46,6 +46,6 @@ namespace PersonalFinance.Common.DataTransfer.Input
         /// <summary>
         /// The new collection of payment requests.
         /// </summary>
-        public List<EditPaymentRequest> PaymentRequests { get; set; }
+        public List<InputPaymentRequest> PaymentRequests { get; set; }
     }
 }
