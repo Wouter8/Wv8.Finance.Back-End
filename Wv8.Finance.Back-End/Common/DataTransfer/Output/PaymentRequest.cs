@@ -44,10 +44,5 @@ namespace PersonalFinance.Common.DataTransfer.Output
         /// <c>true</c> if the payment request is fulfilled, <c>false</c> otherwise.
         /// </summary>
         public bool Complete { get; set; }
-
-        /// <summary>
-        /// The transaction of this payment request.
-        /// </summary>
-        public Transaction Transaction { get; set; }
     }
 }

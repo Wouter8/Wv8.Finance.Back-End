@@ -77,7 +77,6 @@
                 TransactionId = entity.TransactionId,
                 AmountDue = (entity.Count - entity.PaidCount) * entity.Amount,
                 Complete = entity.PaidCount == entity.Count,
-                Transaction = entity.Transaction.AsTransaction(false),
             };
         }
 
