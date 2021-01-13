@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  build:
+  buildTestAndDeploy:
 
     runs-on: ubuntu-latest
     env:
@@ -19,7 +19,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v1.4.0
+      uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: ${{env.DOTNET_VERSION}}
         source-url: ${{env.packageSourceUrl}}
