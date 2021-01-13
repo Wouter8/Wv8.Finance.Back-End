@@ -21,6 +21,7 @@
             builder.BuildTransactionEntity();
             builder.BuildRecurringTransactionEntity();
             builder.BuildDailyBalanceEntity();
+            builder.BuildPaymentRequestEntity();
         }
 
         /// <summary>
@@ -119,6 +120,20 @@
 
             entity.Property(e => e.Description).IsRequired();
             entity.Property(e => e.Amount).HasPrecision(12, 2);
+        }
+
+        /// <summary>
+        /// Adds the required properties to the fields of the payment request entity.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        private static void BuildPaymentRequestEntity(this ModelBuilder builder)
+        {
+            var entity = builder.Entity<PaymentRequestEntity>();
+
+            entity.ToTable("PaymentRequests");
+
+            entity.Property(pr => pr.Name).IsRequired();
+            entity.Property(pr => pr.Amount).HasPrecision(12, 2);
         }
     }
 }

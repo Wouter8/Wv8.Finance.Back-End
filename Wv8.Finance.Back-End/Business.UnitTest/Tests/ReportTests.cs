@@ -29,7 +29,7 @@
             // Add transactions to account and mark obsolete later
             this.GenerateTransaction(accountId: account3.Id, amount: -50, date: DateTime.Today.AddDays(-3).ToLocalDate());
             this.GenerateTransaction(
-                accountId: account3.Id, type: TransactionType.External, amount: 50, date: DateTime.Today.AddDays(-2).ToLocalDate());
+                accountId: account3.Id, type: TransactionType.Income, amount: 50, date: DateTime.Today.AddDays(-2).ToLocalDate());
             this.AccountManager.SetAccountObsolete(account3.Id, true);
 
             this.GenerateTransaction(accountId: account1.Id, amount: -50, date: DateTime.Today.AddDays(-7).ToLocalDate()); // -50
@@ -39,7 +39,7 @@
             this.GenerateTransaction(accountId: account1.Id, amount: -50, date: DateTime.Today.AddDays(-5).ToLocalDate()); // -100
             this.GenerateTransaction(
                 accountId: account1.Id,
-                type: TransactionType.Internal,
+                type: TransactionType.Transfer,
                 amount: 50,
                 date: DateTime.Today.AddDays(-4).ToLocalDate(),
                 receivingAccountId: account2.Id); // -100
@@ -109,7 +109,7 @@
                 accountId: account2.Id, date: DateTime.Today.AddDays(-7).ToLocalDate(), amount: -50);
             this.GenerateTransaction(
                 accountId: account1.Id,
-                type: TransactionType.Internal,
+                type: TransactionType.Transfer,
                 date: DateTime.Today.AddDays(-3).ToLocalDate(),
                 amount: 50,
                 receivingAccountId: account2.Id);
@@ -173,7 +173,7 @@
                 this.GenerateTransaction(accountId: account1.Id, date: DateTime.Today.AddDays(-1).ToLocalDate()).Id,
                 this.GenerateTransaction(
                     accountId: account1.Id,
-                    type: TransactionType.Internal,
+                    type: TransactionType.Transfer,
                     date: DateTime.Today.AddDays(-1).ToLocalDate(),
                     receivingAccountId: account2.Id).Id,
                 this.GenerateTransaction(accountId: account1.Id, date: DateTime.Today.ToLocalDate()).Id,
@@ -225,7 +225,7 @@
                 this.GenerateTransaction(accountId: account1.Id, date: DateTime.Today.AddDays(-1).ToLocalDate()).Id,
                 this.GenerateTransaction(
                     accountId: account1.Id,
-                    type: TransactionType.Internal,
+                    type: TransactionType.Transfer,
                     date: DateTime.Today.AddDays(-1).ToLocalDate(),
                     receivingAccountId: account2.Id).Id,
                 this.GenerateTransaction(accountId: account1.Id, date: DateTime.Today.ToLocalDate()).Id,
@@ -285,7 +285,7 @@
                 this.GenerateTransaction(accountId: account1.Id, date: DateTime.Today.AddDays(-1).ToLocalDate()).Id,
                 this.GenerateTransaction(
                     accountId: account1.Id,
-                    type: TransactionType.Internal,
+                    type: TransactionType.Transfer,
                     date: DateTime.Today.AddDays(-1).ToLocalDate(),
                     receivingAccountId: account2.Id).Id,
                 this.GenerateTransaction(accountId: account1.Id, date: DateTime.Today.ToLocalDate()).Id,

@@ -1,7 +1,7 @@
 ﻿namespace PersonalFinance.Business.Account
 {
     using System.Collections.Generic;
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Output;
 
     /// <summary>
     /// Interface for the manager providing functionality related to accounts.

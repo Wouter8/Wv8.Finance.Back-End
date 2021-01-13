@@ -6,13 +6,18 @@
     public enum TransactionType
     {
         /// <summary>
-        /// A transaction that moves money from or to an external account.
+        /// A transaction that removes money from an account.
         /// </summary>
-        External = 1,
+        Expense = 1,
+
+        /// <summary>
+        /// A transaction that adds money to an account.
+        /// </summary>
+        Income = 2,
 
         /// <summary>
         /// A transaction that transfers money from one account to another.
         /// </summary>
-        Internal = 2,
+        Transfer = 3,
     }
 }

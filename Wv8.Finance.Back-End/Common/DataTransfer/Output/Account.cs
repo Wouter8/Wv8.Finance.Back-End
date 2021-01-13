@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Common.DataTransfer
+﻿namespace PersonalFinance.Common.DataTransfer.Output
 {
     /// <summary>
     /// Data transfer object for an account.

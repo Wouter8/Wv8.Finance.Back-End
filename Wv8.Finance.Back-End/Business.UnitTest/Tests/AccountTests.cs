@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Linq;
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;
     using Wv8.Core.Exceptions;
@@ -226,7 +226,7 @@
             // Create 2 recurring transactions for account.
             var rTransaction1 = this.GenerateRecurringTransaction(account.Id);
             var rTransaction2 = this.GenerateRecurringTransaction(
-                accountId: account2.Id, type: TransactionType.Internal, receivingAccountId: account.Id);
+                accountId: account2.Id, type: TransactionType.Transfer, receivingAccountId: account.Id);
 
             // Set as default and obsolete.
             this.AccountManager.UpdateAccount(
@@ -271,7 +271,7 @@
             // Account has current balance of -50.
             Assert.Throws<ValidationException>(() => this.AccountManager.SetAccountObsolete(account.Id, true));
 
-            var transaction2 = this.GenerateTransaction(accountId: account.Id, type: TransactionType.External, amount: 50);
+            var transaction2 = this.GenerateTransaction(accountId: account.Id, type: TransactionType.Income, amount: 50);
 
             this.AccountManager.SetAccountObsolete(account.Id, true);
 

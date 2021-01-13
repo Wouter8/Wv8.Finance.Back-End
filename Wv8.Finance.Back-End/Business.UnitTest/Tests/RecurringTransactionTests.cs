@@ -47,7 +47,7 @@
                 categoryId: category.Id);
             var rTransaction2 = this.GenerateRecurringTransaction(
                 accountId: account1.Id,
-                type: TransactionType.Internal,
+                type: TransactionType.Transfer,
                 receivingAccountId: account2.Id);
             var finishedRecurringTransactions = this.GenerateRecurringTransaction(
                 accountId: account1.Id,
@@ -82,7 +82,7 @@
             // Type filter
             retrieved =
                 this.RecurringTransactionManager.GetRecurringTransactionsByFilter(
-                    TransactionType.External, Maybe<int>.None, Maybe<int>.None, false);
+                    TransactionType.Expense, Maybe<int>.None, Maybe<int>.None, false);
             Assert.Single(retrieved);
         }
 

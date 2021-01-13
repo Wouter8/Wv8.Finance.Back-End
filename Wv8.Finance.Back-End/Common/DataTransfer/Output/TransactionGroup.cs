@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Common.DataTransfer
+﻿namespace PersonalFinance.Common.DataTransfer.Output
 {
     using System.Collections.Generic;
     using PersonalFinance.Common.Enums;

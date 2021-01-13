@@ -4,7 +4,7 @@
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Category;
     using PersonalFinance.Common;
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
 

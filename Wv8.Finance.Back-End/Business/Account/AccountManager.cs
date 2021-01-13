@@ -3,7 +3,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using PersonalFinance.Common;
-    using PersonalFinance.Common.DataTransfer;
+    using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.Models;

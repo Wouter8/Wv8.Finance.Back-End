@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Common.DataTransfer
+﻿namespace PersonalFinance.Common.DataTransfer.Output
 {
     using PersonalFinance.Common.Enums;
     using Wv8.Core;
