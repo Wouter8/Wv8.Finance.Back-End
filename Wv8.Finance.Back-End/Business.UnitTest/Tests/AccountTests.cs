@@ -147,7 +147,7 @@
         public void UpdateAccount_Exceptions()
         {
             var account = this.GenerateAccount();
-            var account2 = this.GenerateAccount("Description");
+            var account2 = this.GenerateAccount(description: "Description");
 
             const string newDescription = "Description";
             const bool isDefault = true;
@@ -167,6 +167,19 @@
                 () => this.AccountManager.UpdateAccount(100, newDescription, isDefault, newIconPack, newIconName, newIconColor));
         }
 
+        /// <summary>
+        /// Tests that the UpdateAccount method correctly throws an error when trying to set a Splitwise account to be
+        /// the default account.
+        /// </summary>
+        [Fact]
+        public void UpdateAccount_SplitwiseDefault()
+        {
+            var account = this.GenerateAccount(AccountType.Splitwise);
+
+            Assert.Throws<ValidationException>(
+                () => this.AccountManager.UpdateAccount(account.Id, account.Description, true, account.Icon.Pack, account.Icon.Name, account.Icon.Color));
+        }
+
         #endregion UpdateAccount
 
         #region CreateAccount
@@ -177,13 +190,15 @@
         [Fact]
         public void CreateAccount()
         {
+            const AccountType type = AccountType.Normal;
             const string description = "Description";
             const string iconPack = "fas";
             const string iconName = "circle";
             const string iconColor = "#FFFFFF";
 
-            var account = this.AccountManager.CreateAccount(description, iconPack, iconName, iconColor);
+            var account = this.AccountManager.CreateAccount(type, description, iconPack, iconName, iconColor);
 
+            Assert.Equal(type, account.Type);
             Assert.Equal(description, account.Description);
             Assert.Equal(iconPack, account.Icon.Pack);
             Assert.Equal(iconName, account.Icon.Name);
@@ -193,12 +208,13 @@
         }
 
         /// <summary>
-        /// Tests the exceptional flow of the CreateAccount method.
+        /// Tests that the CreateAccount method throws an exception when trying to create an account with an already
+        /// existing description.
         /// </summary>
         [Fact]
-        public void CreateAccount_Exceptions()
+        public void CreateAccount_DescriptionExists()
         {
-            var account = this.GenerateAccount("Description");
+            var account = this.GenerateAccount(AccountType.Normal, "Description");
 
             const string description = "Description";
             const string iconPack = "fas";
@@ -207,7 +223,32 @@
 
             // Description already exists.
             Assert.Throws<ValidationException>(
-                () => this.AccountManager.CreateAccount(description, iconPack, iconName, iconColor));
+                () => this.AccountManager.CreateAccount(AccountType.Normal, description, iconPack, iconName, iconColor));
+            Assert.Throws<ValidationException>(
+                () => this.AccountManager.CreateAccount(AccountType.Splitwise, description, iconPack, iconName, iconColor));
+        }
+
+        /// <summary>
+        /// Tests that the CreateAccount method throws an exception when trying to create a Splitwise account while one already exists.
+        /// </summary>
+        [Fact]
+        public void CreateAccount_SplitwiseExists()
+        {
+            var account = this.GenerateAccount(AccountType.Splitwise);
+
+            const string description = "Description";
+            const string iconPack = "fas";
+            const string iconName = "circle";
+            const string iconColor = "#FFFFFF";
+
+            // Splitwise account already exists.
+            Assert.Throws<ValidationException>(
+                () => this.AccountManager.CreateAccount(AccountType.Splitwise, description, iconPack, iconName, iconColor));
+
+            this.AccountManager.SetAccountObsolete(account.Id, true);
+
+            // Splitwise account is obsolete.
+            this.AccountManager.CreateAccount(AccountType.Splitwise, description, iconPack, iconName, iconColor);
         }
 
         #endregion CreateAccount
@@ -264,7 +305,7 @@
         [Fact]
         public void SetAccountObsolete_Exceptions()
         {
-            var account = this.GenerateAccount("Description");
+            var account = this.GenerateAccount(description: "Description");
 
             var transaction = this.GenerateTransaction(accountId: account.Id, amount: -50);
 
@@ -276,9 +317,33 @@
             this.AccountManager.SetAccountObsolete(account.Id, true);
 
             // Create account with same description as inactive account.
-            var account2 = this.GenerateAccount("Description");
+            var account2 = this.GenerateAccount(description: "Description");
 
             Assert.Throws<ValidationException>(() => this.AccountManager.SetAccountObsolete(account.Id, false));
+        }
+
+        /// <summary>
+        /// Tests that the SetAccountObsolete method throws an exception when trying to mark a Splitwise account active
+        /// while another Splitwise account is already active.
+        /// </summary>
+        [Fact]
+        public void SetAccountObsolete_SplitwiseExists()
+        {
+            var account = this.GenerateAccount(AccountType.Splitwise);
+
+            this.AccountManager.SetAccountObsolete(account.Id, true);
+
+            const string description = "Description";
+            const string iconPack = "fas";
+            const string iconName = "circle";
+            const string iconColor = "#FFFFFF";
+
+            // Splitwise account is obsolete.
+            this.AccountManager.CreateAccount(AccountType.Splitwise, description, iconPack, iconName, iconColor);
+
+            // Splitwise account already exists.
+            Assert.Throws<ValidationException>(
+                () => this.AccountManager.SetAccountObsolete(account.Id, false));
         }
 
         #endregion SetAccountObsolete

@@ -1,6 +1,7 @@
 ﻿namespace PersonalFinance.Business.Account
 {
     using System.Collections.Generic;
+    using Common.Enums;
     using PersonalFinance.Common.DataTransfer.Output;
 
     /// <summary>
@@ -37,12 +38,13 @@
         /// <summary>
         /// Creates a new account.
         /// </summary>
+        /// <param name="type">The type of the account.</param>
         /// <param name="description">The description of the account.</param>
         /// <param name="iconPack">The icon pack of the icon for the account.</param>
         /// <param name="iconName">The name of the icon for the account.</param>
         /// <param name="iconColor">The background color of the icon for the account.</param>
         /// <returns>The created account.</returns>
-        Account CreateAccount(string description, string iconPack, string iconName, string iconColor);
+        Account CreateAccount(AccountType type, string description, string iconPack, string iconName, string iconColor);
 
         /// <summary>
         /// Sets the obsolete value of an account.

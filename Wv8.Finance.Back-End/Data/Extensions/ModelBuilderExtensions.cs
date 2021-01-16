@@ -1,5 +1,6 @@
 ﻿namespace PersonalFinance.Data.Extensions
 {
+    using Common.Enums;
     using Microsoft.EntityFrameworkCore;
     using PersonalFinance.Data.Models;
 
@@ -50,6 +51,7 @@
             entity.ToTable("Accounts");
 
             entity.Property(e => e.Description).IsRequired();
+            entity.Property(e => e.Type).HasDefaultValue(AccountType.Normal);
         }
 
         /// <summary>

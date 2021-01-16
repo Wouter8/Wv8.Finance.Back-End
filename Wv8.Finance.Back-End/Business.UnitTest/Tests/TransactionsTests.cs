@@ -55,8 +55,8 @@
         public void GetTransactionsByFilter()
         {
             // Generate objects.
-            var account1 = this.GenerateAccount("AAA");
-            var account2 = this.GenerateAccount("BBB");
+            var account1 = this.GenerateAccount(description: "AAA");
+            var account2 = this.GenerateAccount(description: "BBB");
 
             var category = this.GenerateCategory(description: "CCC");
             var categoryChild = this.GenerateCategory(

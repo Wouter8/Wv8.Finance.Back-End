@@ -129,18 +129,21 @@ namespace Business.UnitTest
         /// <summary>
         /// Creates an account with specified, or random values.
         /// </summary>
+        /// <param name="type">The account type.</param>
         /// <param name="description">The description.</param>
         /// <param name="iconPack">The icon pack.</param>
         /// <param name="iconName">The icon name.</param>
         /// <param name="iconColor">The icon color.</param>
         /// <returns>The created account.</returns>
         protected Account GenerateAccount(
+            AccountType type = AccountType.Normal,
             string description = null,
             string iconPack = null,
             string iconName = null,
             string iconColor = null)
         {
             return this.AccountManager.CreateAccount(
+                type,
                 description ?? this.GetRandomString(),
                 iconPack ?? this.GetRandomString(3),
                 iconName ?? this.GetRandomString(6),

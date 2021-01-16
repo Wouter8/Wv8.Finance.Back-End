@@ -25,6 +25,7 @@
             return new Account
             {
                 Id = entity.Id,
+                Type = entity.Type,
                 Description = entity.Description,
                 CurrentBalance = entity.DailyBalances.Last().Balance,
                 IsDefault = entity.IsDefault,

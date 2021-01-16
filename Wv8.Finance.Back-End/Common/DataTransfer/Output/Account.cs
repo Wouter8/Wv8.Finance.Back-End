@@ -1,5 +1,7 @@
 ﻿namespace PersonalFinance.Common.DataTransfer.Output
 {
+    using Enums;
+
     /// <summary>
     /// Data transfer object for an account.
     /// </summary>
@@ -9,6 +11,11 @@
         /// The identifier of this account.
         /// </summary>
         public int Id { get; set; }
+
+        /// <summary>
+        /// The type of this account.
+        /// </summary>
+        public AccountType Type { get; set; }
 
         /// <summary>
         /// The description of this account.

@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Linq;
+    using Common.Enums;
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Data;
@@ -64,6 +65,9 @@
 
                 if (isDefault)
                 {
+                    if (entity.Type == AccountType.Splitwise)
+                        throw new ValidationException($"A Splitwise account can not be the default account.");
+
                     var defaultAccount = this.Context.Accounts.SingleOrNone(a => a.IsDefault);
                     if (defaultAccount.IsSome)
                     {
@@ -85,7 +89,7 @@
         }
 
         /// <inheritdoc />
-        public Account CreateAccount(string description, string iconPack, string iconName, string iconColor)
+        public Account CreateAccount(AccountType type, string description, string iconPack, string iconName, string iconColor)
         {
             description = this.validator.Description(description);
             this.validator.Icon(iconPack, iconName, iconColor);
@@ -95,12 +99,19 @@
                 if (this.Context.Accounts.Any(a => a.Description == description && !a.IsObsolete))
                     throw new ValidationException($"An active account with description \"{description}\" already exists.");
 
+                if (type == AccountType.Splitwise &&
+                    this.Context.Accounts.Any(a => a.Type == AccountType.Splitwise && !a.IsObsolete))
+                {
+                    throw new ValidationException($"An active Splitwise account already exists.");
+                }
+
                 var entity = new DailyBalanceEntity
                 {
                     Date = this.Context.CreationTime.ToLocalDate(),
                     Balance = 0,
                     Account = new AccountEntity
                     {
+                        Type = type,
                         Description = description,
                         IsDefault = false,
                         IsObsolete = false,
@@ -136,6 +147,8 @@
                         throw new ValidationException("This account has a current balance which is not 0.");
 
                     // Delete any existing recurring transaction for this account
+                    // TODO: This should just finish the recurring transaction and not remove it.
+                    // TODO: This should remove instances in the future.
                     var recurringTransactions = this.Context.RecurringTransactions
                         .Where(rt => rt.AccountId == entity.Id || rt.ReceivingAccountId == entity.Id)
                         .ToList();
@@ -157,6 +170,9 @@
                     // Validate that no other active account exists with the same description.
                     if (this.Context.Accounts.Any(a => a.Description == entity.Description && !a.IsObsolete && a.Id != entity.Id))
                         throw new ValidationException($"An active account with description \"{entity.Description}\" already exists. Change the description of that account first.");
+
+                    if (entity.Type == AccountType.Splitwise && this.Context.Accounts.Any(a => a.Type == AccountType.Splitwise && !a.IsObsolete && a.Id != entity.Id))
+                        throw new ValidationException($"An active Splitwise account already exists.");
                 }
 
                 entity.IsObsolete = obsolete;
