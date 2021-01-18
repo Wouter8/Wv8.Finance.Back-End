@@ -98,10 +98,17 @@
             return this.ConcurrentInvoke(() =>
             {
                 var entity = this.Context.Transactions.GetEntity(input.Id);
+
+                this.validator.AccountType(entity.Account.Type);
+                if (entity.ReceivingAccount != null)
+                    this.validator.AccountType(entity.ReceivingAccount.Type);
+
                 if (type != entity.Type)
                     throw new ValidationException("Changing the type of transaction is not possible.");
 
                 var account = this.Context.Accounts.GetEntity(input.AccountId, false);
+
+                this.validator.AccountType(account.Type);
 
                 if (entity.Processed)
                     entity.RevertProcessedTransaction(this.Context);
@@ -109,8 +116,13 @@
                 var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
                 var receivingAccount = input.ReceivingAccountId.Select(aId => this.Context.Accounts.GetEntity(aId, false));
-                if (receivingAccount.IsSome && receivingAccount.Value.Id == account.Id)
-                    throw new ValidationException("Sender account can not be the same as receiver account.");
+                if (receivingAccount.IsSome)
+                {
+                    this.validator.AccountType(receivingAccount.Value.Type);
+
+                    if (receivingAccount.Value.Id == account.Id)
+                        throw new ValidationException("Sender account can not be the same as receiver account.");
+                }
 
                 entity.AccountId = input.AccountId;
                 entity.Account = account;
@@ -177,11 +189,18 @@
             {
                 var account = this.Context.Accounts.GetEntity(input.AccountId, false);
 
+                this.validator.AccountType(account.Type);
+
                 var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
                 var receivingAccount = input.ReceivingAccountId.Select(aId => this.Context.Accounts.GetEntity(aId, false));
-                if (receivingAccount.IsSome && receivingAccount.Value.Id == account.Id)
-                    throw new ValidationException("Sender account can not be the same as receiver account.");
+                if (receivingAccount.IsSome)
+                {
+                    this.validator.AccountType(receivingAccount.Value.Type);
+
+                    if (receivingAccount.Value.Id == account.Id)
+                        throw new ValidationException("Sender account can not be the same as receiver account.");
+                }
 
                 var entity = new TransactionEntity
                 {
@@ -256,6 +275,10 @@
             this.ConcurrentInvoke(() =>
             {
                 var entity = this.Context.Transactions.GetEntity(id);
+
+                this.validator.AccountType(entity.Account.Type);
+                if (entity.ReceivingAccount != null)
+                    this.validator.AccountType(entity.ReceivingAccount.Type);
 
                 if (entity.Processed)
                     entity.RevertProcessedTransaction(this.Context);

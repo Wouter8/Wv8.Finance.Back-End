@@ -344,6 +344,8 @@
             Assert.True(updated.Processed);
         }
 
+        // TODO: Exception tests should validate that the correct exception is being tested. Either by message or derived exception types.
+
         /// <summary>
         /// Tests the exceptional flow of the <see cref="ITransactionManager.UpdateTransaction"/> method.
         /// </summary>
@@ -468,6 +470,64 @@
                 -amount,
                 expenseCategory.Id,
                 Maybe<int>.None));
+        }
+
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.UpdateTransaction"/> method. Verifies that an exception is thrown
+        /// when the account of the transaction that is updated is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void UpdateTransaction_SplitwiseAccount()
+        {
+            var category = this.context.GenerateCategory(1);
+            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
+            var transaction = this.context.GenerateTransaction(account.Id, 1, categoryId: category.Id, amount: -50);
+            var normalAccount = this.context.GenerateAccount(2);
+            this.context.SaveChanges();
+
+            var edit = transaction.ToEdit();
+            edit.AccountId = normalAccount.Id;
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(edit));
+        }
+
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.UpdateTransaction"/> method. Verifies that an exception is thrown
+        /// when the new account of the transaction that is updated is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void UpdateTransaction_SplitwiseAccount2()
+        {
+            var category = this.context.GenerateCategory(1);
+            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
+            var normalAccount = this.context.GenerateAccount(2);
+            var transaction = this.context.GenerateTransaction(normalAccount.Id, 1, categoryId: category.Id, amount: -50);
+            this.context.SaveChanges();
+
+            var edit = transaction.ToEdit();
+            edit.AccountId = account.Id;
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(edit));
+        }
+
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.UpdateTransaction"/> method. Verifies that an exception is thrown
+        /// when the account of the transaction that is updated is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void UpdateTransaction_Transfer_SplitwiseAccount()
+        {
+            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
+            var normalAccount = this.context.GenerateAccount(2);
+            var normalAccount2 = this.context.GenerateAccount(3);
+            var transaction = this.context.GenerateTransaction(
+                normalAccount.Id, 1, TransactionType.Transfer, receivingAccountId: account.Id, amount: 50);
+            this.context.SaveChanges();
+
+            var edit = transaction.ToEdit();
+            edit.ReceivingAccountId = normalAccount2.Id;
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(edit));
         }
 
         #endregion UpdateTransaction
@@ -666,6 +726,38 @@
                 false));
         }
 
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.CreateTransaction"/> method. Verifies that an exception is thrown
+        /// when the account of the transaction is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void CreateTransaction_SplitwiseAccount()
+        {
+            var category = this.context.GenerateCategory(1);
+            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
+            this.context.SaveChanges();
+
+            var input = this.GetInputTransaction(account.Id, categoryId: category.Id);
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(input));
+        }
+
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.CreateTransaction"/> method. Verifies that an exception is thrown
+        /// when the receiving account of the transaction is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void CreateTransaction_Transfer_SplitwiseAccount()
+        {
+            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
+            var normalAccount = this.context.GenerateAccount(2);
+            this.context.SaveChanges();
+
+            var input = this.GetInputTransaction(normalAccount.Id, TransactionType.Transfer, receivingAccountId: account.Id);
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(input));
+        }
+
         #endregion CreateTransaction
 
         #region ConfirmTransaction
@@ -816,6 +908,37 @@
         public void DeleteTransaction_Exceptions()
         {
             Assert.Throws<DoesNotExistException>(() => this.TransactionManager.DeleteTransaction(100));
+        }
+
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.DeleteTransaction"/> method. Verifies that an exception is thrown
+        /// when the account of the transaction is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void DeleteTransaction_SplitwiseAccount()
+        {
+            var category = this.context.GenerateCategory(1);
+            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
+            var transaction = this.context.GenerateTransaction(account.Id, id: 1, categoryId: category.Id);
+            this.context.SaveChanges();
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.DeleteTransaction(transaction.Id));
+        }
+
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.DeleteTransaction"/> method. Verifies that an exception is thrown
+        /// when the receiving account of the transaction is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void DeleteTransaction_Transfer_SplitwiseAccount()
+        {
+            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
+            var normalAccount = this.context.GenerateAccount(2);
+            var transaction = this.context.GenerateTransaction(
+                normalAccount.Id, id: 1, TransactionType.Transfer, receivingAccountId: account.Id);
+            this.context.SaveChanges();
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.DeleteTransaction(transaction.Id));
         }
 
         #endregion DeleteTransaction

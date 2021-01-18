@@ -19,6 +19,7 @@ namespace Business.UnitTest
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
+    using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Xunit;
     using Xunit.Sdk;
@@ -122,6 +123,52 @@ namespace Business.UnitTest
         {
             this.serviceProvider?.Dispose();
         }
+
+        #region InputHelpers
+
+        /// <summary>
+        /// Creates an account with specified, or random values.
+        /// </summary>
+        /// <param name="accountId">The identifier of the account.</param>
+        /// <param name="type">The type of the transaction.</param>
+        /// <param name="description">The description of the transaction.</param>
+        /// <param name="date">The date of the transaction.</param>
+        /// <param name="amount">The amount.</param>
+        /// <param name="categoryId">The identifier of the category.</param>
+        /// <param name="receivingAccountId">The identifier of the receiving account.</param>
+        /// <param name="needsConfirmation">A value indicating if the transaction has to be confirmed.</param>
+        /// <param name="paymentRequests">The payment requests of the transaction.</param>
+        /// <returns>The created transaction.</returns>
+        protected InputTransaction GetInputTransaction(
+            int accountId,
+            TransactionType type = TransactionType.Expense,
+            string description = null,
+            LocalDate? date = null,
+            decimal? amount = null,
+            int? categoryId = null,
+            int? receivingAccountId = null,
+            bool needsConfirmation = false,
+            List<InputPaymentRequest> paymentRequests = null)
+        {
+            if ((type == TransactionType.Expense || type == TransactionType.Income) && !categoryId.HasValue)
+                throw new Exception("Specify a category for an income or expense transaction.");
+            if (type == TransactionType.Transfer && !receivingAccountId.HasValue)
+                throw new Exception("Specify a receiving account for a transfer transaction.");
+
+            return new InputTransaction
+            {
+                AccountId = accountId,
+                Amount = amount ?? (type == TransactionType.Expense ? -50 : 50),
+                Description = description ?? this.GetRandomString(),
+                DateString = date.ToMaybe().ValueOrElse(DateTime.Now.ToLocalDate()).ToDateString(),
+                CategoryId = categoryId.ToMaybe(),
+                ReceivingAccountId = receivingAccountId.ToMaybe(),
+                NeedsConfirmation = needsConfirmation,
+                PaymentRequests = paymentRequests ?? new List<InputPaymentRequest>(),
+            };
+        }
+
+        #endregion InputHelpers
 
         #region CreateHelpers
         // TODO: These method should not call manager/controller methods, but rather add entities directly to the database.
@@ -460,6 +507,15 @@ namespace Business.UnitTest
         }
 
         #endregion AssertHelpers
+
+        /// <summary>
+        /// Saves the database context and runs the transaction processor.
+        /// </summary>
+        protected void SaveAndProcess()
+        {
+            this.context.SaveChanges();
+            this.TransactionProcessor.Run();
+        }
 
         /// <summary>
         /// Refreshes the database context of this test.

@@ -32,6 +32,16 @@
         }
 
         /// <summary>
+        /// Validates that the account type is normal.
+        /// </summary>
+        /// <param name="type">The account type to validate.</param>
+        public void AccountType(AccountType type)
+        {
+            if (type == Common.Enums.AccountType.Splitwise)
+                throw new ValidationException("It is not possible manually create or update Splitwise transactions.");
+        }
+
+        /// <summary>
         /// Validates that the interval provided is in the correct range.
         /// </summary>
         /// <param name="input">The input.</param>
