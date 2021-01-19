@@ -1,5 +1,6 @@
 namespace PersonalFinance.Service
 {
+    using System;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc;
@@ -17,7 +18,9 @@ namespace PersonalFinance.Service
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
+    using PersonalFinance.Common;
     using PersonalFinance.Data;
+    using PersonalFinance.Data.Splitwise;
     using PersonalFinance.Service.Middleware;
     using PersonalFinance.Service.Services;
     using Wv8.Core.ModelBinding;
@@ -71,6 +74,9 @@ namespace PersonalFinance.Service
                 });
             });
 
+            // Settings
+            services.Configure<ApplicationSettings>(this.Configuration.GetSection("ApplicationSettings"));
+
             // DbContext
             services.AddDbContext<Context>(options =>
                     options.UseSqlServer(
@@ -85,6 +91,9 @@ namespace PersonalFinance.Service
             services.AddTransient<IRecurringTransactionManager, RecurringTransactionManager>();
             services.AddTransient<ITransactionProcessor, TransactionProcessor>();
             services.AddTransient<IReportManager, ReportManager>();
+
+            // External contexts
+            services.AddTransient<ISplitwiseContext, SplitwiseContext>();
 
             // Services
             services.AddHostedService<PeriodicService>();
@@ -115,11 +124,14 @@ namespace PersonalFinance.Service
                 endpoints.MapControllers();
             });
 
-            if (env.IsProduction())
+            //if (env.IsProduction())
                 this.UpdateDatabase(app);
 
             // Process everything on startup
             this.ProcessAll(app);
+
+
+            this.Test(app);
         }
 
         /// <summary>
@@ -148,6 +160,15 @@ namespace PersonalFinance.Service
             var service = serviceScope.ServiceProvider.GetService<ITransactionProcessor>();
 
             service.Run();
+        }
+
+        private void Test(IApplicationBuilder app)
+        {
+            using var serviceScope = app.ApplicationServices
+                .GetRequiredService<IServiceScopeFactory>()
+                .CreateScope();
+            var context = serviceScope.ServiceProvider.GetService<ISplitwiseContext>();
+            var test = context.GetExpenses(new DateTime(2021, 01, 19));
         }
     }
 }

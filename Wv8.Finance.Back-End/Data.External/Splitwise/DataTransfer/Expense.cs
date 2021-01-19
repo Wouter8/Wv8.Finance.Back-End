@@ -12,7 +12,7 @@ namespace PersonalFinance.Data.Splitwise.DataTransfer
         [JsonProperty("date")]
         public string DateString { get; set; }
 
-        [JsonProperty("deletedAt")]
+        [JsonProperty("deleted_at")]
         public string DeletedAtString { get; set; }
 
         public decimal Cost { get; set; }
