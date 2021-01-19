@@ -19,7 +19,6 @@ namespace Business.UnitTest
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
-    using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Xunit;
     using Xunit.Sdk;

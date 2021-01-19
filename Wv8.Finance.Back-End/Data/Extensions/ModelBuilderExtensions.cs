@@ -1,7 +1,7 @@
 ﻿namespace PersonalFinance.Data.Extensions
 {
-    using Common.Enums;
     using Microsoft.EntityFrameworkCore;
+    using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Models;
 
     /// <summary>

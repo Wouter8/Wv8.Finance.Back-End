@@ -1,10 +1,10 @@
 ﻿namespace PersonalFinance.Service.Controllers
 {
     using System.Collections.Generic;
-    using Common.Enums;
     using Microsoft.AspNetCore.Mvc;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Common.DataTransfer.Output;
+    using PersonalFinance.Common.Enums;
 
     /// <summary>
     /// Service endpoint for actions related to accounts.

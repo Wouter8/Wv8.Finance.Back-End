@@ -1,4 +1,4 @@
-namespace Business.UnitTest
+namespace Business.UnitTest.Helpers
 {
     using System;
     using System.Collections.Generic;

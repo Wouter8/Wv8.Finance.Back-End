@@ -1,27 +1,34 @@
-namespace PersonalFinance.Data.Splitwise
+namespace PersonalFinance.Data.External.Splitwise
 {
     using System;
     using System.Collections.Generic;
     using System.Net;
-    using global::Data.External.Splitwise.RequestResults;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Options;
-    using Newtonsoft.Json.Linq;
     using PersonalFinance.Common;
-    using PersonalFinance.Data.Splitwise.DataTransfer;
+    using PersonalFinance.Data.External.Splitwise.DataTransfer;
+    using PersonalFinance.Data.External.Splitwise.RequestResults;
     using RestSharp;
     using RestSharp.Serializers.NewtonsoftJson;
 
+    /// <summary>
+    /// A class containing functionality to communicate with Splitwise.
+    /// </summary>
     public class SplitwiseContext : ISplitwiseContext
     {
+        /// <summary>
+        /// The client to use for HTTP requests.
+        /// </summary>
         private readonly IRestClient client;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SplitwiseContext"/> class.
+        /// </summary>
+        /// <param name="settings">The application settings.</param>
         public SplitwiseContext(IOptions<ApplicationSettings> settings)
         {
             var baseUrl = settings.Value.SplitwiseRootUrl;
             this.client = new RestClient(baseUrl).UseNewtonsoftJson();
             this.client.AddDefaultHeader("Authorization", $"Bearer {settings.Value.SplitwiseApiKey}");
-            this.client.ThrowOnAnyError = true;
         }
 
         /// <inheritdoc/>

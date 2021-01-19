@@ -1,7 +1,7 @@
 ﻿namespace PersonalFinance.Data.Models
 {
     using System.Collections.Generic;
-    using Common.Enums;
+    using PersonalFinance.Common.Enums;
 
     /// <summary>
     /// An entity representing an account. Used for different bank accounts, etc.

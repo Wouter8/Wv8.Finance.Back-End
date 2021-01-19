@@ -1,6 +1,6 @@
 ﻿namespace PersonalFinance.Common.DataTransfer.Output
 {
-    using Enums;
+    using PersonalFinance.Common.Enums;
 
     /// <summary>
     /// Data transfer object for an account.

@@ -20,7 +20,7 @@ namespace PersonalFinance.Service
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common;
     using PersonalFinance.Data;
-    using PersonalFinance.Data.Splitwise;
+    using PersonalFinance.Data.External.Splitwise;
     using PersonalFinance.Service.Middleware;
     using PersonalFinance.Service.Services;
     using Wv8.Core.ModelBinding;
@@ -124,14 +124,10 @@ namespace PersonalFinance.Service
                 endpoints.MapControllers();
             });
 
-            //if (env.IsProduction())
-                this.UpdateDatabase(app);
+            this.UpdateDatabase(app);
 
             // Process everything on startup
             this.ProcessAll(app);
-
-
-            this.Test(app);
         }
 
         /// <summary>
@@ -160,15 +156,6 @@ namespace PersonalFinance.Service
             var service = serviceScope.ServiceProvider.GetService<ITransactionProcessor>();
 
             service.Run();
-        }
-
-        private void Test(IApplicationBuilder app)
-        {
-            using var serviceScope = app.ApplicationServices
-                .GetRequiredService<IServiceScopeFactory>()
-                .CreateScope();
-            var context = serviceScope.ServiceProvider.GetService<ISplitwiseContext>();
-            var test = context.GetExpenses(new DateTime(2021, 01, 19));
         }
     }
 }

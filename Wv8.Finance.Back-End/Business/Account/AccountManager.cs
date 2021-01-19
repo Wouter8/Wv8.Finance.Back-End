@@ -2,9 +2,9 @@
 {
     using System.Collections.Generic;
     using System.Linq;
-    using Common.Enums;
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer.Output;
+    using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.Models;

@@ -1,8 +1,8 @@
 ﻿namespace PersonalFinance.Business.Account
 {
     using System.Collections.Generic;
-    using Common.Enums;
     using PersonalFinance.Common.DataTransfer.Output;
+    using PersonalFinance.Common.Enums;
 
     /// <summary>
     /// Interface for the manager providing functionality related to accounts.
