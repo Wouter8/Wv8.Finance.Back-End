@@ -14,5 +14,10 @@
         /// The API key for the Splitwise API.
         /// </summary>
         public string SplitwiseApiKey { get; set; }
+
+        /// <summary>
+        /// The id of the user in Splitwise.
+        /// </summary>
+        public int SplitwiseUserId { get; set; }
     }
 }

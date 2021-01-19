@@ -2,10 +2,11 @@ namespace PersonalFinance.Data.External.Splitwise
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
     using Microsoft.Extensions.Options;
     using PersonalFinance.Common;
-    using PersonalFinance.Data.External.Splitwise.DataTransfer;
+    using PersonalFinance.Data.External.Splitwise.Models;
     using PersonalFinance.Data.External.Splitwise.RequestResults;
     using RestSharp;
     using RestSharp.Serializers.NewtonsoftJson;
@@ -21,6 +22,11 @@ namespace PersonalFinance.Data.External.Splitwise
         private readonly IRestClient client;
 
         /// <summary>
+        /// The user id in Splitwise.
+        /// </summary>
+        private readonly int userId;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SplitwiseContext"/> class.
         /// </summary>
         /// <param name="settings">The application settings.</param>
@@ -28,7 +34,10 @@ namespace PersonalFinance.Data.External.Splitwise
         {
             var baseUrl = settings.Value.SplitwiseRootUrl;
             this.client = new RestClient(baseUrl).UseNewtonsoftJson();
+
             this.client.AddDefaultHeader("Authorization", $"Bearer {settings.Value.SplitwiseApiKey}");
+
+            this.userId = settings.Value.SplitwiseUserId;
         }
 
         /// <inheritdoc/>
@@ -43,7 +52,10 @@ namespace PersonalFinance.Data.External.Splitwise
                 .AddParameter("limit", limit)
                 .AddParameter("updated_after", updatedAfterString);
 
-            return this.Execute<GetExpensesResult>(request).Expenses;
+            return this.Execute<GetExpensesResult>(request)
+                .Expenses
+                .Select(e => e.ToDomainObject(this.userId))
+                .ToList();
         }
 
         /// <summary>

@@ -2,7 +2,7 @@ namespace PersonalFinance.Data.External.Splitwise
 {
     using System;
     using System.Collections.Generic;
-    using PersonalFinance.Data.External.Splitwise.DataTransfer;
+    using PersonalFinance.Data.External.Splitwise.Models;
 
     /// <summary>
     /// An interface for a context providing functionality to Splitwise.
