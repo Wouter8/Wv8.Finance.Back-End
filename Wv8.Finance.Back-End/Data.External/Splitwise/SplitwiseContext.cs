@@ -27,6 +27,11 @@ namespace PersonalFinance.Data.External.Splitwise
         private readonly int userId;
 
         /// <summary>
+        /// The group id in Splitwise.
+        /// </summary>
+        private readonly int groupId;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SplitwiseContext"/> class.
         /// </summary>
         /// <param name="settings">The application settings.</param>
@@ -38,6 +43,7 @@ namespace PersonalFinance.Data.External.Splitwise
             this.client.AddDefaultHeader("Authorization", $"Bearer {settings.Value.SplitwiseApiKey}");
 
             this.userId = settings.Value.SplitwiseUserId;
+            this.groupId = settings.Value.SplitwiseGroupId;
         }
 
         /// <inheritdoc/>
@@ -49,11 +55,13 @@ namespace PersonalFinance.Data.External.Splitwise
             var request = new RestRequest("get_expenses", Method.GET);
 
             request
+                .AddParameter("group_id", this.groupId)
                 .AddParameter("limit", limit)
                 .AddParameter("updated_after", updatedAfterString);
 
             return this.Execute<GetExpensesResult>(request)
                 .Expenses
+                .Where(e => e.Users.Any(u => u.UserId == this.userId))
                 .Select(e => e.ToDomainObject(this.userId))
                 .ToList();
         }

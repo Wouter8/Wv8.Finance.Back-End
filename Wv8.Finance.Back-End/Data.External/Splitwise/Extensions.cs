@@ -20,34 +20,16 @@ namespace PersonalFinance.Data.External.Splitwise
         public static Expense ToDomainObject(this DT.Expense expense, int userId)
         {
             var user = expense.Users.Single(u => u.UserId == userId);
-            var others = expense.Users.Where(u => u.UserId != userId);
 
-            Expense domainObject;
-
-            if (user.PaidShare > 0)
+            return new Expense
             {
-                domainObject = new PaidExpense
-                {
-                    PaidAmount = user.PaidShare,
-                    PersonalAmount = user.OwedShare,
-                    // TODO: Can the payment be split? If so, the paid share should be subtracted from the owed share.
-                    OwedAmount = others.Sum(u => u.OwedShare),
-                };
-            }
-            else
-            {
-                domainObject = new OwedExpense
-                {
-                    AmountOwed = user.OwedShare,
-                };
-            }
-
-            domainObject.Id = expense.Id;
-            domainObject.Date = LocalDate.FromDateTime(DateTime.Parse(expense.DateString));
-            domainObject.Description = expense.Description;
-            domainObject.IsDeleted = expense.DeletedAtString != null;
-
-            return domainObject;
+                Id = expense.Id,
+                Date = LocalDate.FromDateTime(DateTime.Parse(expense.DateString)),
+                Description = expense.Description,
+                IsDeleted = expense.DeletedAtString != null,
+                PaidAmount = user.PaidShare,
+                PersonalAmount = user.OwedShare,
+            };
         }
     }
 }
