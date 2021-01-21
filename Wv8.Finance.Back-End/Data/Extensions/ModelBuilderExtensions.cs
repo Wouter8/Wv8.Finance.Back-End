@@ -23,6 +23,7 @@
             builder.BuildRecurringTransactionEntity();
             builder.BuildDailyBalanceEntity();
             builder.BuildPaymentRequestEntity();
+            builder.BuildSplitwiseTransactionEntity();
         }
 
         /// <summary>
@@ -136,6 +137,22 @@
 
             entity.Property(pr => pr.Name).IsRequired();
             entity.Property(pr => pr.Amount).HasPrecision(12, 2);
+        }
+
+        /// <summary>
+        /// Adds the required properties to the fields of the payment request entity.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        private static void BuildSplitwiseTransactionEntity(this ModelBuilder builder)
+        {
+            var entity = builder.Entity<SplitwiseTransactionEntity>();
+
+            entity.ToTable("PaymentRequests");
+
+            entity.Property(st => st.Id).ValueGeneratedNever(); // Use id from Splitwise
+            entity.Property(st => st.Description).IsRequired();
+            entity.Property(st => st.PersonalAmount).HasPrecision(12, 2);
+            entity.Property(st => st.PaidAmount).HasPrecision(12, 2);
         }
     }
 }
