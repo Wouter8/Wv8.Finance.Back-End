@@ -25,7 +25,13 @@ namespace PersonalFinance.Data.External.Splitwise.DataTransfer
         public string DateString { get; set; }
 
         /// <summary>
-        /// The date at which the expense was deleted, formatted as an ISO string.
+        /// The timestamp at which the expense was updated, formatted as an ISO string.
+        /// </summary>
+        [JsonProperty("updated_at")]
+        public string UpdatedAtString { get; set; }
+
+        /// <summary>
+        /// The timestamp at which the expense was deleted, formatted as an ISO string.
         /// If the expense is not deleted, this is <c>null</c>.
         /// </summary>
         [JsonProperty("deleted_at")]

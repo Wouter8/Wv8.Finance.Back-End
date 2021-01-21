@@ -1,4 +1,4 @@
-namespace PersonalFinance.Data.Models
+namespace PersonalFinance.Common.DataTransfer.Output
 {
     using System;
     using NodaTime;
@@ -7,7 +7,7 @@ namespace PersonalFinance.Data.Models
     /// A transaction which is imported from Splitwise.
     /// A category is to be added to be able to fully import this transaction into the finance application.
     /// </summary>
-    public class SplitwiseTransactionEntity
+    public class SplitwiseTransaction
     {
         /// <summary>
         /// The identifier of the transaction.
@@ -39,18 +39,6 @@ namespace PersonalFinance.Data.Models
         /// The personal share of the transaction.
         /// </summary>
         public decimal PersonalAmount { get; set; }
-
-        /// <summary>
-        /// <c>true</c> if the transaction has be imported completely, that is a <see cref="TransactionEntity"/> has
-        /// been created for this transaction, <c>false</c> otherwise.
-        /// </summary>
-        public bool Imported { get; set; }
-
-        /// <summary>
-        /// The timestamp at which this transaction was last modified in Splitwise.
-        /// The highest value of all imported Splitwise transactions is used to always get new Splitwise transactions.
-        /// </summary>
-        public DateTime UpdatedAt { get; set; }
 
         /// <summary>
         /// The amount that is owed by others.

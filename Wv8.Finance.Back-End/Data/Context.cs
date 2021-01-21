@@ -61,6 +61,11 @@
         /// </summary>
         public DbSet<PaymentRequestEntity> PaymentRequests { get; set; }
 
+        /// <summary>
+        /// The set of imported Splitwise transactions.
+        /// </summary>
+        public DbSet<SplitwiseTransactionEntity> SplitwiseTransactions { get; set; }
+
         /// <inheritdoc/>
         public DateTime CreationTime { get; set; }
 

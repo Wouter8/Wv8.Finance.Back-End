@@ -26,6 +26,7 @@ namespace PersonalFinance.Data.External.Splitwise
                 Id = expense.Id,
                 Date = LocalDate.FromDateTime(DateTime.Parse(expense.DateString)),
                 Description = expense.Description,
+                UpdatedAt = DateTime.Parse(expense.UpdatedAtString),
                 IsDeleted = expense.DeletedAtString != null,
                 PaidAmount = user.PaidShare,
                 PersonalAmount = user.OwedShare,

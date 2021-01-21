@@ -30,6 +30,11 @@ namespace PersonalFinance.Data.External.Splitwise.Models
         public bool IsDeleted { get; set; }
 
         /// <summary>
+        /// The timestamp at which this transaction was last modified in Splitwise.
+        /// </summary>
+        public DateTime UpdatedAt { get; set; }
+
+        /// <summary>
         /// The amount paid by the user.
         /// </summary>
         public decimal PaidAmount { get; set; }
