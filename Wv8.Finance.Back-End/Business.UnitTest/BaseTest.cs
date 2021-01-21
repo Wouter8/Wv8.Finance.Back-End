@@ -3,6 +3,8 @@ namespace Business.UnitTest
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
+    using Business.UnitTest.Mocks;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.SqlServer.NodaTime.Extensions;
     using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +13,7 @@ namespace Business.UnitTest
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Business.Category;
     using PersonalFinance.Business.Report;
+    using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
@@ -19,6 +22,7 @@ namespace Business.UnitTest
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
+    using PersonalFinance.Data.External.Splitwise;
     using Wv8.Core;
     using Xunit;
     using Xunit.Sdk;
@@ -27,7 +31,7 @@ namespace Business.UnitTest
     /// A class with basic functionality for tests.
     /// </summary>
     [Collection("Tests")]
-    public abstract class BaseTest : IDisposable
+    public abstract class BaseTest : BeforeAfterTestAttribute, IDisposable
     {
         /// <summary>
         /// The database context to assert things by manually querying the database.
@@ -74,6 +78,10 @@ namespace Business.UnitTest
             services.AddTransient<IRecurringTransactionManager, RecurringTransactionManager>();
             services.AddTransient<IReportManager, ReportManager>();
             services.AddTransient<ITransactionProcessor, TransactionProcessor>();
+            services.AddTransient<ISplitwiseManager, SplitwiseManager>();
+
+            // Mocks
+            services.AddSingleton<ISplitwiseContext, SplitwiseContextMock>();
 
             this.serviceProvider = services.BuildServiceProvider();
 
@@ -113,9 +121,19 @@ namespace Business.UnitTest
         protected IReportManager ReportManager => this.serviceProvider.GetService<IReportManager>();
 
         /// <summary>
+        /// The Splitwise manager.
+        /// </summary>
+        protected ISplitwiseManager SplitwiseManager => this.serviceProvider.GetService<ISplitwiseManager>();
+
+        /// <summary>
         /// The periodic processor.
         /// </summary>
         protected ITransactionProcessor TransactionProcessor => this.serviceProvider.GetService<ITransactionProcessor>();
+
+        /// <summary>
+        /// The Splitwise context mock.
+        /// </summary>
+        protected SplitwiseContextMock SplitwiseContextMock => (SplitwiseContextMock)this.serviceProvider.GetService<ISplitwiseContext>();
 
         /// <inheritdoc />
         public void Dispose()

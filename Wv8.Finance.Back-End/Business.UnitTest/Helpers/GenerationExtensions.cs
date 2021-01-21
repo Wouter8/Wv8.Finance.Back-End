@@ -2,10 +2,12 @@ namespace Business.UnitTest.Helpers
 {
     using System;
     using System.Collections.Generic;
+    using Business.UnitTest.Mocks;
     using NodaTime;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
+    using PersonalFinance.Data.External.Splitwise.Models;
     using PersonalFinance.Data.Models;
     using Wv8.Core.Collections;
 
@@ -154,6 +156,44 @@ namespace Business.UnitTest.Helpers
                 Type = type,
                 RecurringTransactionId = recurringTransactionId,
             }).Entity;
+        }
+
+        /// <summary>
+        /// Creates an expense with specified, or random values.
+        /// </summary>
+        /// <param name="splitwiseContext">The Splitwise context.</param>
+        /// <param name="id">The identifier.</param>
+        /// <param name="description">The description.</param>
+        /// <param name="date">The date.</param>
+        /// <param name="isDeleted">A value indicating if the expense is deleted.</param>
+        /// <param name="updatedAt">The updated at timestamp.</param>
+        /// <param name="paidAmount">The paid amount.</param>
+        /// <param name="personalAmount">The personal amount.</param>
+        /// <returns>The created expense.</returns>
+        public static Expense GenerateExpense(
+            this SplitwiseContextMock splitwiseContext,
+            int id = 0,
+            string description = null,
+            LocalDate? date = null,
+            bool isDeleted = false,
+            DateTime? updatedAt = null,
+            decimal paidAmount = 10,
+            decimal personalAmount = 5)
+        {
+            var expense = new Expense
+            {
+                Id = id,
+                Description = description ?? GetRandomString(),
+                Date = date ?? DateTime.Today.ToLocalDate(),
+                IsDeleted = isDeleted,
+                UpdatedAt = updatedAt ?? DateTime.Now,
+                PaidAmount = paidAmount,
+                PersonalAmount = personalAmount,
+            };
+
+            splitwiseContext.Expenses.Add(expense);
+
+            return expense;
         }
 
         /// <summary>
