@@ -101,5 +101,15 @@
         /// The collection of payment requests which are linked to this transaction.
         /// </summary>
         public List<PaymentRequestEntity> PaymentRequests { get; set; }
+
+        /// <summary>
+        /// Optionally, the identifier of the Splitwise transaction this transaction is based on.
+        /// </summary>
+        public int? SplitwiseTransactionId { get; set; }
+
+        /// <summary>
+        /// Optionally, the Splitwise transaction this transaction is based on.
+        /// </summary>
+        public SplitwiseTransactionEntity SplitwiseTransaction { get; set; }
     }
 }

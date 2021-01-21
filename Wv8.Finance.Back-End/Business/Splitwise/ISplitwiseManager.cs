@@ -15,5 +15,10 @@ namespace PersonalFinance.Business.Splitwise
         /// if only transactions which have to be completely imported should be returned.</param>
         /// <returns>A list of Splitwise transactions.</returns>
         public List<SplitwiseTransaction> GetSplitwiseTransactions(bool includeImported);
+
+        /// <summary>
+        /// Imports new/updated transactions from Splitwise.
+        /// </summary>
+        public void ImportFromSplitwise();
     }
 }
