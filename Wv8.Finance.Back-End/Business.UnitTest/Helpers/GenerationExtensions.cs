@@ -159,6 +159,47 @@ namespace Business.UnitTest.Helpers
         }
 
         /// <summary>
+        /// Creates a Splitwise transaction with specified, or random values.
+        /// </summary>
+        /// <param name="context">The database context.</param>
+        /// <param name="id">The identifier.</param>
+        /// <param name="description">The description.</param>
+        /// <param name="date">The date.</param>
+        /// <param name="isDeleted">A value indicating if the expense is deleted.</param>
+        /// <param name="updatedAt">The updated at timestamp.</param>
+        /// <param name="paidAmount">The paid amount.</param>
+        /// <param name="personalAmount">The personal amount.</param>
+        /// <param name="imported">The imported value.</param>
+        /// <returns>The created expense.</returns>
+        public static SplitwiseTransactionEntity GenerateSplitwiseTransaction(
+            this Context context,
+            int id = 0,
+            string description = null,
+            LocalDate? date = null,
+            bool isDeleted = false,
+            DateTime? updatedAt = null,
+            decimal paidAmount = 10,
+            decimal personalAmount = 5,
+            bool imported = false)
+        {
+            var expense = new SplitwiseTransactionEntity
+            {
+                Id = id,
+                Description = description ?? GetRandomString(),
+                Date = date ?? DateTime.Today.ToLocalDate(),
+                IsDeleted = isDeleted,
+                UpdatedAt = updatedAt ?? DateTime.Now,
+                PaidAmount = paidAmount,
+                PersonalAmount = personalAmount,
+                Imported = imported,
+            };
+
+            context.SplitwiseTransactions.Add(expense);
+
+            return expense;
+        }
+
+        /// <summary>
         /// Creates an expense with specified, or random values.
         /// </summary>
         /// <param name="splitwiseContext">The Splitwise context.</param>
