@@ -4,6 +4,7 @@
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
     using NodaTime;
+    using PersonalFinance.Common.Enums;
     using PersonalFinance.Common.Exceptions;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
@@ -152,6 +153,32 @@
         }
 
         /// <summary>
+        /// Retrieves the default account entity.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <returns>The account.</returns>
+        public static AccountEntity GetDefaultEntity(this DbSet<AccountEntity> set)
+        {
+            return set
+                .IncludeAll()
+                .SingleOrNone(a => a.IsDefault)
+                .ValueOrThrow(() => new DoesNotExistException($"A default account does not exist."));
+        }
+
+        /// <summary>
+        /// Retrieves the single active Splitwise account entity.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <returns>The account.</returns>
+        public static AccountEntity GetSplitwiseEntity(this DbSet<AccountEntity> set)
+        {
+            return set
+                .IncludeAll()
+                .SingleOrNone(a => !a.IsObsolete && a.Type == AccountType.Splitwise)
+                .ValueOrThrow(() => new DoesNotExistException($"An active Splitwise account does not exist."));
+        }
+
+        /// <summary>
         /// Retrieves a budget entity.
         /// </summary>
         /// <param name="set">The database set.</param>
@@ -218,13 +245,26 @@
         /// </summary>
         /// <param name="set">The database set.</param>
         /// <param name="id">The identifier of the payment request to be retrieved.</param>
-        /// <returns>The transaction.</returns>
+        /// <returns>The payment request.</returns>
         public static PaymentRequestEntity GetEntity(this DbSet<PaymentRequestEntity> set, int id)
         {
             return set
                 .IncludeAll()
                 .SingleOrNone(c => c.Id == id)
                 .ValueOrThrow(() => new DoesNotExistException($"Payment request with identifier {id} does not exist."));
+        }
+
+        /// <summary>
+        /// Retrieves a Splitwise transaction entity.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <param name="id">The identifier of the Splitwise transaction to be retrieved.</param>
+        /// <returns>The transaction.</returns>
+        public static SplitwiseTransactionEntity GetEntity(this DbSet<SplitwiseTransactionEntity> set, int id)
+        {
+            return set
+                .SingleOrNone(t => t.Id == id)
+                .ValueOrThrow(() => new DoesNotExistException($"Splitwise transaction with identifier {id} does not exist."));
         }
 
         /// <summary>

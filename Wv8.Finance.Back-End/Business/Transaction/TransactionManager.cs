@@ -4,8 +4,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
-    using NodaTime;
-    using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
@@ -110,8 +108,7 @@
 
                 this.validator.AccountType(account.Type);
 
-                if (entity.Processed)
-                    entity.RevertProcessedTransaction(this.Context);
+                entity.RevertIfProcessed(this.Context);
 
                 var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
@@ -166,10 +163,7 @@
                 this.Context.PaymentRequests.RemoveRange(removedPaymentRequests);
                 entity.PaymentRequests = updatedPaymentRequests;
 
-                // Is confirmed is always filled if needs confirmation is true.
-                // ReSharper disable once PossibleInvalidOperationException
-                if (date <= LocalDate.FromDateTime(DateTime.Today) && (!entity.NeedsConfirmation || entity.IsConfirmed.Value))
-                    entity.ProcessTransaction(this.Context);
+                entity.ProcessIfNeeded(this.Context);
 
                 this.Context.SaveChanges();
 
@@ -225,8 +219,7 @@
                     }).ToList(),
                 };
 
-                if (date <= LocalDate.FromDateTime(DateTime.Today) && !input.NeedsConfirmation)
-                    entity.ProcessTransaction(this.Context);
+                entity.ProcessIfNeeded(this.Context);
 
                 this.Context.Transactions.Add(entity);
 
@@ -260,8 +253,7 @@
                 entity.Amount = amount;
                 entity.IsConfirmed = true;
 
-                if (date <= LocalDate.FromDateTime(DateTime.Today))
-                    entity.ProcessTransaction(this.Context);
+                entity.ProcessIfNeeded(this.Context);
 
                 this.Context.SaveChanges();
 
@@ -280,8 +272,7 @@
                 if (entity.ReceivingAccount != null)
                     this.validator.AccountType(entity.ReceivingAccount.Type);
 
-                if (entity.Processed)
-                    entity.RevertProcessedTransaction(this.Context);
+                entity.RevertIfProcessed(this.Context);
 
                 this.Context.Remove(entity);
 

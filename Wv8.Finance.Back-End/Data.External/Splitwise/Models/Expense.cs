@@ -2,7 +2,6 @@ namespace PersonalFinance.Data.External.Splitwise.Models
 {
     using System;
     using NodaTime;
-    using Wv8.Core;
 
     /// <summary>
     /// A transaction from Splitwise.

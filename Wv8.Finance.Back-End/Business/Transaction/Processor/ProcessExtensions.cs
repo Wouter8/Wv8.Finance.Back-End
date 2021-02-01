@@ -43,6 +43,10 @@ namespace PersonalFinance.Business.Transaction.Processor
                     foreach (var budget in budgets)
                         budget.Spent += Math.Abs(amount);
 
+                    // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
+                    if (transaction.SplitwiseTransactionId.HasValue)
+                        transaction.SplitwiseTransaction.ProcessTransaction(context);
+
                     break;
                 case TransactionType.Income:
                     foreach (var entry in historicalEntriesToEdit)
@@ -96,6 +100,10 @@ namespace PersonalFinance.Business.Transaction.Processor
                     var budgets = context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
                     foreach (var budget in budgets)
                         budget.Spent -= Math.Abs(amount);
+
+                    // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
+                    if (transaction.SplitwiseTransactionId.HasValue)
+                        transaction.SplitwiseTransaction.RevertProcessedTransaction(context);
 
                     break;
                 case TransactionType.Income:
@@ -151,6 +159,51 @@ namespace PersonalFinance.Business.Transaction.Processor
             }
 
             context.Transactions.AddRange(instances);
+        }
+
+        /// <summary>
+        /// Processes a Splitwise transaction. Meaning that the Splitwise account balances are updated if needed.
+        /// </summary>
+        /// <param name="transaction">The Splitwise transaction.</param>
+        /// <param name="context">The database context.</param>
+        private static void ProcessTransaction(this SplitwiseTransactionEntity transaction, Context context)
+        {
+            transaction.VerifyProcessable();
+
+            // If the user did not pay for this transaction, then that means that the transaction has been added
+            // for the Splitwise account, meaning that the balance of the account is already up to date.
+            if (transaction.PaidAmount == 0)
+                return;
+
+            var splitwiseAccount = context.Accounts.GetSplitwiseEntity();
+            var historicalEntriesToEdit = GetBalanceEntriesToEdit(splitwiseAccount, transaction.Date);
+            var mutationAmount = transaction.GetSplitwiseAccountDifference();
+
+            foreach (var entry in historicalEntriesToEdit)
+                entry.Balance += mutationAmount;
+        }
+
+        /// <summary>
+        /// Reverses the processing of a Splitwise transaction. Meaning that the Splitwise account balances are updated
+        /// if needed.
+        /// </summary>
+        /// <param name="transaction">The Splitwise transaction.</param>
+        /// <param name="context">The database context.</param>
+        private static void RevertProcessedTransaction(this SplitwiseTransactionEntity transaction, Context context)
+        {
+            transaction.VerifyProcessable();
+
+            // If the user did not pay for this transaction, then that means that the transaction has been added
+            // for the Splitwise account, meaning that the balance of the account is already up to date.
+            if (transaction.PaidAmount == 0)
+                return;
+
+            var splitwiseAccount = context.Accounts.GetSplitwiseEntity();
+            var historicalEntriesToEdit = GetBalanceEntriesToEdit(splitwiseAccount, transaction.Date);
+            var mutationAmount = transaction.GetSplitwiseAccountDifference();
+
+            foreach (var entry in historicalEntriesToEdit)
+                entry.Balance -= mutationAmount;
         }
 
         /// <summary>
@@ -306,6 +359,26 @@ namespace PersonalFinance.Business.Transaction.Processor
                 throw new IsObsoleteException($"Receiver is obsolete.");
             if (transaction.CategoryId.HasValue && transaction.Category.IsObsolete)
                 throw new IsObsoleteException($"Category is obsolete.");
+        }
+
+        /// <summary>
+        /// Verifies that a Splitwise transaction is processable. This is the case when the transaction has been
+        /// imported and is not deleted.
+        /// </summary>
+        /// <param name="transaction">The entity to verify.</param>
+        private static void VerifyProcessable(this SplitwiseTransactionEntity transaction)
+        {
+            if (!transaction.Imported)
+            {
+                throw new InvalidOperationException(
+                    "This Splitwise transaction is not imported and should therefore not be processed.");
+            }
+
+            if (transaction.IsDeleted)
+            {
+                throw new InvalidOperationException(
+                    "This Splitwise transaction is marked deleted and should therefore not be processed.");
+            }
         }
     }
 }
