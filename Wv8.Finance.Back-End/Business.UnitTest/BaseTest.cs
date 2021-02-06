@@ -3,6 +3,7 @@ namespace Business.UnitTest
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Microsoft.Data.Sqlite;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.SqlServer.NodaTime.Extensions;
     using Microsoft.Extensions.DependencyInjection;
@@ -55,14 +56,18 @@ namespace Business.UnitTest
 
             if (this.useInMemoryDatabase)
             {
+                var sqliteConnection = new SqliteConnection("Filename=:memory:");
+
                 services.AddDbContext<Context>(
-                    options => options.UseInMemoryDatabase(Guid.NewGuid().ToString()), ServiceLifetime.Transient);
+                    options => options.UseSqlite(sqliteConnection), ServiceLifetime.Transient);
             }
             else
             {
+                // Mac: Server=localhost;Database=Wv8-Finance;User Id=SA;Password=localDatabase1;
+                // Windows: Server=(LocalDb)\\MSSQLLocalDB;Database=Wv8-Finance-Test;Integrated Security=SSPI;
                 services.AddDbContext<Context>(
                     options => options.UseSqlServer(
-                        "Server=(LocalDb)\\MSSQLLocalDB;Database=Wv8-Finance-Test;Integrated Security=SSPI;",
+                        "Server=localhost;Database=Wv8-Finance;User Id=SA;Password=localDatabase1;",
                         sqlOptions => sqlOptions.UseNodaTime()),
                     ServiceLifetime.Transient);
             }
@@ -79,7 +84,7 @@ namespace Business.UnitTest
 
             this.RefreshContext();
             this.context.Database.EnsureDeleted();
-            this.context.Database.EnsureCreated();
+            this.context.Database.Migrate();
         }
 
         /// <summary>

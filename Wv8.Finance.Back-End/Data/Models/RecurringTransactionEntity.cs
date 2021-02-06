@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Data.Models
+namespace PersonalFinance.Data.Models
 {
     using NodaTime;
     using PersonalFinance.Common.Enums;

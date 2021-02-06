@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Data.Models
+namespace PersonalFinance.Data.Models
 {
     using System.Collections.Generic;
     using NodaTime;

@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Data.Extensions
+namespace PersonalFinance.Data.Extensions
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -26,8 +26,7 @@
         public static IQueryable<AccountEntity> IncludeAll(this DbSet<AccountEntity> set)
         {
             return set
-                .Include(a => a.Icon)
-                .Include(a => a.DailyBalances);
+                .Include(a => a.Icon);
         }
 
         /// <summary>
@@ -73,12 +72,8 @@
             return set
                 .Include(t => t.Account)
                 .ThenInclude(t => t.Icon)
-                .Include(t => t.Account)
-                .ThenInclude(t => t.DailyBalances)
                 .Include(t => t.ReceivingAccount)
                 .ThenInclude(t => t.Icon)
-                .Include(t => t.ReceivingAccount)
-                .ThenInclude(t => t.DailyBalances)
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Icon)
                 .Include(t => t.Category)
@@ -100,12 +95,8 @@
             return set
                 .Include(t => t.Account)
                 .ThenInclude(t => t.Icon)
-                .Include(t => t.Account)
-                .ThenInclude(t => t.DailyBalances)
                 .Include(t => t.ReceivingAccount)
                 .ThenInclude(t => t.Icon)
-                .Include(t => t.ReceivingAccount)
-                .ThenInclude(t => t.DailyBalances)
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Icon)
                 .Include(t => t.Category)

@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Business.Account
+namespace PersonalFinance.Business.Account
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -132,7 +132,7 @@
 
                 if (obsolete)
                 {
-                    if (entity.DailyBalances.Last().Balance != 0)
+                    if (entity.CurrentBalance != 0)
                         throw new ValidationException("This account has a current balance which is not 0.");
 
                     // Delete any existing recurring transaction for this account

@@ -38,8 +38,9 @@
         public IconEntity Icon { get; set; }
 
         /// <summary>
-        /// The historical balances for this account.
+        /// The current balance of the account.
         /// </summary>
-        public List<DailyBalanceEntity> DailyBalances { get; set; }
+        /// <remarks>This value is calculated by the database.</remarks>
+        public decimal CurrentBalance { get; private set; }
     }
 }

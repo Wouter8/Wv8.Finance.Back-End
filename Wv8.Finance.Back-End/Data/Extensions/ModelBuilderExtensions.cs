@@ -50,6 +50,8 @@
             entity.ToTable("Accounts");
 
             entity.Property(e => e.Description).IsRequired();
+            entity.Property(e => e.CurrentBalance).HasPrecision(12, 2)
+                .HasComputedColumnSql("GetCurrentBalance([Id]) PERSISTED");
         }
 
         /// <summary>
