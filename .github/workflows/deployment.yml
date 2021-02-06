@@ -13,7 +13,7 @@ jobs:
       workingDirectory: ./Wv8.Finance.Back-End
       AZURE_WEBAPP_NAME: wv8-finance
       AZURE_WEBAPP_PACKAGE_PATH: './Wv8.Finance.Back-End'
-      DOTNET_VERSION: '3.1.100'
+      DOTNET_VERSION: '5.0.102'
       packageSourceUrl: https://pkgs.dev.azure.com/woutervanacht/_packaging/Wv8-NuGet-Feed/nuget/v3/index.json
 
     steps:
