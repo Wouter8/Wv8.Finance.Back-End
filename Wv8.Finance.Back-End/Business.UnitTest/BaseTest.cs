@@ -3,9 +3,10 @@ namespace Business.UnitTest
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Microsoft.Data.Sqlite;
+    using System.Runtime.InteropServices;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.SqlServer.NodaTime.Extensions;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using NodaTime;
     using PersonalFinance.Business.Account;
@@ -41,36 +42,17 @@ namespace Business.UnitTest
         private readonly ServiceProvider serviceProvider;
 
         /// <summary>
-        /// A value indicating if an in memory database should be used. This should always be true upon
-        /// deploying, because the pipeline that will run does not have a local database.
-        /// It can however be turned off while developing, to be able to debug database issues.
-        /// </summary>
-        private readonly bool useInMemoryDatabase = true;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="BaseTest"/> class.
         /// </summary>
         protected BaseTest()
         {
             var services = new ServiceCollection();
 
-            if (this.useInMemoryDatabase)
-            {
-                var sqliteConnection = new SqliteConnection("Filename=:memory:");
-
-                services.AddDbContext<Context>(
-                    options => options.UseSqlite(sqliteConnection), ServiceLifetime.Transient);
-            }
-            else
-            {
-                // Mac: Server=localhost;Database=Wv8-Finance;User Id=SA;Password=localDatabase1;
-                // Windows: Server=(LocalDb)\\MSSQLLocalDB;Database=Wv8-Finance-Test;Integrated Security=SSPI;
-                services.AddDbContext<Context>(
-                    options => options.UseSqlServer(
-                        "Server=localhost;Database=Wv8-Finance;User Id=SA;Password=localDatabase1;",
-                        sqlOptions => sqlOptions.UseNodaTime()),
-                    ServiceLifetime.Transient);
-            }
+            services.AddDbContext<Context>(
+                options => options.UseSqlServer(
+                    this.GetDatabaseConnectionString(),
+                    sqlOptions => sqlOptions.UseNodaTime()),
+                ServiceLifetime.Transient);
 
             services.AddTransient<IAccountManager, AccountManager>();
             services.AddTransient<ICategoryManager, CategoryManager>();
@@ -85,6 +67,32 @@ namespace Business.UnitTest
             this.RefreshContext();
             this.context.Database.EnsureDeleted();
             this.context.Database.Migrate();
+        }
+
+        /// <summary>
+        /// Gets the correct database connection string based on the OS.
+        /// GitHub Actions uses Linux.
+        /// </summary>
+        /// <returns>The connections string.</returns>
+        private string GetDatabaseConnectionString()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return "Server=(LocalDb)\\MSSQLLocalDB;Database=Wv8-Finance-Test;Integrated Security=SSPI;";
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return "Server=localhost;Database=Wv8-Finance-Test;User Id=SA;Password=localDatabase1;";
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return "Server=localhost;Database=Wv8-Finance-Test;User Id=SA;Password=localDatabase1;";
+            }
+
+            // This should not happen.
+            return string.Empty;
         }
 
         /// <summary>

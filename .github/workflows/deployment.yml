@@ -28,6 +28,11 @@ jobs:
     - name: Build with dotnet
       run: dotnet build --configuration Release /warnaserror
       working-directory: ${{env.workingDirectory}}
+    - name: Setup test database
+      uses: 280780363/sqlserver-action@v1.0
+      with:
+        accept eula: true
+        sa password: 'localDatabase1'
     - name: Test
       run: dotnet test
       working-directory: ${{env.workingDirectory}}
