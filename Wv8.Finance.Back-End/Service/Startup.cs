@@ -57,8 +57,7 @@ namespace PersonalFinance.Service
                     options.SerializerSettings.Converters.Add(new MaybeJsonConverter());
                     options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-                })
-                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+                });
 
             // Cors
             services.AddCors(options =>
@@ -75,7 +74,11 @@ namespace PersonalFinance.Service
             services.AddDbContext<Context>(options =>
                     options.UseSqlServer(
                         this.Configuration.GetConnectionString("Default"),
-                        sqlOptions => sqlOptions.UseNodaTime()));
+                        sqlOptions =>
+                        {
+                            sqlOptions.UseNodaTime();
+                            sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        }));
 
             // Managers
             services.AddTransient<IAccountManager, AccountManager>();
