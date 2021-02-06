@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Business.Transaction
+namespace PersonalFinance.Business.Transaction
 {
     using System;
     using System.Collections.Generic;

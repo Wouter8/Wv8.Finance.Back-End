@@ -1,7 +1,5 @@
 ﻿namespace PersonalFinance.Data.Models
 {
-    using System.Collections.Generic;
-
     /// <summary>
     /// An entity representing an account. Used for different bank accounts, etc.
     /// </summary>
@@ -38,8 +36,9 @@
         public IconEntity Icon { get; set; }
 
         /// <summary>
-        /// The historical balances for this account.
+        /// The current balance of the account.
         /// </summary>
-        public List<DailyBalanceEntity> DailyBalances { get; set; }
+        /// <remarks>This value is calculated by the database.</remarks>
+        public decimal CurrentBalance { get; private set; }
     }
 }

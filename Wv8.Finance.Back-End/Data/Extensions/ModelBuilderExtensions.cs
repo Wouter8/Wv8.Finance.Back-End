@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Data.Extensions
+namespace PersonalFinance.Data.Extensions
 {
     using Microsoft.EntityFrameworkCore;
     using PersonalFinance.Data.Models;
@@ -50,6 +50,8 @@
             entity.ToTable("Accounts");
 
             entity.Property(e => e.Description).IsRequired();
+            entity.Property(e => e.CurrentBalance).HasPrecision(12, 2)
+                .HasComputedColumnSql("GetCurrentBalance([Id])");
         }
 
         /// <summary>
