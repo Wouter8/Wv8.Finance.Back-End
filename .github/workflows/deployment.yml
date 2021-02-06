@@ -37,11 +37,11 @@ jobs:
       run: dotnet test
       working-directory: ${{env.workingDirectory}}
     - name: Publish with dotnet
-      run: dotnet publish -c Release -o myapp
+      run: dotnet publish Service -c Release -o publish
       working-directory: ${{env.workingDirectory}}
     - name: 'Run Azure webapp deploy action using publish profile credentials'
       uses: azure/webapps-deploy@v2
       with: 
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE  }}
-        package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/myapp'
+        package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/publish'
