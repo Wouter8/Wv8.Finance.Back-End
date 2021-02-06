@@ -6,7 +6,6 @@ namespace Business.UnitTest
     using System.Runtime.InteropServices;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.SqlServer.NodaTime.Extensions;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using NodaTime;
     using PersonalFinance.Business.Account;
@@ -67,32 +66,6 @@ namespace Business.UnitTest
             this.RefreshContext();
             this.context.Database.EnsureDeleted();
             this.context.Database.Migrate();
-        }
-
-        /// <summary>
-        /// Gets the correct database connection string based on the OS.
-        /// GitHub Actions uses Linux.
-        /// </summary>
-        /// <returns>The connections string.</returns>
-        private string GetDatabaseConnectionString()
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                return "Server=(LocalDb)\\MSSQLLocalDB;Database=Wv8-Finance-Test;Integrated Security=SSPI;";
-            }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                return "Server=localhost;Database=Wv8-Finance-Test;User Id=SA;Password=localDatabase1;";
-            }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                return "Server=localhost;Database=Wv8-Finance-Test;User Id=SA;Password=localDatabase1;";
-            }
-
-            // This should not happen.
-            return string.Empty;
         }
 
         /// <summary>
@@ -477,6 +450,32 @@ namespace Business.UnitTest
         protected void RefreshContext()
         {
             this.context = this.serviceProvider.GetService<Context>();
+        }
+
+        /// <summary>
+        /// Gets the correct database connection string based on the OS.
+        /// GitHub Actions uses Linux.
+        /// </summary>
+        /// <returns>The connections string.</returns>
+        private string GetDatabaseConnectionString()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return "Server=(LocalDb)\\MSSQLLocalDB;Database=Wv8-Finance-Test;Integrated Security=SSPI;";
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return "Server=localhost;Database=Wv8-Finance-Test;User Id=SA;Password=localDatabase1;";
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return "Server=localhost;Database=Wv8-Finance-Test;User Id=SA;Password=localDatabase1;";
+            }
+
+            // This should not happen.
+            return string.Empty;
         }
 
         /// <summary>

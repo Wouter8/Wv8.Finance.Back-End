@@ -229,7 +229,7 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// a new historical entry will be created and inserted in history.
         /// </summary>
         /// <param name="context">The database context.</param>
-        /// <param name="account">The account for which to check the historical entries.</param>
+        /// <param name="accountId">The account identifier for which to check the historical entries.</param>
         /// <param name="date">The date from which should be checked.</param>
         /// <returns>The list of to be updated entities.</returns>
         private static List<DailyBalanceEntity> GetBalanceEntriesToEdit(Context context, int accountId, LocalDate date)
@@ -255,6 +255,7 @@ namespace PersonalFinance.Business.Transaction.Processor
 
             var newBalanceEntry = new DailyBalanceEntity
             {
+                AccountId = accountId,
                 Balance = lastEntry.Select(e => e.Balance).ValueOrElse(0),
                 Date = date,
             };

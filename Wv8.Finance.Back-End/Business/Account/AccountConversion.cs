@@ -1,7 +1,6 @@
 ﻿namespace PersonalFinance.Business.Account
 {
     using System;
-    using System.Linq;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Data.Models;
 
