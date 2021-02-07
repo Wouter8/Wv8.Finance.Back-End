@@ -5,6 +5,7 @@
     using System.Linq;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Category;
+    using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Comparers;
@@ -34,6 +35,8 @@
                 throw new ArgumentNullException(nameof(entity.ReceivingAccount));
             if (entity.PaymentRequests == null)
                 throw new ArgumentNullException(nameof(entity.PaymentRequests));
+            if (entity.SplitwiseTransactionId.HasValue && entity.SplitwiseTransaction == null)
+                throw new ArgumentNullException(nameof(entity.SplitwiseTransaction));
 
             return new Transaction
             {
@@ -57,6 +60,8 @@
                     ? entity.PaymentRequests.Select(pr => pr.AsPaymentRequest()).ToList()
                     : new List<PaymentRequest>(),
                 PersonalAmount = entity.GetPersonalAmount(),
+                SplitwiseTransactionId = entity.SplitwiseTransactionId.ToMaybe(),
+                SplitwiseTransaction = entity.SplitwiseTransaction.ToMaybe().Select(st => st.AsSplitwiseTransaction()),
             };
         }
 

@@ -80,7 +80,7 @@ namespace PersonalFinance.Business.Splitwise
 
                 this.Context.Transactions.Add(transaction);
 
-                return (Transaction)null;
+                return transaction.AsTransaction();
             });
         }
 

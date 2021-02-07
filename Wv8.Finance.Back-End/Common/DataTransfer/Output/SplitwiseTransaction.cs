@@ -31,6 +31,12 @@ namespace PersonalFinance.Common.DataTransfer.Output
         public bool IsDeleted { get; set; }
 
         /// <summary>
+        /// <c>true</c> if the transaction has been imported completely, that is a <see cref="Transaction"/> has
+        /// been created for this transaction, <c>false</c> otherwise.
+        /// </summary>
+        public bool Imported { get; set; }
+
+        /// <summary>
         /// The amount paid by the user.
         /// </summary>
         public decimal PaidAmount { get; set; }

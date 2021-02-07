@@ -61,7 +61,9 @@ namespace PersonalFinance.Data.External.Splitwise
 
             return this.Execute<GetExpensesResult>(request)
                 .Expenses
-                .Where(e => e.Users.Any(u => u.UserId == this.userId))
+                // Only return expenses for the user where someone else paid.
+                // Expenses where the user paid should be added in the Finance application.
+                .Where(e => e.Users.Any(u => u.UserId == this.userId && u.PaidShare > 0))
                 .Select(e => e.ToDomainObject(this.userId))
                 .ToList();
         }

@@ -23,6 +23,7 @@ namespace PersonalFinance.Business.Splitwise
                 Description = entity.Description,
                 Date = entity.Date,
                 IsDeleted = entity.IsDeleted,
+                Imported = entity.Imported,
                 PaidAmount = entity.PaidAmount,
                 PersonalAmount = entity.PersonalAmount,
             };
@@ -45,8 +46,11 @@ namespace PersonalFinance.Business.Splitwise
             {
                 Description = entity.Description,
                 Date = entity.Date,
+                AccountId = account.Id,
                 Account = account,
+                CategoryId = category.Id,
                 Category = category,
+                SplitwiseTransactionId = entity.Id,
                 SplitwiseTransaction = entity,
                 PaymentRequests = new List<PaymentRequestEntity>(),
             };
@@ -55,9 +59,8 @@ namespace PersonalFinance.Business.Splitwise
             if (entity.PersonalAmount > 0)
             {
                 transaction.Type = TransactionType.Expense;
-                // If I paid anything, then use the paid amount since balances have to be updated properly.
-                // If not, then just use the amount owed to others to get the correct balance.
-                transaction.Amount = entity.PaidAmount > 0 ? entity.PaidAmount : entity.OwedToOthers;
+                // The amount is equal to what is actually paid. The personal amount will be calculated.
+                transaction.Amount = entity.PaidAmount;
             }
             // Otherwise create an income transaction.
             else

@@ -103,12 +103,12 @@
         public List<PaymentRequestEntity> PaymentRequests { get; set; }
 
         /// <summary>
-        /// Optionally, the identifier of the Splitwise transaction this transaction is based on.
+        /// Optionally, the identifier of the Splitwise transaction this transaction is linked to.
         /// </summary>
         public int? SplitwiseTransactionId { get; set; }
 
         /// <summary>
-        /// Optionally, the Splitwise transaction this transaction is based on.
+        /// Optionally, the Splitwise transaction this transaction is linked to.
         /// </summary>
         public SplitwiseTransactionEntity SplitwiseTransaction { get; set; }
     }

@@ -107,6 +107,16 @@
         /// </summary>
         public decimal PersonalAmount { get; set; }
 
+        /// <summary>
+        /// Optionally, the identifier of the Splitwise transaction this transaction is linked to.
+        /// </summary>
+        public Maybe<int> SplitwiseTransactionId { get; set; }
+
+        /// <summary>
+        /// Optionally, the Splitwise transaction this transaction is linked to.
+        /// </summary>
+        public Maybe<SplitwiseTransaction> SplitwiseTransaction { get; set; }
+
         // TODO: Add Savings
     }
 }
