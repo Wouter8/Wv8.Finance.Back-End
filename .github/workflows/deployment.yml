@@ -13,7 +13,7 @@ jobs:
       workingDirectory: ./Wv8.Finance.Back-End
       AZURE_WEBAPP_NAME: wv8-finance
       AZURE_WEBAPP_PACKAGE_PATH: './Wv8.Finance.Back-End'
-      DOTNET_VERSION: '3.1.100'
+      DOTNET_VERSION: '5.0.102'
       packageSourceUrl: https://pkgs.dev.azure.com/woutervanacht/_packaging/Wv8-NuGet-Feed/nuget/v3/index.json
 
     steps:
@@ -28,15 +28,20 @@ jobs:
     - name: Build with dotnet
       run: dotnet build --configuration Release /warnaserror
       working-directory: ${{env.workingDirectory}}
+    - name: Setup test database
+      uses: 280780363/sqlserver-action@v1.0
+      with:
+        accept eula: true
+        sa password: 'localDatabase1'
     - name: Test
       run: dotnet test
       working-directory: ${{env.workingDirectory}}
     - name: Publish with dotnet
-      run: dotnet publish -c Release -o myapp
+      run: dotnet publish Service -c Release -o publish
       working-directory: ${{env.workingDirectory}}
     - name: 'Run Azure webapp deploy action using publish profile credentials'
       uses: azure/webapps-deploy@v2
       with: 
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE  }}
-        package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/myapp'
+        package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/publish'

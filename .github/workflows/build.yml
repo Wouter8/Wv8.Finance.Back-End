@@ -19,13 +19,18 @@ jobs:
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v1.7.2
       with:
-        dotnet-version: 3.1.100
+        dotnet-version: 5.0.102
         source-url: https://pkgs.dev.azure.com/woutervanacht/_packaging/Wv8-NuGet-Feed/nuget/v3/index.json
       env:
         NUGET_AUTH_TOKEN: ${{secrets.AZURE_DEVOPS_PAT}}
     - name: Build with dotnet
       run: dotnet build --configuration Release /warnaserror
       working-directory: ${{env.workingDirectory}}
+    - name: Setup test database
+      uses: 280780363/sqlserver-action@v1.0
+      with:
+        accept eula: true
+        sa password: 'localDatabase1'
     - name: Test
       run: dotnet test
       working-directory: ${{env.workingDirectory}}

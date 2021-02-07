@@ -59,5 +59,15 @@
         {
             return LocalDate.FromDateTime(dateTime);
         }
+
+        /// <summary>
+        /// Converts a date time object to a local date object.
+        /// </summary>
+        /// <param name="dateTime">The date time object.</param>
+        /// <returns>The local date.</returns>
+        public static LocalDate? ToLocalDate(this DateTime? dateTime)
+        {
+            return dateTime.ToMaybe().Select(LocalDate.FromDateTime).ToNullable();
+        }
     }
 }
