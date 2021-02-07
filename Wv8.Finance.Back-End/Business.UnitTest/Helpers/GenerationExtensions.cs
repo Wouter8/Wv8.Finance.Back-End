@@ -20,7 +20,6 @@ namespace Business.UnitTest.Helpers
         /// Creates an account with specified, or random values.
         /// </summary>
         /// <param name="context">The database context.</param>
-        /// <param name="id">The transaction id.</param>
         /// <param name="type">The account type.</param>
         /// <param name="description">The description.</param>
         /// <param name="isDefault">A value indicating if the account is the default account.</param>
@@ -30,9 +29,8 @@ namespace Business.UnitTest.Helpers
         /// <param name="iconName">The icon name.</param>
         /// <param name="iconColor">The icon color.</param>
         /// <returns>The created account.</returns>
-        public static AccountEntity GenerateAccount(
+        public static (AccountEntity, DailyBalanceEntity) GenerateAccount(
             this Context context,
-            int id = 0,
             AccountType type = AccountType.Normal,
             string description = null,
             bool isDefault = false,
@@ -42,15 +40,9 @@ namespace Business.UnitTest.Helpers
             string iconName = null,
             string iconColor = null)
         {
-            var test = context.Accounts.Add(new AccountEntity
+            var account = context.Accounts.Add(new AccountEntity
             {
-                Id = id,
                 Description = description ?? GetRandomString(),
-                DailyBalances = new DailyBalanceEntity
-                {
-                    Balance = 0,
-                    Date = firstBalanceDate ?? DateTime.Now.ToLocalDate(),
-                }.Singleton(),
                 Type = type,
                 IsDefault = isDefault,
                 IsObsolete = isObsolete,
@@ -60,16 +52,22 @@ namespace Business.UnitTest.Helpers
                     Name = iconName ?? GetRandomString(3),
                     Color = iconColor ?? GetRandomString(7),
                 },
-            });
+            }).Entity;
 
-            return test.Entity;
+            var dailyBalance = context.DailyBalances.Add(new DailyBalanceEntity
+            {
+                Account = account,
+                Balance = 0,
+                Date = firstBalanceDate ?? DateTime.Now.ToLocalDate(),
+            }).Entity;
+
+            return (account, dailyBalance);
         }
 
         /// <summary>
         /// Creates a category with specified, or random values.
         /// </summary>
         /// <param name="context">The database context.</param>
-        /// <param name="id">The identifier of the category.</param>
         /// <param name="description">The description.</param>
         /// <param name="expectedMonthlyAmount">The expected monthly amount.</param>
         /// <param name="parentCategoryId">The identifier of the parent category.</param>
@@ -80,7 +78,6 @@ namespace Business.UnitTest.Helpers
         /// <returns>The created account.</returns>
         public static CategoryEntity GenerateCategory(
             this Context context,
-            int id = 0,
             string description = null,
             decimal? expectedMonthlyAmount = null,
             int? parentCategoryId = null,
@@ -91,7 +88,6 @@ namespace Business.UnitTest.Helpers
         {
             return context.Categories.Add(new CategoryEntity
             {
-                Id = id,
                 Description = description ?? GetRandomString(),
                 IsObsolete = isObsolete,
                 ParentCategoryId = parentCategoryId,
@@ -111,7 +107,6 @@ namespace Business.UnitTest.Helpers
         /// </summary>
         /// <param name="context">The database context.</param>
         /// <param name="accountId">The identifier of the account.</param>
-        /// <param name="id">The transaction id.</param>
         /// <param name="type">The type of the transaction.</param>
         /// <param name="description">The description of the transaction.</param>
         /// <param name="date">The date of the transaction.</param>
@@ -125,7 +120,6 @@ namespace Business.UnitTest.Helpers
         public static TransactionEntity GenerateTransaction(
             this Context context,
             int accountId,
-            int id = 0,
             TransactionType type = TransactionType.Expense,
             string description = null,
             LocalDate? date = null,
@@ -142,7 +136,6 @@ namespace Business.UnitTest.Helpers
 
             return context.Transactions.Add(new TransactionEntity
             {
-                Id = id,
                 AccountId = accountId,
                 Amount = amount ?? (type == TransactionType.Expense ? -50 : 50),
                 Description = description ?? GetRandomString(),

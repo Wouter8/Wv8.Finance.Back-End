@@ -175,7 +175,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                 return;
 
             var splitwiseAccount = context.Accounts.GetSplitwiseEntity();
-            var historicalEntriesToEdit = GetBalanceEntriesToEdit(splitwiseAccount, transaction.Date);
+            var historicalEntriesToEdit = GetBalanceEntriesToEdit(context, splitwiseAccount.Id, transaction.Date);
             var mutationAmount = transaction.GetSplitwiseAccountDifference();
 
             foreach (var entry in historicalEntriesToEdit)
@@ -198,7 +198,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                 return;
 
             var splitwiseAccount = context.Accounts.GetSplitwiseEntity();
-            var historicalEntriesToEdit = GetBalanceEntriesToEdit(splitwiseAccount, transaction.Date);
+            var historicalEntriesToEdit = GetBalanceEntriesToEdit(context, splitwiseAccount.Id, transaction.Date);
             var mutationAmount = transaction.GetSplitwiseAccountDifference();
 
             foreach (var entry in historicalEntriesToEdit)

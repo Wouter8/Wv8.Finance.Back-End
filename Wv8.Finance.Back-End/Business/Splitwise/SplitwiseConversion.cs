@@ -60,7 +60,7 @@ namespace PersonalFinance.Business.Splitwise
             {
                 transaction.Type = TransactionType.Expense;
                 // The amount is equal to what is actually paid. The personal amount will be calculated.
-                transaction.Amount = entity.PaidAmount;
+                transaction.Amount = -entity.PaidAmount;
             }
             // Otherwise create an income transaction.
             else

@@ -149,7 +149,7 @@ namespace PersonalFinance.Data.Extensions
         {
             var entity = builder.Entity<SplitwiseTransactionEntity>();
 
-            entity.ToTable("PaymentRequests");
+            entity.ToTable("SplitwiseTransactions");
 
             entity.Property(st => st.Id).ValueGeneratedNever(); // Use id from Splitwise
             entity.Property(st => st.Description).IsRequired();

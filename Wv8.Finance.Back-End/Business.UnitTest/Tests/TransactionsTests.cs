@@ -480,10 +480,10 @@
         [Fact]
         public void UpdateTransaction_SplitwiseAccount()
         {
-            var category = this.context.GenerateCategory(1);
-            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
-            var transaction = this.context.GenerateTransaction(account.Id, 1, categoryId: category.Id, amount: -50);
-            var normalAccount = this.context.GenerateAccount(2);
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var transaction = this.context.GenerateTransaction(account.Id, categoryId: category.Id, amount: -50);
+            var (normalAccount, _) = this.context.GenerateAccount();
             this.context.SaveChanges();
 
             var edit = transaction.ToEdit();
@@ -499,10 +499,10 @@
         [Fact]
         public void UpdateTransaction_SplitwiseAccount2()
         {
-            var category = this.context.GenerateCategory(1);
-            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
-            var normalAccount = this.context.GenerateAccount(2);
-            var transaction = this.context.GenerateTransaction(normalAccount.Id, 1, categoryId: category.Id, amount: -50);
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var (normalAccount, _) = this.context.GenerateAccount();
+            var transaction = this.context.GenerateTransaction(normalAccount.Id, categoryId: category.Id, amount: -50);
             this.context.SaveChanges();
 
             var edit = transaction.ToEdit();
@@ -518,11 +518,11 @@
         [Fact]
         public void UpdateTransaction_Transfer_SplitwiseAccount()
         {
-            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
-            var normalAccount = this.context.GenerateAccount(2);
-            var normalAccount2 = this.context.GenerateAccount(3);
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var (normalAccount, _) = this.context.GenerateAccount();
+            var (normalAccount2, _) = this.context.GenerateAccount();
             var transaction = this.context.GenerateTransaction(
-                normalAccount.Id, 1, TransactionType.Transfer, receivingAccountId: account.Id, amount: 50);
+                normalAccount.Id, TransactionType.Transfer, receivingAccountId: account.Id, amount: 50);
             this.context.SaveChanges();
 
             var edit = transaction.ToEdit();
@@ -734,8 +734,8 @@
         [Fact]
         public void CreateTransaction_SplitwiseAccount()
         {
-            var category = this.context.GenerateCategory(1);
-            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
             this.context.SaveChanges();
 
             var input = this.GetInputTransaction(account.Id, categoryId: category.Id);
@@ -750,8 +750,8 @@
         [Fact]
         public void CreateTransaction_Transfer_SplitwiseAccount()
         {
-            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
-            var normalAccount = this.context.GenerateAccount(2);
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var (normalAccount, _) = this.context.GenerateAccount();
             this.context.SaveChanges();
 
             var input = this.GetInputTransaction(normalAccount.Id, TransactionType.Transfer, receivingAccountId: account.Id);
@@ -918,9 +918,9 @@
         [Fact]
         public void DeleteTransaction_SplitwiseAccount()
         {
-            var category = this.context.GenerateCategory(1);
-            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
-            var transaction = this.context.GenerateTransaction(account.Id, id: 1, categoryId: category.Id);
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var transaction = this.context.GenerateTransaction(account.Id, categoryId: category.Id);
             this.context.SaveChanges();
 
             Assert.Throws<ValidationException>(() => this.TransactionManager.DeleteTransaction(transaction.Id));
@@ -933,10 +933,10 @@
         [Fact]
         public void DeleteTransaction_Transfer_SplitwiseAccount()
         {
-            var account = this.context.GenerateAccount(1, AccountType.Splitwise);
-            var normalAccount = this.context.GenerateAccount(2);
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var (normalAccount, _) = this.context.GenerateAccount();
             var transaction = this.context.GenerateTransaction(
-                normalAccount.Id, id: 1, TransactionType.Transfer, receivingAccountId: account.Id);
+                normalAccount.Id, TransactionType.Transfer, receivingAccountId: account.Id);
             this.context.SaveChanges();
 
             Assert.Throws<ValidationException>(() => this.TransactionManager.DeleteTransaction(transaction.Id));

@@ -78,9 +78,9 @@
         [Fact]
         public void Test_ImportTransaction_PaidByMe()
         {
-            var account = this.context.GenerateAccount(1);
-            var splitwiseAccount = this.context.GenerateAccount(2, AccountType.Splitwise);
-            var category = this.context.GenerateCategory(1);
+            var (account, _) = this.context.GenerateAccount();
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
 
             var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
                     1, date: DateTime.Today.ToLocalDate(), paidAmount: 10, personalAmount: 2.5M);
@@ -102,8 +102,8 @@
 
             this.RefreshContext();
 
-            var accountBalance = this.context.Accounts.GetEntity(account.Id).DailyBalances.OrderBy(db => db.Date).Last().Balance;
-            var splitwiseBalance = this.context.Accounts.GetEntity(splitwiseAccount.Id).DailyBalances.OrderBy(db => db.Date).Last().Balance;
+            var accountBalance = this.context.Accounts.GetEntity(account.Id).CurrentBalance;
+            var splitwiseBalance = this.context.Accounts.GetEntity(splitwiseAccount.Id).CurrentBalance;
 
             Assert.Equal(-10, accountBalance);
             Assert.Equal(5, splitwiseBalance);
