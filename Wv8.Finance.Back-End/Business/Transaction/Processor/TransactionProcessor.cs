@@ -303,6 +303,7 @@
         {
             var balanceEntries = addedDailyBalances
                 .ValueOrElse(new List<DailyBalanceEntity>())
+                .Where(db => db.AccountId == accountId)
                 .Concat(this.Context.DailyBalances
                     .Where(db => db.AccountId == accountId))
                 .ToList();
