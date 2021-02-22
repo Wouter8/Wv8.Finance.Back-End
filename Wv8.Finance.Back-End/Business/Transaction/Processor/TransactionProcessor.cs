@@ -33,9 +33,9 @@
         {
             this.ConcurrentInvoke(() =>
             {
-                this.ProcessTransactions();
-                this.ProcessRecurringBudgets();
-                this.ProcessRecurringTransactions();
+                // New daily balances are added to the list
+                var newDailyBalances = this.ProcessTransactions();
+                this.ProcessRecurringTransactions(newDailyBalances);
 
                 this.Context.SaveChanges();
             });
@@ -85,9 +85,27 @@
         /// <remarks>Note that the context is not saved.</remarks>
         private void Process(TransactionEntity transaction)
         {
+            this.Process(transaction, new List<DailyBalanceEntity>());
+        }
+
+        /// <summary>
+        /// Processes a transaction. Meaning the value is added to the account, budgets and savings.
+        /// </summary>
+        /// <param name="transaction">The transaction.</param>
+        /// <param name="addedDailyBalances">The daily balances that were already added. This is needed since the
+        /// context does not contain already added entities, resulting in possible double daily balances which results
+        /// in an error.</param>
+        /// <remarks>Note that the context is not saved.</remarks>
+        private void Process(
+            TransactionEntity transaction, List<DailyBalanceEntity> addedDailyBalances)
+        {
             transaction.VerifyEntitiesNotObsolete();
 
-            var historicalEntriesToEdit = this.GetBalanceEntriesToEdit(transaction.AccountId, transaction.Date);
+            var (historicalEntriesToEdit, newHistoricalEntry) =
+                this.GetBalanceEntriesToEdit(transaction.AccountId, transaction.Date, addedDailyBalances);
+            if (newHistoricalEntry.IsSome)
+                addedDailyBalances.Add(newHistoricalEntry.Value);
+
             var amount = transaction.GetPersonalAmount();
 
             switch (transaction.Type)
@@ -108,8 +126,11 @@
 
                     break;
                 case TransactionType.Transfer:
-                    var receiverEntriesToEdit =
-                        this.GetBalanceEntriesToEdit(transaction.ReceivingAccountId.Value, transaction.Date);
+                    var (receiverEntriesToEdit, newReceiverEntry) =
+                        this.GetBalanceEntriesToEdit(
+                            transaction.ReceivingAccountId.Value, transaction.Date, addedDailyBalances);
+                    if (newReceiverEntry.IsSome)
+                        addedDailyBalances.Add(newReceiverEntry.Value);
 
                     foreach (var entry in historicalEntriesToEdit)
                         entry.Balance -= amount;
@@ -135,7 +156,7 @@
             if (!transaction.Processed)
                 throw new NotSupportedException("Transaction has not been processed.");
 
-            var historicalBalances = this.GetBalanceEntriesToEdit(transaction.AccountId, transaction.Date);
+            var (historicalBalances, _) = this.GetBalanceEntriesToEdit(transaction.AccountId, transaction.Date);
             var amount = transaction.GetPersonalAmount();
 
             switch (transaction.Type)
@@ -179,6 +200,19 @@
         /// <remarks>Note that the context is not saved.</remarks>
         private void Process(RecurringTransactionEntity transaction)
         {
+            this.Process(transaction, new List<DailyBalanceEntity>());
+        }
+
+        /// <summary>
+        /// Processes a recurring transaction. Meaning that instances get created.
+        /// </summary>
+        /// <param name="transaction">The recurring transaction.</param>
+        /// <param name="addedDailyBalances">The daily balances that were already added. This is needed since the
+        /// context does not contain already added entities, resulting in possible double daily balances which results
+        /// in an error.</param>
+        /// <remarks>Note that the context is not saved.</remarks>
+        private void Process(RecurringTransactionEntity transaction, List<DailyBalanceEntity> addedDailyBalances)
+        {
             transaction.VerifyEntitiesNotObsolete();
 
             var instances = new List<TransactionEntity>();
@@ -193,7 +227,7 @@
 
                 // Immediately process if transaction does not need to be confirmed.
                 if (!instance.NeedsConfirmation && !isFuture)
-                    this.Process(instance);
+                    this.Process(instance, addedDailyBalances);
 
                 instances.Add(instance);
             }
@@ -208,7 +242,8 @@
         /// <summary>
         /// Processes the transactions that are in the past.
         /// </summary>
-        private void ProcessTransactions()
+        /// <returns>The list of added daily balances.</returns>
+        private List<DailyBalanceEntity> ProcessTransactions()
         {
             var today = LocalDate.FromDateTime(DateTime.Today);
             var transactionsToBeProcessed = this.Context.Transactions
@@ -217,16 +252,24 @@
                             (!t.NeedsConfirmation || (t.NeedsConfirmation && t.IsConfirmed.Value)))
                 .ToList();
 
+            // New daily balances are added to the list in the Process method.
+            var newDailyBalances = new List<DailyBalanceEntity>();
+
             foreach (var transaction in transactionsToBeProcessed)
             {
-                this.Process(transaction);
+                this.Process(transaction, newDailyBalances);
             }
+
+            return newDailyBalances;
         }
 
         /// <summary>
         /// Processes the recurring transactions that have to be created.
         /// </summary>
-        private void ProcessRecurringTransactions()
+        /// <param name="addedDailyBalances">The daily balances that were already added. This is needed since the
+        /// context does not contain already added entities, resulting in possible double daily balances which results
+        /// in an error.</param>
+        private void ProcessRecurringTransactions(List<DailyBalanceEntity> addedDailyBalances)
         {
             var today = LocalDate.FromDateTime(DateTime.Today);
             var recurringTransactions = this.Context.RecurringTransactions
@@ -236,16 +279,8 @@
 
             foreach (var recurringTransaction in recurringTransactions)
             {
-                this.Process(recurringTransaction);
+                this.Process(recurringTransaction, addedDailyBalances);
             }
-        }
-
-        /// <summary>
-        /// Processes the recurring budgets that have to be created.
-        /// </summary>
-        private void ProcessRecurringBudgets()
-        {
-            // TODO: Implement
         }
 
         #endregion Bulk
@@ -256,14 +291,20 @@
         /// Gets the historical balance entries which should be edited based on a date. If the date has no entry,
         /// a new historical entry will be created and inserted in history.
         /// </summary>
-        /// <param name="context">The database context.</param>
         /// <param name="accountId">The account identifier for which to check the historical entries.</param>
         /// <param name="date">The date from which should be checked.</param>
-        /// <returns>The list of to be updated entities.</returns>
-        private List<DailyBalanceEntity> GetBalanceEntriesToEdit(int accountId, LocalDate date)
+        /// <param name="addedDailyBalances">The daily balances that were already added. This is needed since the
+        /// context does not contain already added entities, resulting in possible double daily balances which results
+        /// in an error.</param>
+        /// <returns>A tuple containing the list of to be updated entities and optionally the newly created daily
+        /// balance.</returns>
+        private (List<DailyBalanceEntity>, Maybe<DailyBalanceEntity>) GetBalanceEntriesToEdit(
+            int accountId, LocalDate date, Maybe<List<DailyBalanceEntity>> addedDailyBalances = default)
         {
-            var balanceEntries = this.Context.DailyBalances
-                .Where(db => db.AccountId == accountId)
+            var balanceEntries = addedDailyBalances
+                .ValueOrElse(new List<DailyBalanceEntity>())
+                .Concat(this.Context.DailyBalances
+                    .Where(db => db.AccountId == accountId))
                 .ToList();
             var balanceEntriesAfterDate = balanceEntries
                 .Where(hb => hb.Date >= date)
@@ -273,7 +314,7 @@
             // If date already has historical entry, just alter that and later entries.
             var balanceEntryOnSameDate = balanceEntries.SingleOrNone(hb => hb.Date == date);
             if (balanceEntryOnSameDate.IsSome)
-                return balanceEntriesAfterDate;
+                return (balanceEntriesAfterDate, Maybe<DailyBalanceEntity>.None);
 
             // Get last entity before date
             var lastEntry = balanceEntries
@@ -290,9 +331,9 @@
             this.Context.DailyBalances.Add(newBalanceEntry);
 
             // Return all entries after the date + the new entry
-            return newBalanceEntry.Enumerate()
+            return (newBalanceEntry.Enumerate()
                     .Concat(balanceEntriesAfterDate)
-                    .ToList();
+                    .ToList(), newBalanceEntry);
         }
 
         #endregion Helpers

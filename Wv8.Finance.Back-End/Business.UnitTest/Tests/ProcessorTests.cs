@@ -154,6 +154,75 @@
         }
 
         /// <summary>
+        /// Tests method <see cref="TransactionProcessor.ProcessAll"/>.
+        /// Verifies that no exception is thrown when there are multiple transactions to be processed at the same date.
+        /// </summary>
+        [Fact]
+        public void Test_ProcessAll_MultipleTransactions()
+        {
+            // TODO: Use new generation methods.
+            var account = this.context.DailyBalances.Add(new DailyBalanceEntity
+            {
+                Balance = 0,
+                Date = DateTime.Today.AddDays(-1).ToLocalDate(),
+                Account = new AccountEntity
+                {
+                    Description = "account",
+                    Icon = new IconEntity
+                    {
+                        Color = "123456",
+                        Name = "aaa",
+                        Pack = "aaa",
+                    },
+                    IsDefault = true,
+                    IsObsolete = false,
+                },
+            }).Entity.Account;
+            var category = this.GenerateCategory();
+
+            this.context.Transactions.Add(
+                new TransactionEntity
+                {
+                    Account = account,
+                    Amount = -20,
+                    CategoryId = category.Id,
+                    Date = LocalDate.FromDateTime(DateTime.Today),
+                    Description = "Description",
+                    Processed = false,
+                    Type = TransactionType.Expense,
+                });
+            this.context.Transactions.Add(
+                new TransactionEntity
+                {
+                    Account = account,
+                    Amount = -40,
+                    CategoryId = category.Id,
+                    Date = LocalDate.FromDateTime(DateTime.Today),
+                    Description = "Description",
+                    Processed = false,
+                    Type = TransactionType.Expense,
+                });
+            this.context.RecurringTransactions.Add(
+                new RecurringTransactionEntity
+                {
+                    Account = account,
+                    Amount = -40,
+                    CategoryId = category.Id,
+                    StartDate = LocalDate.FromDateTime(DateTime.Today),
+                    Description = "Description",
+                    Type = TransactionType.Expense,
+                    Interval = 1,
+                    IntervalUnit = IntervalUnit.Weeks,
+                    NextOccurence = LocalDate.FromDateTime(DateTime.Today.AddDays(7)),
+                });
+            this.context.SaveChanges();
+
+            this.RefreshContext();
+
+            this.TransactionProcessor.ProcessAll();
+        }
+
+        /// <summary>
         /// Tests that recurring transactions get properly processed.
         /// </summary>
         [Fact]
