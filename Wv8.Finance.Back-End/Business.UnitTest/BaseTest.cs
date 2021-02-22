@@ -59,7 +59,6 @@ namespace Business.UnitTest
             services.AddTransient<ITransactionManager, TransactionManager>();
             services.AddTransient<IRecurringTransactionManager, RecurringTransactionManager>();
             services.AddTransient<IReportManager, ReportManager>();
-            services.AddTransient<ITransactionProcessor, TransactionProcessor>();
 
             this.serviceProvider = services.BuildServiceProvider();
 
@@ -99,9 +98,9 @@ namespace Business.UnitTest
         protected IReportManager ReportManager => this.serviceProvider.GetService<IReportManager>();
 
         /// <summary>
-        /// The periodic processor.
+        /// The transaction processor.
         /// </summary>
-        protected ITransactionProcessor TransactionProcessor => this.serviceProvider.GetService<ITransactionProcessor>();
+        protected TransactionProcessor TransactionProcessor => new (this.context);
 
         /// <inheritdoc />
         public void Dispose()

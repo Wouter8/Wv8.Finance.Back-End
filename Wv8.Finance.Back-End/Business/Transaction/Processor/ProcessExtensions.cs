@@ -2,161 +2,44 @@ namespace PersonalFinance.Business.Transaction.Processor
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using NodaTime;
-    using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Common.Exceptions;
-    using PersonalFinance.Data;
-    using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.Models;
-    using Wv8.Core;
-    using Wv8.Core.Collections;
 
     /// <summary>
-    /// A class providing extension methods to process transactions.
+    /// A class providing helper methods in the form of extension methods to process transactions.
     /// </summary>
     public static class ProcessExtensions
     {
         /// <summary>
-        /// Processes a transaction. Meaning the value is added to the account, budgets and savings.
+        /// Gets a value indicating if the transaction needs to be processed.
         /// </summary>
-        /// <param name="transaction">The transaction.</param>
-        /// <param name="context">The database context.</param>
-        /// <remarks>Note that the context is not saved.</remarks>
-        /// <returns>The updated transaction.</returns>
-        public static TransactionEntity ProcessTransaction(this TransactionEntity transaction, Context context)
+        /// <param name="entity">The transaction.</param>
+        /// <returns>A boolean indicating if the transaction needs to be processed.</returns>
+        public static bool NeedsProcessing(this TransactionEntity entity)
         {
-            transaction.VerifyEntitiesNotObsolete();
-
-            var historicalEntriesToEdit = GetBalanceEntriesToEdit(context, transaction.AccountId, transaction.Date);
-            var amount = transaction.GetPersonalAmount();
-
-            switch (transaction.Type)
-            {
-                case TransactionType.Expense:
-                    foreach (var entry in historicalEntriesToEdit)
-                        entry.Balance += amount;
-
-                    // Update budgets.
-                    var budgets = context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
-                    foreach (var budget in budgets)
-                        budget.Spent += Math.Abs(amount);
-
-                    break;
-                case TransactionType.Income:
-                    foreach (var entry in historicalEntriesToEdit)
-                        entry.Balance += amount;
-
-                    break;
-                case TransactionType.Transfer:
-                    var receiverEntriesToEdit =
-                        GetBalanceEntriesToEdit(context, transaction.ReceivingAccountId.Value, transaction.Date);
-
-                    foreach (var entry in historicalEntriesToEdit)
-                        entry.Balance -= amount;
-                    foreach (var entry in receiverEntriesToEdit)
-                        entry.Balance += amount;
-
-                    break;
-                default:
-                    throw new InvalidOperationException("Unknown transaction type.");
-            }
-
-            transaction.Processed = true;
-
-            return transaction;
+            return entity.Date <= LocalDate.FromDateTime(DateTime.Today) &&
+                   // Is confirmed is always filled if needs confirmation is true.
+                   // ReSharper disable once PossibleInvalidOperationException
+                   (!entity.NeedsConfirmation || entity.IsConfirmed.Value);
         }
 
         /// <summary>
-        /// Reverses the processing of a transaction. Meaning the value is removed from the account, budgets and savings.
-        /// This alters all historical values starting at the transaction date.
+        /// Gets a value indicating if the recurring transaction needs to be processed.
         /// </summary>
-        /// <param name="transaction">The transaction.</param>
-        /// <param name="context">The database context.</param>
-        /// <remarks>Note that the context is not saved.</remarks>
-        /// <returns>The updated transaction.</returns>
-        public static TransactionEntity RevertProcessedTransaction(this TransactionEntity transaction, Context context)
+        /// <param name="entity">The transaction.</param>
+        /// <returns>A boolean indicating if the transaction needs to be processed.</returns>
+        public static bool NeedsProcessing(this RecurringTransactionEntity entity)
         {
-            if (!transaction.Processed)
-                throw new NotSupportedException("Transaction has not been processed.");
-
-            var historicalBalances = GetBalanceEntriesToEdit(context, transaction.AccountId, transaction.Date);
-            var amount = transaction.GetPersonalAmount();
-
-            switch (transaction.Type)
-            {
-                case TransactionType.Expense:
-                    foreach (var historicalBalance in historicalBalances)
-                        historicalBalance.Balance -= amount;
-
-                    // Update budgets.
-                    var budgets = context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
-                    foreach (var budget in budgets)
-                        budget.Spent -= Math.Abs(amount);
-
-                    break;
-                case TransactionType.Income:
-                    foreach (var historicalBalance in historicalBalances)
-                        historicalBalance.Balance -= amount;
-
-                    break;
-                case TransactionType.Transfer:
-                    var receiverHistoricalBalances = context.DailyBalances
-                        .Where(db => db.AccountId == transaction.ReceivingAccountId)
-                        .Where(hb => hb.Date >= transaction.Date)
-                        .ToList();
-
-                    foreach (var historicalBalance in historicalBalances)
-                        historicalBalance.Balance += amount;
-                    foreach (var historicalBalance in receiverHistoricalBalances)
-                        historicalBalance.Balance -= amount;
-
-                    break;
-            }
-
-            transaction.Processed = false;
-
-            return transaction;
-        }
-
-        /// <summary>
-        /// Processes a recurring transaction. Meaning that instances get created.
-        /// </summary>
-        /// <param name="transaction">The recurring transaction.</param>
-        /// <param name="context">The database context.</param>
-        /// <remarks>Note that the context is not saved.</remarks>
-        public static void ProcessRecurringTransaction(
-            this RecurringTransactionEntity transaction,
-            Context context)
-        {
-            transaction.VerifyEntitiesNotObsolete();
-
-            var instances = new List<TransactionEntity>();
-            while (!transaction.Finished)
-            {
-                // Create transactions until a couple days in the future.
-                if (transaction.NextOccurence > DateTime.Today.AddDays(7).ToLocalDate())
-                    break;
-
-                var instance = transaction.CreateOccurence();
-                var isFuture = instance.Date > DateTime.Today.ToLocalDate();
-
-                // Immediately process if transaction does not need to be confirmed.
-                if (!instance.NeedsConfirmation && !isFuture)
-                    instance.ProcessTransaction(context);
-
-                instances.Add(instance);
-            }
-
-            context.Transactions.AddRange(instances);
+            return entity.StartDate <= LocalDate.FromDateTime(DateTime.Today);
         }
 
         /// <summary>
         /// Calculates and sets the next occurrence for a recurring transaction.
         /// </summary>
         /// <param name="transaction">The recurring transaction.</param>
-        private static void SetNextOccurrence(this RecurringTransactionEntity transaction)
+        public static void SetNextOccurrence(this RecurringTransactionEntity transaction)
         {
             var start = transaction.LastOccurence ?? transaction.StartDate;
             var next = LocalDate.MinIsoValue;
@@ -193,7 +76,7 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// <param name="transaction">The recurring transaction.</param>
         /// <returns>The created transaction.</returns>
         /// <remarks>Note that the date is not validated in this method.</remarks>
-        private static TransactionEntity CreateOccurence(this RecurringTransactionEntity transaction)
+        public static TransactionEntity CreateOccurence(this RecurringTransactionEntity transaction)
         {
             if (!transaction.NextOccurence.HasValue)
                 throw new InvalidOperationException("Recurring transaction has no next occurence date set.");
@@ -225,53 +108,10 @@ namespace PersonalFinance.Business.Transaction.Processor
         }
 
         /// <summary>
-        /// Gets the historical balance entries which should be edited based on a date. If the date has no entry,
-        /// a new historical entry will be created and inserted in history.
-        /// </summary>
-        /// <param name="context">The database context.</param>
-        /// <param name="accountId">The account identifier for which to check the historical entries.</param>
-        /// <param name="date">The date from which should be checked.</param>
-        /// <returns>The list of to be updated entities.</returns>
-        private static List<DailyBalanceEntity> GetBalanceEntriesToEdit(Context context, int accountId, LocalDate date)
-        {
-            var balanceEntries = context.DailyBalances
-                .Where(db => db.AccountId == accountId)
-                .ToList();
-            var balanceEntriesAfterDate = balanceEntries
-                .Where(hb => hb.Date >= date)
-                .OrderBy(hb => hb.Date)
-                .ToList();
-
-            // If date already has historical entry, just alter that and later entries.
-            var balanceEntryOnSameDate = balanceEntries.SingleOrNone(hb => hb.Date == date);
-            if (balanceEntryOnSameDate.IsSome)
-                return balanceEntriesAfterDate;
-
-            // Get last entity before date
-            var lastEntry = balanceEntries
-                .Where(hb => hb.Date < date)
-                .OrderBy(hb => hb.Date)
-                .LastOrNone();
-
-            var newBalanceEntry = new DailyBalanceEntity
-            {
-                AccountId = accountId,
-                Balance = lastEntry.Select(e => e.Balance).ValueOrElse(0),
-                Date = date,
-            };
-            context.DailyBalances.Add(newBalanceEntry);
-
-            // Return all entries after the date + the new entry
-            return newBalanceEntry.Enumerate()
-                    .Concat(balanceEntriesAfterDate)
-                    .ToList();
-        }
-
-        /// <summary>
         /// Verifies that the entities linked to a transaction are not obsolete.
         /// </summary>
         /// <param name="transaction">The transaction.</param>
-        private static void VerifyEntitiesNotObsolete(this TransactionEntity transaction)
+        public static void VerifyEntitiesNotObsolete(this TransactionEntity transaction)
         {
             if (transaction.Account == null)
                 throw new ArgumentNullException(nameof(transaction.Account));
@@ -292,7 +132,7 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// Verifies that the entities linked to a recurring transaction are not obsolete.
         /// </summary>
         /// <param name="transaction">The transaction.</param>
-        private static void VerifyEntitiesNotObsolete(this RecurringTransactionEntity transaction)
+        public static void VerifyEntitiesNotObsolete(this RecurringTransactionEntity transaction)
         {
             if (transaction.Account == null)
                 throw new ArgumentNullException(nameof(transaction.Account));

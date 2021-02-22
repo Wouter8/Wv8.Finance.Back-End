@@ -4,7 +4,6 @@ namespace PersonalFinance.Business.Transaction
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
-    using NodaTime;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.DataTransfer.Output;
@@ -97,14 +96,15 @@ namespace PersonalFinance.Business.Transaction
 
             return this.ConcurrentInvoke(() =>
             {
+                var processor = new TransactionProcessor(this.Context);
+
                 var entity = this.Context.Transactions.GetEntity(input.Id);
                 if (type != entity.Type)
                     throw new ValidationException("Changing the type of transaction is not possible.");
 
                 var account = this.Context.Accounts.GetEntity(input.AccountId, false);
 
-                if (entity.Processed)
-                    entity.RevertProcessedTransaction(this.Context);
+                processor.RevertIfProcessed(entity);
 
                 var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
@@ -154,10 +154,7 @@ namespace PersonalFinance.Business.Transaction
                 this.Context.PaymentRequests.RemoveRange(removedPaymentRequests);
                 entity.PaymentRequests = updatedPaymentRequests;
 
-                // Is confirmed is always filled if needs confirmation is true.
-                // ReSharper disable once PossibleInvalidOperationException
-                if (date <= LocalDate.FromDateTime(DateTime.Today) && (!entity.NeedsConfirmation || entity.IsConfirmed.Value))
-                    entity.ProcessTransaction(this.Context);
+                processor.ProcessIfNeeded(entity);
 
                 this.Context.SaveChanges();
 
@@ -175,6 +172,8 @@ namespace PersonalFinance.Business.Transaction
 
             return this.ConcurrentInvoke(() =>
             {
+                var processor = new TransactionProcessor(this.Context);
+
                 var account = this.Context.Accounts.GetEntity(input.AccountId, false);
 
                 var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
@@ -206,8 +205,7 @@ namespace PersonalFinance.Business.Transaction
                     }).ToList(),
                 };
 
-                if (date <= LocalDate.FromDateTime(DateTime.Today) && !input.NeedsConfirmation)
-                    entity.ProcessTransaction(this.Context);
+                processor.ProcessIfNeeded(entity);
 
                 this.Context.Transactions.Add(entity);
 
@@ -224,6 +222,8 @@ namespace PersonalFinance.Business.Transaction
 
             return this.ConcurrentInvoke(() =>
             {
+                var processor = new TransactionProcessor(this.Context);
+
                 var entity = this.Context.Transactions.GetEntity(id);
                 this.validator.Amount(amount, entity.Type);
 
@@ -241,8 +241,7 @@ namespace PersonalFinance.Business.Transaction
                 entity.Amount = amount;
                 entity.IsConfirmed = true;
 
-                if (date <= LocalDate.FromDateTime(DateTime.Today))
-                    entity.ProcessTransaction(this.Context);
+                processor.ProcessIfNeeded(entity);
 
                 this.Context.SaveChanges();
 
@@ -255,10 +254,11 @@ namespace PersonalFinance.Business.Transaction
         {
             this.ConcurrentInvoke(() =>
             {
+                var processor = new TransactionProcessor(this.Context);
+
                 var entity = this.Context.Transactions.GetEntity(id);
 
-                if (entity.Processed)
-                    entity.RevertProcessedTransaction(this.Context);
+                processor.RevertIfProcessed(entity);
 
                 this.Context.Remove(entity);
 

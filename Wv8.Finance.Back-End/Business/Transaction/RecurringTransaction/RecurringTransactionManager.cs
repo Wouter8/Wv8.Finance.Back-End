@@ -1,9 +1,7 @@
 ﻿namespace PersonalFinance.Business.Transaction.RecurringTransaction
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
-    using NodaTime;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common.DataTransfer.Output;
@@ -91,6 +89,8 @@
 
             return this.ConcurrentInvoke(() =>
             {
+                var processor = new TransactionProcessor(this.Context);
+
                 var entity = this.Context.RecurringTransactions.GetEntity(id);
                 if (type != entity.Type) // TODO: Add test for this case
                     throw new ValidationException("Changing the type of transaction is not possible.");
@@ -131,8 +131,7 @@
                     foreach (var instance in instances)
                     {
                         // Although always in the past, a transaction might not be processed because it still has to be confirmed.
-                        if (instance.Processed)
-                            instance.RevertProcessedTransaction(this.Context);
+                        processor.RevertIfProcessed(instance);
                         this.Context.Remove(instance);
                     }
 
@@ -140,8 +139,7 @@
                     entity.Finished = false;
                 }
 
-                if (entity.StartDate <= LocalDate.FromDateTime(DateTime.Today))
-                    entity.ProcessRecurringTransaction(this.Context);
+                processor.ProcessIfNeeded(entity);
 
                 this.Context.SaveChanges();
 
@@ -172,6 +170,8 @@
 
             return this.ConcurrentInvoke(() =>
             {
+                var processor = new TransactionProcessor(this.Context);
+
                 var account = this.Context.Accounts.GetEntity(accountId, false);
 
                 var category = categoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
@@ -204,8 +204,7 @@
                     NextOccurence = startPeriod,
                 };
 
-                if (entity.StartDate <= LocalDate.FromDateTime(DateTime.Today))
-                    entity.ProcessRecurringTransaction(this.Context);
+                processor.ProcessIfNeeded(entity);
 
                 this.Context.RecurringTransactions.Add(entity);
                 this.Context.SaveChanges();
@@ -219,6 +218,8 @@
         {
             this.ConcurrentInvoke(() =>
             {
+                var processor = new TransactionProcessor(this.Context);
+
                 var entity = this.Context.RecurringTransactions.GetEntity(id);
 
                 var instances = this.Context.Transactions.GetTransactionsFromRecurring(entity.Id);
@@ -226,9 +227,7 @@
                 {
                     if (deleteInstances)
                     {
-                        // Although always in the past, a transaction might not be processed because it still has to be confirmed.
-                        if (instance.Processed)
-                            instance.RevertProcessedTransaction(this.Context);
+                        processor.RevertIfProcessed(instance);
                         this.Context.Remove(instance);
                     }
                     else

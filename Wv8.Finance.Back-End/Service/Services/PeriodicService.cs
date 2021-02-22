@@ -6,6 +6,7 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using PersonalFinance.Business.Transaction.Processor;
+    using PersonalFinance.Data;
 
     /// <summary>
     /// A class for a service which handles a periodic run to process all needing objects.
@@ -64,8 +65,10 @@
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
 
-            var service = serviceScope.ServiceProvider.GetService<ITransactionProcessor>();
-            service.Run();
+            using var context = serviceScope.ServiceProvider.GetService<Context>();
+            var processor = new TransactionProcessor(context);
+
+            processor.ProcessAll();
         }
     }
 }

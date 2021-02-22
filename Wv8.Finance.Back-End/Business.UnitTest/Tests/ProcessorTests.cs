@@ -10,7 +10,7 @@
     using Xunit;
 
     /// <summary>
-    /// A test class testing the functionality of <see cref="ITransactionProcessor"/>.
+    /// A test class testing the functionality of <see cref="TransactionProcessor"/>.
     /// </summary>
     public class ProcessorTests : BaseTest
     {
@@ -43,7 +43,7 @@
                 });
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -67,7 +67,7 @@
                 });
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -91,7 +91,7 @@
                 });
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -115,7 +115,7 @@
                 });
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -142,7 +142,7 @@
                 });
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -186,7 +186,7 @@
             this.context.RecurringTransactions.Add(rTransaction);
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             this.RefreshContext();
 
@@ -233,7 +233,7 @@
             this.context.RecurringTransactions.Add(rTransaction);
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             this.RefreshContext();
 
