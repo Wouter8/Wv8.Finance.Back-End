@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using Business.UnitTest.Helpers;
     using NodaTime;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common;
@@ -160,61 +161,14 @@
         [Fact]
         public void Test_ProcessAll_MultipleTransactions()
         {
-            // TODO: Use new generation methods.
-            var account = this.context.DailyBalances.Add(new DailyBalanceEntity
-            {
-                Balance = 0,
-                Date = DateTime.Today.AddDays(-1).ToLocalDate(),
-                Account = new AccountEntity
-                {
-                    Description = "account",
-                    Icon = new IconEntity
-                    {
-                        Color = "123456",
-                        Name = "aaa",
-                        Pack = "aaa",
-                    },
-                    IsDefault = true,
-                    IsObsolete = false,
-                },
-            }).Entity.Account;
-            var category = this.GenerateCategory();
+            var (account, _) =
+                this.context.GenerateAccount(firstBalanceDate: DateTime.Today.AddDays(-7).ToLocalDate());
+            var category = this.context.GenerateCategory();
 
-            this.context.Transactions.Add(
-                new TransactionEntity
-                {
-                    Account = account,
-                    Amount = -20,
-                    CategoryId = category.Id,
-                    Date = LocalDate.FromDateTime(DateTime.Today),
-                    Description = "Description",
-                    Processed = false,
-                    Type = TransactionType.Expense,
-                });
-            this.context.Transactions.Add(
-                new TransactionEntity
-                {
-                    Account = account,
-                    Amount = -40,
-                    CategoryId = category.Id,
-                    Date = LocalDate.FromDateTime(DateTime.Today),
-                    Description = "Description",
-                    Processed = false,
-                    Type = TransactionType.Expense,
-                });
-            this.context.RecurringTransactions.Add(
-                new RecurringTransactionEntity
-                {
-                    Account = account,
-                    Amount = -40,
-                    CategoryId = category.Id,
-                    StartDate = LocalDate.FromDateTime(DateTime.Today),
-                    Description = "Description",
-                    Type = TransactionType.Expense,
-                    Interval = 1,
-                    IntervalUnit = IntervalUnit.Weeks,
-                    NextOccurence = LocalDate.FromDateTime(DateTime.Today.AddDays(7)),
-                });
+            var today = DateTime.Today.ToLocalDate();
+            this.context.GenerateTransaction(account, category: category, date: today);
+            this.context.GenerateTransaction(account, category: category, date: today);
+            this.context.GenerateRecurringTransaction(account, category: category, startDate: today);
             this.context.SaveChanges();
 
             this.RefreshContext();

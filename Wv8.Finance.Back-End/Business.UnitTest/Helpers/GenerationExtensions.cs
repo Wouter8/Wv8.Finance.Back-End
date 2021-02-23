@@ -4,6 +4,7 @@ namespace Business.UnitTest.Helpers
     using System.Collections.Generic;
     using Business.UnitTest.Mocks;
     using NodaTime;
+    using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
@@ -103,7 +104,7 @@ namespace Business.UnitTest.Helpers
         }
 
         /// <summary>
-        /// Creates an account with specified, or random values.
+        /// Creates a transaction with specified, or random values.
         /// </summary>
         /// <param name="context">The database context.</param>
         /// <param name="account">The account.</param>
@@ -151,6 +152,61 @@ namespace Business.UnitTest.Helpers
                 RecurringTransaction = recurringTransaction,
                 SplitwiseTransaction = splitwiseTransaction,
             }).Entity;
+        }
+
+        /// <summary>
+        /// Creates a recurring transaction with specified, or random values.
+        /// </summary>
+        /// <param name="context">The database context.</param>
+        /// <param name="account">The account.</param>
+        /// <param name="type">The type of the transaction.</param>
+        /// <param name="description">The description of the transaction.</param>
+        /// <param name="startDate">The start date of the transaction.</param>
+        /// <param name="endDate">The end date of the transaction.</param>
+        /// <param name="amount">The amount.</param>
+        /// <param name="category">The category.</param>
+        /// <param name="receivingAccount">The receiving account.</param>
+        /// <param name="needsConfirmation">A value indicating if the transaction has to be confirmed.</param>
+        /// <param name="interval">The interval.</param>
+        /// <param name="intervalUnit">The interval unit.</param>
+        /// <returns>The created transaction.</returns>
+        public static RecurringTransactionEntity GenerateRecurringTransaction(
+            this Context context,
+            AccountEntity account,
+            TransactionType type = TransactionType.Expense,
+            string description = null,
+            LocalDate? startDate = null,
+            LocalDate? endDate = null,
+            decimal? amount = null,
+            CategoryEntity category = null,
+            AccountEntity receivingAccount = null,
+            bool needsConfirmation = false,
+            int interval = 1,
+            IntervalUnit intervalUnit = IntervalUnit.Weeks)
+        {
+            if ((type == TransactionType.Expense || type == TransactionType.Income) && category == null)
+                throw new Exception("Specify a category for an income or expense transaction.");
+            if (type == TransactionType.Transfer && receivingAccount == null)
+                throw new Exception("Specify a receiving account for a transfer transaction.");
+
+            var entity = new RecurringTransactionEntity
+            {
+                Account = account,
+                Amount = amount ?? (type == TransactionType.Expense ? -50 : 50),
+                Description = description ?? GetRandomString(),
+                StartDate = startDate ?? DateTime.Now.ToLocalDate(),
+                EndDate = endDate,
+                Category = category,
+                ReceivingAccount = receivingAccount,
+                NeedsConfirmation = needsConfirmation,
+                Type = type,
+                Interval = interval,
+                IntervalUnit = intervalUnit,
+            };
+
+            entity.SetNextOccurrence();
+
+            return context.RecurringTransactions.Add(entity).Entity;
         }
 
         /// <summary>
