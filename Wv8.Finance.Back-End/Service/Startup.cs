@@ -2,7 +2,6 @@ namespace PersonalFinance.Service
 {
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
-    using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.SqlServer.NodaTime.Extensions;
     using Microsoft.Extensions.Configuration;
@@ -91,7 +90,6 @@ namespace PersonalFinance.Service
             services.AddTransient<IBudgetManager, BudgetManager>();
             services.AddTransient<ITransactionManager, TransactionManager>();
             services.AddTransient<IRecurringTransactionManager, RecurringTransactionManager>();
-            services.AddTransient<ITransactionProcessor, TransactionProcessor>();
             services.AddTransient<IReportManager, ReportManager>();
 
             // External contexts
@@ -155,9 +153,10 @@ namespace PersonalFinance.Service
             using var serviceScope = app.ApplicationServices
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
-            var service = serviceScope.ServiceProvider.GetService<ITransactionProcessor>();
+            using var context = serviceScope.ServiceProvider.GetService<Context>();
 
-            service.Run();
+            var processor = new TransactionProcessor(context);
+            processor.ProcessAll();
         }
     }
 }

@@ -4,6 +4,7 @@ namespace PersonalFinance.Business.Transaction
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
+    using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
@@ -95,6 +96,8 @@ namespace PersonalFinance.Business.Transaction
 
             return this.ConcurrentInvoke(() =>
             {
+                var processor = new TransactionProcessor(this.Context);
+
                 var entity = this.Context.Transactions.GetEntity(input.Id);
 
                 this.validator.AccountType(entity.Account.Type);
@@ -108,8 +111,6 @@ namespace PersonalFinance.Business.Transaction
 
                 this.validator.AccountType(account.Type);
 
-                entity.RevertIfProcessed(this.Context);
-
                 var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
                 var receivingAccount = input.ReceivingAccountId.Select(aId => this.Context.Accounts.GetEntity(aId, false));
@@ -120,6 +121,8 @@ namespace PersonalFinance.Business.Transaction
                     if (receivingAccount.Value.Id == account.Id)
                         throw new ValidationException("Sender account can not be the same as receiver account.");
                 }
+
+                processor.RevertIfProcessed(entity);
 
                 entity.AccountId = input.AccountId;
                 entity.Account = account;
@@ -163,7 +166,7 @@ namespace PersonalFinance.Business.Transaction
                 this.Context.PaymentRequests.RemoveRange(removedPaymentRequests);
                 entity.PaymentRequests = updatedPaymentRequests;
 
-                entity.ProcessIfNeeded(this.Context);
+                processor.ProcessIfNeeded(entity);
 
                 this.Context.SaveChanges();
 
@@ -181,6 +184,8 @@ namespace PersonalFinance.Business.Transaction
 
             return this.ConcurrentInvoke(() =>
             {
+                var processor = new TransactionProcessor(this.Context);
+
                 var account = this.Context.Accounts.GetEntity(input.AccountId, false);
 
                 this.validator.AccountType(account.Type);
@@ -219,7 +224,7 @@ namespace PersonalFinance.Business.Transaction
                     }).ToList(),
                 };
 
-                entity.ProcessIfNeeded(this.Context);
+                processor.ProcessIfNeeded(entity);
 
                 this.Context.Transactions.Add(entity);
 
@@ -236,6 +241,8 @@ namespace PersonalFinance.Business.Transaction
 
             return this.ConcurrentInvoke(() =>
             {
+                var processor = new TransactionProcessor(this.Context);
+
                 var entity = this.Context.Transactions.GetEntity(id);
                 this.validator.Amount(amount, entity.Type);
 
@@ -253,7 +260,7 @@ namespace PersonalFinance.Business.Transaction
                 entity.Amount = amount;
                 entity.IsConfirmed = true;
 
-                entity.ProcessIfNeeded(this.Context);
+                processor.ProcessIfNeeded(entity);
 
                 this.Context.SaveChanges();
 
@@ -266,13 +273,15 @@ namespace PersonalFinance.Business.Transaction
         {
             this.ConcurrentInvoke(() =>
             {
+                var processor = new TransactionProcessor(this.Context);
+
                 var entity = this.Context.Transactions.GetEntity(id);
 
                 this.validator.AccountType(entity.Account.Type);
                 if (entity.ReceivingAccount != null)
                     this.validator.AccountType(entity.ReceivingAccount.Type);
 
-                entity.RevertIfProcessed(this.Context);
+                processor.RevertIfProcessed(entity);
 
                 this.Context.Remove(entity);
 

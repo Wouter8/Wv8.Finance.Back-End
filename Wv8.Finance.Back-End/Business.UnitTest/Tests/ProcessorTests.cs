@@ -10,7 +10,7 @@
     using Xunit;
 
     /// <summary>
-    /// A test class testing the functionality of <see cref="ITransactionProcessor"/>.
+    /// A test class testing the functionality of <see cref="TransactionProcessor"/>.
     /// </summary>
     public class ProcessorTests : BaseTest
     {
@@ -43,7 +43,7 @@
                 });
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -67,7 +67,7 @@
                 });
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -91,7 +91,7 @@
                 });
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -115,7 +115,7 @@
                 });
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -142,7 +142,7 @@
                 });
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             budget = this.BudgetManager.GetBudget(budget.Id);
             account = this.AccountManager.GetAccount(account.Id);
@@ -151,6 +151,75 @@
             Assert.Equal(0, account.CurrentBalance);
             Assert.Equal(30, account2.CurrentBalance);
             Assert.Equal(20, budget.Spent);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="TransactionProcessor.ProcessAll"/>.
+        /// Verifies that no exception is thrown when there are multiple transactions to be processed at the same date.
+        /// </summary>
+        [Fact]
+        public void Test_ProcessAll_MultipleTransactions()
+        {
+            // TODO: Use new generation methods.
+            var account = this.context.DailyBalances.Add(new DailyBalanceEntity
+            {
+                Balance = 0,
+                Date = DateTime.Today.AddDays(-1).ToLocalDate(),
+                Account = new AccountEntity
+                {
+                    Description = "account",
+                    Icon = new IconEntity
+                    {
+                        Color = "123456",
+                        Name = "aaa",
+                        Pack = "aaa",
+                    },
+                    IsDefault = true,
+                    IsObsolete = false,
+                },
+            }).Entity.Account;
+            var category = this.GenerateCategory();
+
+            this.context.Transactions.Add(
+                new TransactionEntity
+                {
+                    Account = account,
+                    Amount = -20,
+                    CategoryId = category.Id,
+                    Date = LocalDate.FromDateTime(DateTime.Today),
+                    Description = "Description",
+                    Processed = false,
+                    Type = TransactionType.Expense,
+                });
+            this.context.Transactions.Add(
+                new TransactionEntity
+                {
+                    Account = account,
+                    Amount = -40,
+                    CategoryId = category.Id,
+                    Date = LocalDate.FromDateTime(DateTime.Today),
+                    Description = "Description",
+                    Processed = false,
+                    Type = TransactionType.Expense,
+                });
+            this.context.RecurringTransactions.Add(
+                new RecurringTransactionEntity
+                {
+                    Account = account,
+                    Amount = -40,
+                    CategoryId = category.Id,
+                    StartDate = LocalDate.FromDateTime(DateTime.Today),
+                    Description = "Description",
+                    Type = TransactionType.Expense,
+                    Interval = 1,
+                    IntervalUnit = IntervalUnit.Weeks,
+                    NextOccurence = LocalDate.FromDateTime(DateTime.Today.AddDays(7)),
+                });
+            this.context.SaveChanges();
+
+            this.RefreshContext();
+
+            this.TransactionProcessor.ProcessAll();
         }
 
         /// <summary>
@@ -186,7 +255,7 @@
             this.context.RecurringTransactions.Add(rTransaction);
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             this.RefreshContext();
 
@@ -233,7 +302,7 @@
             this.context.RecurringTransactions.Add(rTransaction);
             this.context.SaveChanges();
 
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
 
             this.RefreshContext();
 

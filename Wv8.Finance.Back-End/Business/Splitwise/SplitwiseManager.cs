@@ -4,6 +4,7 @@ namespace PersonalFinance.Business.Splitwise
     using System.Collections.Generic;
     using System.Linq;
     using PersonalFinance.Business.Transaction;
+    using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
@@ -57,6 +58,8 @@ namespace PersonalFinance.Business.Splitwise
 
             return this.ConcurrentInvoke(() =>
             {
+                var processor = new TransactionProcessor(this.Context);
+
                 // If the user paid anything for the transaction, then create an expense transaction for the default account.
                 if (splitwiseTransaction.PaidAmount > 0)
                 {
@@ -66,7 +69,7 @@ namespace PersonalFinance.Business.Splitwise
 
                 var transaction = splitwiseTransaction.ToTransaction(splitwiseAccount, category);
 
-                transaction.ProcessIfNeeded(this.Context);
+                processor.ProcessIfNeeded(transaction);
 
                 this.Context.Transactions.Add(transaction);
 
@@ -110,6 +113,8 @@ namespace PersonalFinance.Business.Splitwise
 
             this.ConcurrentInvoke(() =>
             {
+                var processor = new TransactionProcessor(this.Context);
+
                 foreach (var newExpense in newExpenses)
                 {
                     var splitwiseTransactionMaybe = splitwiseTransactionsById.TryGetValue(newExpense.Id);
@@ -120,7 +125,7 @@ namespace PersonalFinance.Business.Splitwise
                     // Revert the transaction before updating values.
                     if (transaction.IsSome)
                     {
-                        transaction.Value.RevertIfProcessed(this.Context);
+                        processor.RevertIfProcessed(transaction.Value);
 
                         // Remove the transaction, it is re-added if needed.
                         this.Context.Transactions.Remove(transaction.Value);
@@ -151,7 +156,7 @@ namespace PersonalFinance.Business.Splitwise
                                 transaction =
                                     splitwiseTransaction.ToTransaction(transaction.Value.Account, transaction.Value.Category);
 
-                                transaction.Value.ProcessIfNeeded(this.Context);
+                                processor.ProcessIfNeeded(transaction.Value);
 
                                 this.Context.Transactions.Add(transaction.Value);
                             }

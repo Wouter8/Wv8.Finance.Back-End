@@ -62,7 +62,6 @@ namespace Business.UnitTest
             services.AddTransient<ITransactionManager, TransactionManager>();
             services.AddTransient<IRecurringTransactionManager, RecurringTransactionManager>();
             services.AddTransient<IReportManager, ReportManager>();
-            services.AddTransient<ITransactionProcessor, TransactionProcessor>();
             services.AddTransient<ISplitwiseManager, SplitwiseManager>();
 
             // Mocks
@@ -111,9 +110,9 @@ namespace Business.UnitTest
         protected ISplitwiseManager SplitwiseManager => this.serviceProvider.GetService<ISplitwiseManager>();
 
         /// <summary>
-        /// The periodic processor.
+        /// The transaction processor.
         /// </summary>
-        protected ITransactionProcessor TransactionProcessor => this.serviceProvider.GetService<ITransactionProcessor>();
+        protected TransactionProcessor TransactionProcessor => new (this.context);
 
         /// <summary>
         /// The Splitwise context mock.
@@ -516,7 +515,7 @@ namespace Business.UnitTest
         protected void SaveAndProcess()
         {
             this.context.SaveChanges();
-            this.TransactionProcessor.Run();
+            this.TransactionProcessor.ProcessAll();
         }
 
         /// <summary>
