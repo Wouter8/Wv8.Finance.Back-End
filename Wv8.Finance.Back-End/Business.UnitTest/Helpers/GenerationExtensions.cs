@@ -106,48 +106,50 @@ namespace Business.UnitTest.Helpers
         /// Creates an account with specified, or random values.
         /// </summary>
         /// <param name="context">The database context.</param>
-        /// <param name="accountId">The identifier of the account.</param>
+        /// <param name="account">The account.</param>
         /// <param name="type">The type of the transaction.</param>
         /// <param name="description">The description of the transaction.</param>
         /// <param name="date">The date of the transaction.</param>
         /// <param name="amount">The amount.</param>
-        /// <param name="categoryId">The identifier of the category.</param>
-        /// <param name="receivingAccountId">The identifier of the receiving account.</param>
-        /// <param name="recurringTransactionId">The identifier of the recurring transaction from which this is an
-        /// instance.</param>
+        /// <param name="category">The category.</param>
+        /// <param name="receivingAccount">The receiving account.</param>
+        /// <param name="recurringTransaction">The recurring transaction from which this is an instance.</param>
+        /// <param name="splitwiseTransaction">The Splitwise transaction which is linked to this transaction.</param>
         /// <param name="needsConfirmation">A value indicating if the transaction has to be confirmed.</param>
         /// <returns>The created transaction.</returns>
         public static TransactionEntity GenerateTransaction(
             this Context context,
-            int accountId,
+            AccountEntity account,
             TransactionType type = TransactionType.Expense,
             string description = null,
             LocalDate? date = null,
             decimal? amount = null,
-            int? categoryId = null,
-            int? receivingAccountId = null,
-            int? recurringTransactionId = null,
+            CategoryEntity category = null,
+            AccountEntity receivingAccount = null,
+            RecurringTransactionEntity recurringTransaction = null,
+            SplitwiseTransactionEntity splitwiseTransaction = null,
             bool needsConfirmation = false)
         {
-            if ((type == TransactionType.Expense || type == TransactionType.Income) && !categoryId.HasValue)
+            if ((type == TransactionType.Expense || type == TransactionType.Income) && category == null)
                 throw new Exception("Specify a category for an income or expense transaction.");
-            if (type == TransactionType.Transfer && !receivingAccountId.HasValue)
+            if (type == TransactionType.Transfer && receivingAccount == null)
                 throw new Exception("Specify a receiving account for a transfer transaction.");
 
             return context.Transactions.Add(new TransactionEntity
             {
-                AccountId = accountId,
+                Account = account,
                 Amount = amount ?? (type == TransactionType.Expense ? -50 : 50),
                 Description = description ?? GetRandomString(),
                 Date = date ?? DateTime.Now.ToLocalDate(),
-                CategoryId = categoryId,
-                ReceivingAccountId = receivingAccountId,
+                Category = category,
+                ReceivingAccount = receivingAccount,
                 NeedsConfirmation = needsConfirmation,
                 PaymentRequests = new List<PaymentRequestEntity>(),
                 Processed = false,
                 IsConfirmed = !needsConfirmation,
                 Type = type,
-                RecurringTransactionId = recurringTransactionId,
+                RecurringTransaction = recurringTransaction,
+                SplitwiseTransaction = splitwiseTransaction,
             }).Entity;
         }
 

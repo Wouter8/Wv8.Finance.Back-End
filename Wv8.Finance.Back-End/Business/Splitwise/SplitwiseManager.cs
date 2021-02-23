@@ -36,10 +36,11 @@ namespace PersonalFinance.Business.Splitwise
         }
 
         /// <inheritdoc />
-        public List<SplitwiseTransaction> GetSplitwiseTransactions(bool includeImported)
+        public List<SplitwiseTransaction> GetSplitwiseTransactions(bool onlyImportable)
         {
             return this.Context.SplitwiseTransactions
-                .WhereIf(!includeImported, t => !t.Imported)
+                // Only transactions where nothing has been paid are importable.
+                .WhereIf(onlyImportable, t => !t.Imported && t.PaidAmount == 0)
                 .OrderBy(t => t.Date)
                 .AsEnumerable()
                 .Select(t => t.AsSplitwiseTransaction())
@@ -47,34 +48,23 @@ namespace PersonalFinance.Business.Splitwise
         }
 
         /// <inheritdoc />
-        public Transaction ImportTransaction(int splitwiseId, Maybe<int> accountId, int categoryId)
+        public Transaction ImportTransaction(int splitwiseId, int categoryId)
         {
             var splitwiseTransaction = this.Context.SplitwiseTransactions.GetEntity(splitwiseId);
             var splitwiseAccount = this.Context.Accounts.GetSplitwiseEntity();
 
             var category = this.Context.Categories.GetEntity(categoryId, allowObsolete: false);
-            AccountEntity account;
 
             return this.ConcurrentInvoke(() =>
             {
                 // If the user paid anything for the transaction, then create an expense transaction for the default account.
                 if (splitwiseTransaction.PaidAmount > 0)
                 {
-                    if (accountId.IsNone)
-                    {
-                        throw new ValidationException(
-                            "An account must be specified for Splitwise transactions that have an amount paid.");
-                    }
-
-                    account = this.Context.Accounts.GetEntity(accountId.Value, allowObsolete: false);
-                }
-                // Otherwise use the Splitwise account
-                else
-                {
-                    account = splitwiseAccount;
+                    throw new ValidationException(
+                            "A Splitwise transaction that has a paid share is managed in this application.");
                 }
 
-                var transaction = splitwiseTransaction.ToTransaction(account, category);
+                var transaction = splitwiseTransaction.ToTransaction(splitwiseAccount, category);
 
                 transaction.ProcessIfNeeded(this.Context);
 
@@ -100,7 +90,10 @@ namespace PersonalFinance.Business.Splitwise
                 .ValueOrElse(DateTime.MinValue);
 
             // Get the new and updated expenses from Splitwise.
-            var newExpenses = this.splitwiseContext.GetExpenses(latestUpdated);
+            var newExpenses = this.splitwiseContext.GetExpenses(latestUpdated)
+                // Filter expenses for which the user paid, as these are managed from this application.
+                .Where(e => e.PaidAmount == 0)
+                .ToList();
             var newExpenseIds = newExpenses.Select(t => t.Id).ToSet();
 
             // Load relevant entities and store them in a dictionary.
@@ -109,6 +102,7 @@ namespace PersonalFinance.Business.Splitwise
                 .AsEnumerable()
                 .ToDictionary(t => t.Id);
             var transactionsBySplitwiseId = this.Context.Transactions
+                .IncludeAll()
                 .Where(t => t.SplitwiseTransactionId.HasValue)
                 .Where(t => newExpenseIds.Contains(t.SplitwiseTransactionId.Value))
                 .AsEnumerable()
@@ -121,6 +115,16 @@ namespace PersonalFinance.Business.Splitwise
                     var splitwiseTransactionMaybe = splitwiseTransactionsById.TryGetValue(newExpense.Id);
                     var knownSplitwiseTransaction = splitwiseTransactionMaybe.IsSome;
                     var splitwiseTransaction = splitwiseTransactionMaybe.ValueOrElse(new SplitwiseTransactionEntity());
+                    var transaction = transactionsBySplitwiseId.TryGetValue(splitwiseTransaction.Id);
+
+                    // Revert the transaction before updating values.
+                    if (transaction.IsSome)
+                    {
+                        transaction.Value.RevertIfProcessed(this.Context);
+
+                        // Remove the transaction, it is re-added if needed.
+                        this.Context.Transactions.Remove(transaction.Value);
+                    }
 
                     // Set all fields on new or known expense.
                     splitwiseTransaction.Id = newExpense.Id;
@@ -132,18 +136,12 @@ namespace PersonalFinance.Business.Splitwise
                     splitwiseTransaction.PersonalAmount = newExpense.PersonalAmount;
 
                     // If the transaction was already completely imported, then also update the transaction.
-                    if (splitwiseTransaction.Imported)
+                    if (transaction.IsSome)
                     {
-                        var transaction = transactionsBySplitwiseId[splitwiseTransaction.Id];
-                        transaction.RevertIfProcessed(this.Context);
-
-                        // Remove the transaction, it is re-added if needed.
-                        this.Context.Transactions.Remove(transaction);
-
                         if (!splitwiseTransaction.IsDeleted)
                         {
                             // If the account or category is now obsolete, then the Splitwise transaction has to be re-imported.
-                            if (transaction.Account.IsObsolete || transaction.Category.IsObsolete)
+                            if (transaction.Value.Account.IsObsolete || transaction.Value.Category.IsObsolete)
                             {
                                 splitwiseTransaction.Imported = false;
                             }
@@ -151,11 +149,11 @@ namespace PersonalFinance.Business.Splitwise
                             else
                             {
                                 transaction =
-                                    splitwiseTransaction.ToTransaction(transaction.Account, transaction.Category);
+                                    splitwiseTransaction.ToTransaction(transaction.Value.Account, transaction.Value.Category);
 
-                                transaction.ProcessIfNeeded(this.Context);
+                                transaction.Value.ProcessIfNeeded(this.Context);
 
-                                this.Context.Transactions.Add(transaction);
+                                this.Context.Transactions.Add(transaction.Value);
                             }
                         }
                     }

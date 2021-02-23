@@ -30,18 +30,18 @@ namespace PersonalFinance.Business.Transaction.Processor
             transaction.VerifyEntitiesNotObsolete();
 
             var historicalEntriesToEdit = GetBalanceEntriesToEdit(context, transaction.AccountId, transaction.Date);
-            var amount = transaction.GetPersonalAmount();
+            var personalAmount = transaction.PersonalAmount;
 
             switch (transaction.Type)
             {
                 case TransactionType.Expense:
                     foreach (var entry in historicalEntriesToEdit)
-                        entry.Balance += amount;
+                        entry.Balance += transaction.Amount;
 
                     // Update budgets.
                     var budgets = context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
                     foreach (var budget in budgets)
-                        budget.Spent += Math.Abs(amount);
+                        budget.Spent += Math.Abs(personalAmount);
 
                     // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
                     if (transaction.SplitwiseTransactionId.HasValue)
@@ -50,7 +50,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                     break;
                 case TransactionType.Income:
                     foreach (var entry in historicalEntriesToEdit)
-                        entry.Balance += amount;
+                        entry.Balance += transaction.Amount;
 
                     break;
                 case TransactionType.Transfer:
@@ -58,9 +58,9 @@ namespace PersonalFinance.Business.Transaction.Processor
                         GetBalanceEntriesToEdit(context, transaction.ReceivingAccountId.Value, transaction.Date);
 
                     foreach (var entry in historicalEntriesToEdit)
-                        entry.Balance -= amount;
+                        entry.Balance -= transaction.Amount;
                     foreach (var entry in receiverEntriesToEdit)
-                        entry.Balance += amount;
+                        entry.Balance += transaction.Amount;
 
                     break;
                 default:
@@ -86,18 +86,18 @@ namespace PersonalFinance.Business.Transaction.Processor
                 throw new NotSupportedException("Transaction has not been processed.");
 
             var historicalBalances = GetBalanceEntriesToEdit(context, transaction.AccountId, transaction.Date);
-            var amount = transaction.GetPersonalAmount();
+            var personalAmount = transaction.PersonalAmount;
 
             switch (transaction.Type)
             {
                 case TransactionType.Expense:
                     foreach (var historicalBalance in historicalBalances)
-                        historicalBalance.Balance -= amount;
+                        historicalBalance.Balance -= transaction.Amount;
 
                     // Update budgets.
                     var budgets = context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
                     foreach (var budget in budgets)
-                        budget.Spent -= Math.Abs(amount);
+                        budget.Spent -= Math.Abs(personalAmount);
 
                     // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
                     if (transaction.SplitwiseTransactionId.HasValue)
@@ -106,7 +106,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                     break;
                 case TransactionType.Income:
                     foreach (var historicalBalance in historicalBalances)
-                        historicalBalance.Balance -= amount;
+                        historicalBalance.Balance -= transaction.Amount;
 
                     break;
                 case TransactionType.Transfer:
@@ -116,9 +116,9 @@ namespace PersonalFinance.Business.Transaction.Processor
                         .ToList();
 
                     foreach (var historicalBalance in historicalBalances)
-                        historicalBalance.Balance += amount;
+                        historicalBalance.Balance += transaction.Amount;
                     foreach (var historicalBalance in receiverHistoricalBalances)
-                        historicalBalance.Balance -= amount;
+                        historicalBalance.Balance -= transaction.Amount;
 
                     break;
             }
@@ -169,11 +169,6 @@ namespace PersonalFinance.Business.Transaction.Processor
         {
             transaction.VerifyProcessable();
 
-            // If the user did not pay for this transaction, then that means that the transaction has been added
-            // for the Splitwise account, meaning that the balance of the account is already up to date.
-            if (transaction.PaidAmount == 0)
-                return;
-
             var splitwiseAccount = context.Accounts.GetSplitwiseEntity();
             var historicalEntriesToEdit = GetBalanceEntriesToEdit(context, splitwiseAccount.Id, transaction.Date);
             var mutationAmount = transaction.GetSplitwiseAccountDifference();
@@ -191,11 +186,6 @@ namespace PersonalFinance.Business.Transaction.Processor
         private static void RevertProcessedTransaction(this SplitwiseTransactionEntity transaction, Context context)
         {
             transaction.VerifyProcessable();
-
-            // If the user did not pay for this transaction, then that means that the transaction has been added
-            // for the Splitwise account, meaning that the balance of the account is already up to date.
-            if (transaction.PaidAmount == 0)
-                return;
 
             var splitwiseAccount = context.Accounts.GetSplitwiseEntity();
             var historicalEntriesToEdit = GetBalanceEntriesToEdit(context, splitwiseAccount.Id, transaction.Date);

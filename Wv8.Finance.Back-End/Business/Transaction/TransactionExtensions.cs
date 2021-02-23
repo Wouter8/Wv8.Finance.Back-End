@@ -35,26 +35,6 @@ namespace PersonalFinance.Business.Transaction
         }
 
         /// <summary>
-        /// Get the amount of the transaction that is personally due. This can be different from the amount on the
-        /// transaction when that amount contains an amount paid for others or paid by others. These differences are
-        /// stored in the linked Splitwise transaction or payment request.
-        /// </summary>
-        /// <param name="entity">The transaction entity.</param>
-        /// <returns>The personal amount of the transaction.</returns>
-        public static decimal GetPersonalAmount(this TransactionEntity entity)
-        {
-            // When I paid for others, then subtract the amount paid for others.
-            // When someone else paid for me, then add that share to the personal amount.
-            var splitwiseMutation = entity.SplitwiseTransactionId.HasValue
-                ? entity.SplitwiseTransaction.OwedToOthers - entity.SplitwiseTransaction.OwedByOthers
-                : 0;
-
-            return entity.Amount
-                   + entity.PaymentRequests.Sum(pr => pr.Count * pr.Amount)
-                   + splitwiseMutation;
-        }
-
-        /// <summary>
         /// Gets the amount with which the Splitwise account should be updated. This can either be negative
         /// (in the case that something is owed to others) positive (when someone else owes something to me).
         /// </summary>

@@ -59,7 +59,7 @@
                 PaymentRequests = includePaymentRequests
                     ? entity.PaymentRequests.Select(pr => pr.AsPaymentRequest()).ToList()
                     : new List<PaymentRequest>(),
-                PersonalAmount = entity.GetPersonalAmount(),
+                PersonalAmount = entity.PersonalAmount,
                 SplitwiseTransactionId = entity.SplitwiseTransactionId.ToMaybe(),
                 SplitwiseTransaction = entity.SplitwiseTransaction.ToMaybe().Select(st => st.AsSplitwiseTransaction()),
             };

@@ -83,7 +83,8 @@ namespace PersonalFinance.Data.Extensions
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Children)
                 .ThenInclude(c => c.Icon)
-                .Include(t => t.PaymentRequests);
+                .Include(t => t.PaymentRequests)
+                .Include(t => t.SplitwiseTransaction);
         }
 
         /// <summary>

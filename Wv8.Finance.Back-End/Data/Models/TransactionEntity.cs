@@ -1,6 +1,7 @@
 namespace PersonalFinance.Data.Models
 {
     using System.Collections.Generic;
+    using System.Linq;
     using NodaTime;
     using PersonalFinance.Common.Enums;
 
@@ -111,5 +112,20 @@ namespace PersonalFinance.Data.Models
         /// Optionally, the Splitwise transaction this transaction is linked to.
         /// </summary>
         public SplitwiseTransactionEntity SplitwiseTransaction { get; set; }
+
+        /// <summary>
+        /// Get the amount of the transaction that is personally due. This can be different from the amount on the
+        /// transaction when that amount contains an amount paid for others or paid by others. These differences are
+        /// stored in the linked Splitwise transaction or payment request.
+        /// </summary>
+        /// <returns>The personal amount of the transaction.</returns>
+        public decimal PersonalAmount =>
+            this.Amount
+            + this.PaymentRequests.Sum(pr => pr.Count * pr.Amount)
+            // When I paid for others, then subtract the amount paid for others.
+            // When someone else paid for me, then add that share to the personal amount.
+            + (this.SplitwiseTransactionId.HasValue
+                ? (this.SplitwiseTransaction.OwedToOthers - this.SplitwiseTransaction.OwedByOthers) * -1
+                : 0);
     }
 }

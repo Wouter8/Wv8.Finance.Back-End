@@ -482,7 +482,7 @@
         {
             var category = this.context.GenerateCategory();
             var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
-            var transaction = this.context.GenerateTransaction(account.Id, categoryId: category.Id, amount: -50);
+            var transaction = this.context.GenerateTransaction(account, category: category, amount: -50);
             var (normalAccount, _) = this.context.GenerateAccount();
             this.context.SaveChanges();
 
@@ -502,7 +502,7 @@
             var category = this.context.GenerateCategory();
             var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
             var (normalAccount, _) = this.context.GenerateAccount();
-            var transaction = this.context.GenerateTransaction(normalAccount.Id, categoryId: category.Id, amount: -50);
+            var transaction = this.context.GenerateTransaction(normalAccount, category: category, amount: -50);
             this.context.SaveChanges();
 
             var edit = transaction.ToEdit();
@@ -522,7 +522,7 @@
             var (normalAccount, _) = this.context.GenerateAccount();
             var (normalAccount2, _) = this.context.GenerateAccount();
             var transaction = this.context.GenerateTransaction(
-                normalAccount.Id, TransactionType.Transfer, receivingAccountId: account.Id, amount: 50);
+                normalAccount, TransactionType.Transfer, receivingAccount: account, amount: 50);
             this.context.SaveChanges();
 
             var edit = transaction.ToEdit();
@@ -920,7 +920,7 @@
         {
             var category = this.context.GenerateCategory();
             var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
-            var transaction = this.context.GenerateTransaction(account.Id, categoryId: category.Id);
+            var transaction = this.context.GenerateTransaction(account, category: category);
             this.context.SaveChanges();
 
             Assert.Throws<ValidationException>(() => this.TransactionManager.DeleteTransaction(transaction.Id));
@@ -936,7 +936,7 @@
             var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
             var (normalAccount, _) = this.context.GenerateAccount();
             var transaction = this.context.GenerateTransaction(
-                normalAccount.Id, TransactionType.Transfer, receivingAccountId: account.Id);
+                normalAccount, TransactionType.Transfer, receivingAccount: account);
             this.context.SaveChanges();
 
             Assert.Throws<ValidationException>(() => this.TransactionManager.DeleteTransaction(transaction.Id));
@@ -989,7 +989,7 @@
             Assert.Equal(400, transaction.PaymentRequests.Sum(pr => pr.AmountDue));
             Assert.Equal(-100, transaction.PersonalAmount);
 
-            Assert.Equal(-100, account.CurrentBalance);
+            Assert.Equal(-500, account.CurrentBalance);
         }
 
         /// <summary>
@@ -1071,7 +1071,7 @@
             Assert.Equal(400, transaction.PaymentRequests.Sum(pr => pr.AmountDue));
             Assert.Equal(-100, transaction.PersonalAmount);
 
-            Assert.Equal(-100, account.CurrentBalance);
+            Assert.Equal(-500, account.CurrentBalance);
 
             // TODO: Add exception tests for payment requests
         }

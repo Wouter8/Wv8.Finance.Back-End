@@ -12,20 +12,20 @@ namespace PersonalFinance.Business.Splitwise
         /// <summary>
         /// Get all imported Splitwise transactions. Results are ordered by date.
         /// </summary>
-        /// <param name="includeImported"><c>true</c> if already imported transactions should be included, <c>false</c>
+        /// <param name="onlyImportable"><c>true</c> if only transactions that are importable should be included.
+        /// A transaction is importable if the paid amount is 0 and the transaction has not yet been imported.
+        /// <c>false</c> in all other cases.
         /// if only transactions which have to be completely imported should be returned.</param>
         /// <returns>A list of Splitwise transactions.</returns>
-        public List<SplitwiseTransaction> GetSplitwiseTransactions(bool includeImported);
+        public List<SplitwiseTransaction> GetSplitwiseTransactions(bool onlyImportable);
 
         /// <summary>
         /// Imports a Splitwise transaction by specifying a category for the transaction.
         /// </summary>
         /// <param name="splitwiseId">The identifier of the Splitwise transaction.</param>
-        /// <param name="accountId">The identifier of the account for which an expense transaction must be made if the
-        /// user paid anything for the Splitwise expense.</param>
         /// <param name="categoryId">The identifier of the category.</param>
         /// <returns>The imported transaction.</returns>
-        public Transaction ImportTransaction(int splitwiseId, Maybe<int> accountId, int categoryId);
+        public Transaction ImportTransaction(int splitwiseId, int categoryId);
 
         /// <summary>
         /// Imports new/updated transactions from Splitwise.
