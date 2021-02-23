@@ -10,6 +10,7 @@
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Extensions;
     using Wv8.Core;
+    using Wv8.Core.Collections;
     using Wv8.Core.Exceptions;
     using Xunit;
 
@@ -338,6 +339,56 @@
         [Fact]
         public void Test_ImportFromSplitwise_Removed()
         {
+
+        }
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.ImportFromSplitwise"/>.
+        /// Verifies that a known transaction is removed properly.
+        /// </summary>
+        [Fact]
+        public void Test_ImportFromSplitwise_RemovedAlreadyProcessed()
+        {
+            var category = this.context.GenerateCategory();
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                updatedAt: DateTime.Now.AddDays(-7),
+                paidAmount: 0,
+                personalAmount: 10,
+                date: DateTime.Today.ToLocalDate(),
+                description: "Description",
+                imported: true);
+            var transaction = this.context.GenerateTransaction(
+                splitwiseAccount,
+                TransactionType.Expense,
+                splitwiseTransaction.Description,
+                splitwiseTransaction.Date,
+                splitwiseTransaction.PaidAmount,
+                category,
+                splitwiseTransaction: splitwiseTransaction);
+            this.SaveAndProcess();
+
+            // Add new version to mock. New version is removed.
+            this.SplitwiseContextMock.GenerateExpense(
+                1,
+                updatedAt: DateTime.Now,
+                isDeleted: true,
+                paidAmount: splitwiseTransaction.PaidAmount,
+                personalAmount: splitwiseTransaction.PersonalAmount,
+                date: splitwiseTransaction.Date,
+                description: splitwiseTransaction.Description);
+            this.SplitwiseManager.ImportFromSplitwise();
+
+            // Verify revert and removal.
+            this.RefreshContext();
+            var accountBalance = this.context.Accounts.Single(a => a.Id == splitwiseAccount.Id).CurrentBalance;
+            Assert.Equal(0, accountBalance);
+            var transactionMaybe = this.context.Transactions.SingleOrNone(t => t.Id == transaction.Id);
+            Assert.True(transactionMaybe.IsNone);
+            var splitwiseTransactionMaybe = this.context.SplitwiseTransactions.SingleOrNone(t => t.Id == splitwiseTransaction.Id);
+            Assert.True(splitwiseTransactionMaybe.IsNone);
         }
 
         /// <summary>
