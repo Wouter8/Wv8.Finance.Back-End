@@ -448,7 +448,7 @@
         /// Verifies that the name is correctly set.
         /// </summary>
         [Fact]
-        public void Test_GetSplitwiseUsers_ConcattedName()
+        public void Test_GetSplitwiseUsers_ConcatName()
         {
             this.SplitwiseContextMock.GenerateUser(1, "Wouter", "van Acht");
 

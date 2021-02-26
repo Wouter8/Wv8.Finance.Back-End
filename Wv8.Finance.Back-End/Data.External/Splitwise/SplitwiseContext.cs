@@ -78,6 +78,7 @@ namespace PersonalFinance.Data.External.Splitwise
             return this.Execute<GetGroupResult>(request)
                 .Group
                 .Members
+                .Where(u => u.Id != this.userId)
                 .Select(u => u.ToDomainObject())
                 .ToList();
         }
