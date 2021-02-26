@@ -339,7 +339,31 @@
         [Fact]
         public void Test_ImportFromSplitwise_Removed()
         {
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                updatedAt: DateTime.Now.AddDays(-7),
+                paidAmount: 0,
+                personalAmount: 10,
+                date: DateTime.Today.AddDays(1).ToLocalDate(),
+                description: "Description",
+                imported: false);
+            this.context.SaveChanges();
 
+            // Add new version to mock. New version is removed.
+            this.SplitwiseContextMock.GenerateExpense(
+                1,
+                updatedAt: DateTime.Now,
+                isDeleted: true,
+                paidAmount: splitwiseTransaction.PaidAmount,
+                personalAmount: splitwiseTransaction.PersonalAmount,
+                date: splitwiseTransaction.Date,
+                description: splitwiseTransaction.Description);
+            this.SplitwiseManager.ImportFromSplitwise();
+
+            // Verify removal.
+            this.RefreshContext();
+            splitwiseTransaction = this.context.SplitwiseTransactions.Single(t => t.Id == splitwiseTransaction.Id);
+            Assert.True(splitwiseTransaction.IsDeleted);
         }
 
         /// <summary>
@@ -387,8 +411,8 @@
             Assert.Equal(0, accountBalance);
             var transactionMaybe = this.context.Transactions.SingleOrNone(t => t.Id == transaction.Id);
             Assert.True(transactionMaybe.IsNone);
-            var splitwiseTransactionMaybe = this.context.SplitwiseTransactions.SingleOrNone(t => t.Id == splitwiseTransaction.Id);
-            Assert.True(splitwiseTransactionMaybe.IsNone);
+            splitwiseTransaction = this.context.SplitwiseTransactions.Single(t => t.Id == splitwiseTransaction.Id);
+            Assert.True(splitwiseTransaction.IsDeleted);
         }
 
         /// <summary>
@@ -398,6 +422,21 @@
         [Fact]
         public void Test_ImportFromSplitwise_RemovedNotKnown()
         {
+            // Add new transaction to mock. Transaction is already removed.
+            var expense = this.SplitwiseContextMock.GenerateExpense(
+                1,
+                updatedAt: DateTime.Now,
+                isDeleted: true,
+                paidAmount: 0,
+                personalAmount: 10,
+                date: DateTime.Today.ToLocalDate(),
+                description: "Description");
+            this.SplitwiseManager.ImportFromSplitwise();
+
+            // Verify removal.
+            this.RefreshContext();
+            var splitwiseTransaction = this.context.SplitwiseTransactions.Single(t => t.Id == expense.Id);
+            Assert.True(splitwiseTransaction.IsDeleted);
         }
 
         #endregion ImportFromSplitwise
