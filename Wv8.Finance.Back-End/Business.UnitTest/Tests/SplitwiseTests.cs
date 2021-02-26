@@ -440,5 +440,25 @@
         }
 
         #endregion ImportFromSplitwise
+
+        #region GetSplitwiseUsers
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.GetSplitwiseUsers"/>.
+        /// Verifies that the name is correctly set.
+        /// </summary>
+        [Fact]
+        public void Test_GetSplitwiseUsers_Name()
+        {
+            this.SplitwiseContextMock.GenerateUser(1, "Wouter", "van Acht");
+
+            var users = this.SplitwiseManager.GetSplitwiseUsers();
+
+            var user = users.Single();
+            Assert.Equal(1, user.Id);
+            Assert.Equal("Wouter van Acht", user.Name);
+        }
+
+        #endregion GetSplitwiseUsers
     }
 }

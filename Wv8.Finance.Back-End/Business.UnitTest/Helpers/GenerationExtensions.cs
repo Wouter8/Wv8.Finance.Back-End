@@ -289,6 +289,32 @@ namespace Business.UnitTest.Helpers
         }
 
         /// <summary>
+        /// Creates a user with specified, or random values.
+        /// </summary>
+        /// <param name="splitwiseContext">The Splitwise context.</param>
+        /// <param name="id">The identifier.</param>
+        /// <param name="firstName">The first name.</param>
+        /// <param name="lastName">The last name.</param>
+        /// <returns>The created expense.</returns>
+        public static User GenerateUser(
+            this SplitwiseContextMock splitwiseContext,
+            int id = 0,
+            string firstName = null,
+            string lastName = null)
+        {
+            var user = new User
+            {
+                Id = id,
+                FirstName = firstName ?? GetRandomString(),
+                LastName = lastName ?? GetRandomString(),
+            };
+
+            splitwiseContext.Users.Add(user);
+
+            return user;
+        }
+
+        /// <summary>
         /// Generates a random string.
         /// </summary>
         /// <param name="length">The length of the string.</param>
