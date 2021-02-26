@@ -306,7 +306,7 @@ namespace Business.UnitTest.Helpers
             {
                 Id = id,
                 FirstName = firstName ?? GetRandomString(),
-                LastName = lastName ?? GetRandomString(),
+                LastName = lastName,
             };
 
             splitwiseContext.Users.Add(user);

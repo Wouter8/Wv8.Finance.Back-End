@@ -4,6 +4,7 @@ namespace PersonalFinance.Data.External.Splitwise
     using System.Linq;
     using NodaTime;
     using PersonalFinance.Data.External.Splitwise.Models;
+    using Wv8.Core;
     using DT = PersonalFinance.Data.External.Splitwise.DataTransfer;
 
     /// <summary>
@@ -44,7 +45,7 @@ namespace PersonalFinance.Data.External.Splitwise
             {
                 Id = user.Id,
                 FirstName = user.FirstName,
-                LastName = user.LastName,
+                LastName = user.LastName.ToMaybe(),
             };
         }
     }

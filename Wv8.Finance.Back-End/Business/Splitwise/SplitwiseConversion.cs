@@ -4,6 +4,7 @@ namespace PersonalFinance.Business.Splitwise
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Models;
+    using Wv8.Core;
     using SW = PersonalFinance.Data.External.Splitwise.Models;
 
     /// <summary>
@@ -37,10 +38,13 @@ namespace PersonalFinance.Business.Splitwise
         /// <returns>The data transfer object.</returns>
         public static SplitwiseUser AsSplitwiseUser(this SW.User user)
         {
+            var name = user.LastName.IsSome
+                ? $"{user.FirstName} {user.LastName.Value}"
+                : $"{user.FirstName}";
             return new SplitwiseUser
             {
                 Id = user.Id,
-                Name = $"{user.FirstName} {user.LastName}",
+                Name = name,
             };
         }
 

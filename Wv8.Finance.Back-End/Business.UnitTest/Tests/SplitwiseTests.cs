@@ -448,7 +448,7 @@
         /// Verifies that the name is correctly set.
         /// </summary>
         [Fact]
-        public void Test_GetSplitwiseUsers_Name()
+        public void Test_GetSplitwiseUsers_ConcattedName()
         {
             this.SplitwiseContextMock.GenerateUser(1, "Wouter", "van Acht");
 
@@ -457,6 +457,22 @@
             var user = users.Single();
             Assert.Equal(1, user.Id);
             Assert.Equal("Wouter van Acht", user.Name);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.GetSplitwiseUsers"/>.
+        /// Verifies that the name is correctly set.
+        /// </summary>
+        [Fact]
+        public void Test_GetSplitwiseUsers_NoLastName()
+        {
+            this.SplitwiseContextMock.GenerateUser(1, "Wouter", null);
+
+            var users = this.SplitwiseManager.GetSplitwiseUsers();
+
+            var user = users.Single();
+            Assert.Equal(1, user.Id);
+            Assert.Equal("Wouter", user.Name);
         }
 
         #endregion GetSplitwiseUsers

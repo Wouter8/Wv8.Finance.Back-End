@@ -1,5 +1,7 @@
 namespace PersonalFinance.Data.External.Splitwise.Models
 {
+    using Wv8.Core;
+
     /// <summary>
     /// A user which is imported from Splitwise.
     /// </summary>
@@ -19,6 +21,6 @@ namespace PersonalFinance.Data.External.Splitwise.Models
         /// <summary>
         /// The last name of the user.
         /// </summary>
-        public string LastName { get; set; }
+        public Maybe<string> LastName { get; set; }
     }
 }
