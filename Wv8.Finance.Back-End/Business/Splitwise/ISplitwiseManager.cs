@@ -20,6 +20,12 @@ namespace PersonalFinance.Business.Splitwise
         public List<SplitwiseTransaction> GetSplitwiseTransactions(bool onlyImportable);
 
         /// <summary>
+        /// Get all relevant users from Splitwise.
+        /// </summary>
+        /// <returns>A list of Splitwise users.</returns>
+        public List<SplitwiseUser> GetSplitwiseUsers();
+
+        /// <summary>
         /// Imports a Splitwise transaction by specifying a category for the transaction.
         /// </summary>
         /// <param name="splitwiseId">The identifier of the Splitwise transaction.</param>

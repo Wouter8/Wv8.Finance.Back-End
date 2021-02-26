@@ -16,5 +16,11 @@ namespace PersonalFinance.Data.External.Splitwise
         /// retrieved.</param>
         /// <returns>The list of expenses.</returns>
         public List<Expense> GetExpenses(DateTime updatedAfter);
+
+        /// <summary>
+        /// Get all users from the group of the user.
+        /// </summary>
+        /// <returns>A list of Splitwise users.</returns>
+        public List<User> GetUsers();
     }
 }

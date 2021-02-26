@@ -4,6 +4,7 @@ namespace PersonalFinance.Business.Splitwise
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Models;
+    using SW = PersonalFinance.Data.External.Splitwise.Models;
 
     /// <summary>
     /// Conversion class containing conversion methods.
@@ -26,6 +27,20 @@ namespace PersonalFinance.Business.Splitwise
                 Imported = entity.Imported,
                 PaidAmount = entity.PaidAmount,
                 PersonalAmount = entity.PersonalAmount,
+            };
+        }
+
+        /// <summary>
+        /// Converts the user to a data transfer object.
+        /// </summary>
+        /// <param name="user">The user.</param>
+        /// <returns>The data transfer object.</returns>
+        public static SplitwiseUser AsSplitwiseUser(this SW.User user)
+        {
+            return new SplitwiseUser
+            {
+                Id = user.Id,
+                Name = $"{user.FirstName} {user.LastName}",
             };
         }
 

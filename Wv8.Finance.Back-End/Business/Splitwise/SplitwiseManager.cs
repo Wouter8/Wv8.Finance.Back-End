@@ -49,6 +49,12 @@ namespace PersonalFinance.Business.Splitwise
         }
 
         /// <inheritdoc />
+        public List<SplitwiseUser> GetSplitwiseUsers()
+        {
+            return this.splitwiseContext.GetUsers().Select(u => u.AsSplitwiseUser()).ToList();
+        }
+
+        /// <inheritdoc />
         public Transaction ImportTransaction(int splitwiseId, int categoryId)
         {
             var splitwiseTransaction = this.Context.SplitwiseTransactions.GetEntity(splitwiseId);

@@ -32,5 +32,20 @@ namespace PersonalFinance.Data.External.Splitwise
                 PersonalAmount = user.OwedShare,
             };
         }
+
+        /// <summary>
+        /// Converts a user from Splitwise to a domain object.
+        /// </summary>
+        /// <param name="user">The user from Splitwise.</param>
+        /// <returns>The domain expense object.</returns>
+        public static User ToDomainObject(this DT.User user)
+        {
+            return new User
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+            };
+        }
     }
 }

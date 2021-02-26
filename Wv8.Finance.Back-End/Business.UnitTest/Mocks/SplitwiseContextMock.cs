@@ -16,12 +16,23 @@ namespace Business.UnitTest.Mocks
         /// </summary>
         public List<Expense> Expenses { get; } = new List<Expense>();
 
+        /// <summary>
+        /// The list of mocked users.
+        /// </summary>
+        public List<User> Users { get; } = new List<User>();
+
         /// <inheritdoc />
         public List<Expense> GetExpenses(DateTime updatedAfter)
         {
             return this.Expenses
                 .Where(e => e.UpdatedAt > updatedAfter)
                 .ToList();
+        }
+
+        /// <inheritdoc />
+        public List<User> GetUsers()
+        {
+            return this.Users;
         }
     }
 }

@@ -68,6 +68,20 @@ namespace PersonalFinance.Data.External.Splitwise
                 .ToList();
         }
 
+        /// <inheritdoc/>
+        public List<User> GetUsers()
+        {
+            var request = new RestRequest("get_group", Method.GET);
+
+            request.AddParameter("id", this.groupId);
+
+            return this.Execute<GetGroupResult>(request)
+                .Group
+                .Members
+                .Select(u => u.ToDomainObject())
+                .ToList();
+        }
+
         /// <summary>
         /// Executes a <see cref="RestRequest"/> and parses the response in type <typeparamref name="T"/>.
         /// <typeparam name="T">The class to parse the response to. Class must have a public empty constructor
