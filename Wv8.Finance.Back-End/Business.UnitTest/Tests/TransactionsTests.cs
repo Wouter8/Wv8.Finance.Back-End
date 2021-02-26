@@ -486,10 +486,10 @@
             var (normalAccount, _) = this.context.GenerateAccount();
             this.context.SaveChanges();
 
-            var edit = transaction.ToEdit();
+            var edit = transaction.ToInput();
             edit.AccountId = normalAccount.Id;
 
-            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(edit));
+            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(transaction.Id, edit));
         }
 
         /// <summary>
@@ -505,10 +505,10 @@
             var transaction = this.context.GenerateTransaction(normalAccount, category: category, amount: -50);
             this.context.SaveChanges();
 
-            var edit = transaction.ToEdit();
+            var edit = transaction.ToInput();
             edit.AccountId = account.Id;
 
-            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(edit));
+            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(transaction.Id, edit));
         }
 
         /// <summary>
@@ -525,10 +525,10 @@
                 normalAccount, TransactionType.Transfer, receivingAccount: account, amount: 50);
             this.context.SaveChanges();
 
-            var edit = transaction.ToEdit();
+            var edit = transaction.ToInput();
             edit.ReceivingAccountId = normalAccount2.Id;
 
-            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(edit));
+            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(transaction.Id, edit));
         }
 
         #endregion UpdateTransaction
@@ -1032,9 +1032,8 @@
             var prGroup = transaction.PaymentRequests.Single(pr => pr.Count == 4);
             var prPerson = transaction.PaymentRequests.Single(pr => pr.Count == 1);
 
-            var edit = new EditTransaction
+            var edit = new InputTransaction
             {
-                Id = transaction.Id,
                 Amount = transaction.Amount,
                 Description = transaction.Description,
                 AccountId = transaction.AccountId,
@@ -1059,7 +1058,7 @@
                     },
                 },
             };
-            transaction = this.TransactionManager.UpdateTransaction(edit);
+            transaction = this.TransactionManager.UpdateTransaction(transaction.Id, edit);
             var prIds = transaction.PaymentRequests.Select(pr => pr.Id).ToList();
 
             Assert.DoesNotContain(prPerson.Id, prIds);
@@ -1153,9 +1152,8 @@
             Maybe<int> categoryId,
             Maybe<int> receivingAccountId)
         {
-            var input = new EditTransaction
+            var input = new InputTransaction
             {
-                Id = id,
                 AccountId = accountId,
                 Description = description,
                 DateString = date,
@@ -1165,7 +1163,7 @@
                 PaymentRequests = new List<InputPaymentRequest>(),
             };
 
-            return this.TransactionManager.UpdateTransaction(input);
+            return this.TransactionManager.UpdateTransaction(id, input);
         }
 
         private Transaction CreateTransaction(

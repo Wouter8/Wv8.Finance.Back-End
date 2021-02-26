@@ -4,7 +4,7 @@ namespace PersonalFinance.Common.DataTransfer.Input
     using Wv8.Core;
 
     /// <summary>
-    /// A class containing user input with which a transaction can be created.
+    /// A class containing user input with which a transaction can be created or updated.
     /// </summary>
     public class InputTransaction
     {

@@ -87,7 +87,7 @@ namespace PersonalFinance.Business.Transaction
         }
 
         /// <inheritdoc />
-        public Transaction UpdateTransaction(EditTransaction input)
+        public Transaction UpdateTransaction(int id, InputTransaction input)
         {
             this.validator.Description(input.Description);
             var date = this.validator.DateString(input.DateString, "date");
@@ -98,7 +98,7 @@ namespace PersonalFinance.Business.Transaction
             {
                 var processor = new TransactionProcessor(this.Context);
 
-                var entity = this.Context.Transactions.GetEntity(input.Id);
+                var entity = this.Context.Transactions.GetEntity(id);
 
                 this.validator.AccountType(entity.Account.Type);
                 if (entity.ReceivingAccount != null)

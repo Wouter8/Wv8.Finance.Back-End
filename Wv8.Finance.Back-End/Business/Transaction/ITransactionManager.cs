@@ -36,9 +36,10 @@
         /// <summary>
         /// Updates an transaction.
         /// </summary>
+        /// <param name="id">The identifier of the to be updated transaction.</param>
         /// <param name="input">The input with the values for the to be updated transaction.</param>
         /// <returns>The updated transaction.</returns>
-        Transaction UpdateTransaction(EditTransaction input);
+        Transaction UpdateTransaction(int id, InputTransaction input);
 
         /// <summary>
         /// Creates a new transaction.

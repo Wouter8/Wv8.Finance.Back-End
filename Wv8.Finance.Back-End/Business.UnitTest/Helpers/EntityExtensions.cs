@@ -31,26 +31,6 @@ namespace Business.UnitTest.Helpers
         }
 
         /// <summary>
-        /// Converts a <see cref="TransactionEntity"/> to a <see cref="EditTransaction"/>.
-        /// </summary>
-        /// <param name="transaction">The entity.</param>
-        /// <returns>The converted object.</returns>
-        public static EditTransaction ToEdit(this TransactionEntity transaction)
-        {
-            return new EditTransaction
-            {
-                Id = transaction.Id,
-                Amount = transaction.Amount,
-                Description = transaction.Description,
-                DateString = transaction.Date.ToDateString(),
-                AccountId = transaction.AccountId,
-                CategoryId = transaction.CategoryId.ToMaybe(),
-                ReceivingAccountId = transaction.ReceivingAccountId.ToMaybe(),
-                PaymentRequests = transaction.PaymentRequests.Select(pr => pr.ToInput()).ToList(),
-            };
-        }
-
-        /// <summary>
         /// Converts a <see cref="PaymentRequestEntity"/> to a <see cref="InputPaymentRequest"/>.
         /// </summary>
         /// <param name="paymentRequest">The entity.</param>
