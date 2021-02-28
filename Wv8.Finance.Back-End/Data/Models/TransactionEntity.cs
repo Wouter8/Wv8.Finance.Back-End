@@ -114,6 +114,12 @@ namespace PersonalFinance.Data.Models
         public SplitwiseTransactionEntity SplitwiseTransaction { get; set; }
 
         /// <summary>
+        /// The splits, containing all specifications of amounts in this transaction paid for others.
+        /// This can only have entries when a <see cref="SplitwiseTransaction"/> is linked.
+        /// </summary>
+        public List<SplitDetailEntity> SplitDetails { get; set; }
+
+        /// <summary>
         /// Get the amount of the transaction that is personally due. This can be different from the amount on the
         /// transaction when that amount contains an amount paid for others or paid by others. These differences are
         /// stored in the linked Splitwise transaction or payment request.

@@ -47,5 +47,10 @@ namespace PersonalFinance.Common.DataTransfer.Input
         /// The collection of payment requests that are linked to this transaction.
         /// </summary>
         public List<InputPaymentRequest> PaymentRequests { get; set; }
+
+        /// <summary>
+        /// The collection of splits that are linked to this transaction.
+        /// </summary>
+        public List<InputSplitwiseSplit> SplitwiseSplits { get; set; }
     }
 }

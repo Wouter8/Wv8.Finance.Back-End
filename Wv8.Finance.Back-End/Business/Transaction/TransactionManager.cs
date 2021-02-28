@@ -11,6 +11,7 @@ namespace PersonalFinance.Business.Transaction
     using PersonalFinance.Common.Exceptions;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
+    using PersonalFinance.Data.External.Splitwise;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
@@ -25,13 +26,20 @@ namespace PersonalFinance.Business.Transaction
         private readonly TransactionValidator validator;
 
         /// <summary>
+        /// The Splitwise context.
+        /// </summary>
+        private readonly ISplitwiseContext splitwiseContext;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="TransactionManager"/> class.
         /// </summary>
         /// <param name="context">The database context.</param>
-        public TransactionManager(Context context)
+        /// <param name="splitwiseContext">The Splitwise context.</param>
+        public TransactionManager(Context context, ISplitwiseContext splitwiseContext)
             : base(context)
         {
             this.validator = new TransactionValidator();
+            this.splitwiseContext = splitwiseContext;
         }
 
         /// <inheritdoc />
@@ -122,6 +130,8 @@ namespace PersonalFinance.Business.Transaction
                         throw new ValidationException("Sender account can not be the same as receiver account.");
                 }
 
+                this.validator.SplitwiseSplits(input.SplitwiseSplits, input.Amount, this.splitwiseContext);
+
                 processor.RevertIfProcessed(entity);
 
                 entity.AccountId = input.AccountId;
@@ -133,6 +143,7 @@ namespace PersonalFinance.Business.Transaction
                 entity.Category = category.ToNullIfNone();
                 entity.ReceivingAccountId = input.ReceivingAccountId.ToNullable();
                 entity.ReceivingAccount = receivingAccount.ToNullIfNone();
+                entity.SplitDetails = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity()).ToList();
 
                 var existingPaymentRequestIds = input.PaymentRequests
                     .SelectSome(pr => pr.Id)
@@ -201,6 +212,8 @@ namespace PersonalFinance.Business.Transaction
                         throw new ValidationException("Sender account can not be the same as receiver account.");
                 }
 
+                this.validator.SplitwiseSplits(input.SplitwiseSplits, input.Amount, this.splitwiseContext);
+
                 var entity = new TransactionEntity
                 {
                     Description = input.Description,
@@ -216,12 +229,8 @@ namespace PersonalFinance.Business.Transaction
                     ReceivingAccount = receivingAccount.ToNullIfNone(),
                     NeedsConfirmation = input.NeedsConfirmation,
                     IsConfirmed = input.NeedsConfirmation ? false : (bool?)null,
-                    PaymentRequests = input.PaymentRequests.Select(pr => new PaymentRequestEntity
-                    {
-                        Amount = pr.Amount,
-                        Name = pr.Name,
-                        Count = pr.Count,
-                    }).ToList(),
+                    PaymentRequests = input.PaymentRequests.Select(pr => pr.ToPaymentRequestEntity()).ToList(),
+                    SplitDetails = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity()).ToList(),
                 };
 
                 processor.ProcessIfNeeded(entity);

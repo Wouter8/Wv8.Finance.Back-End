@@ -5,6 +5,8 @@
     using System.Linq;
     using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.Enums;
+    using PersonalFinance.Data.External.Splitwise;
+    using Wv8.Core.EntityFramework;
     using Wv8.Core.Exceptions;
 
     /// <summary>
@@ -106,6 +108,36 @@
                 if (paymentRequest.Amount <= 0)
                     throw new ValidationException("A payment request must have an amount greater than 0.");
             }
+        }
+
+        /// <summary>
+        /// Validates a list of Splitwise splits.
+        /// </summary>
+        /// <param name="splitwiseSplits">The splits to be validated.</param>
+        /// <param name="amount">The total amount of the transaction.</param>
+        /// <param name="splitwiseContext">The Splitwise context.</param>
+        public void SplitwiseSplits(
+            List<InputSplitwiseSplit> splitwiseSplits, decimal amount, ISplitwiseContext splitwiseContext)
+        {
+            if (!splitwiseSplits.Any()) return;
+
+            var sum = splitwiseSplits.Sum(s => s.Amount);
+            if (sum > amount)
+            {
+                throw new ValidationException(
+                    "The amount split can not exceed the total amount of the transaction.");
+            }
+
+            if (splitwiseSplits.Any(s => s.Amount <= 0))
+                throw new ValidationException("Splits must have an amount greater than 0.");
+
+            var inputtedUserIds = splitwiseSplits.Select(s => s.UserId).ToSet();
+            if (inputtedUserIds.Count != splitwiseSplits.Count)
+                throw new ValidationException("A user can only be linked to a single split.");
+
+            var splitwiseUserIds = splitwiseContext.GetUsers().Select(u => u.Id).ToSet();
+            if (!inputtedUserIds.IsSubsetOf(splitwiseUserIds))
+                throw new ValidationException("Unknown Splitwise user(s) specified.");
         }
     }
 }

@@ -24,6 +24,7 @@ namespace PersonalFinance.Data.Extensions
             builder.BuildDailyBalanceEntity();
             builder.BuildPaymentRequestEntity();
             builder.BuildSplitwiseTransactionEntity();
+            builder.BuildSplitDetailEntity();
         }
 
         /// <summary>
@@ -142,7 +143,7 @@ namespace PersonalFinance.Data.Extensions
         }
 
         /// <summary>
-        /// Adds the required properties to the fields of the payment request entity.
+        /// Adds the required properties to the fields of the Splitwise transaction entity.
         /// </summary>
         /// <param name="builder">The builder.</param>
         private static void BuildSplitwiseTransactionEntity(this ModelBuilder builder)
@@ -155,6 +156,20 @@ namespace PersonalFinance.Data.Extensions
             entity.Property(st => st.Description).IsRequired();
             entity.Property(st => st.PersonalAmount).HasPrecision(12, 2);
             entity.Property(st => st.PaidAmount).HasPrecision(12, 2);
+        }
+
+        /// <summary>
+        /// Adds the required properties to the fields of the split detail entity.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        private static void BuildSplitDetailEntity(this ModelBuilder builder)
+        {
+            var entity = builder.Entity<SplitDetailEntity>();
+
+            entity.ToTable("SplitDetails");
+
+            entity.HasKey(sd => new { sd.TransactionId, sd.SplitwiseUserId });
+            entity.Property(sd => sd.Amount).HasPrecision(12, 2);
         }
     }
 }

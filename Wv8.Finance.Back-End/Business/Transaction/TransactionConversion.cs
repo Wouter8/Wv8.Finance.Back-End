@@ -9,6 +9,7 @@
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Comparers;
+    using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
@@ -18,6 +19,35 @@
     /// </summary>
     public static class TransactionConversion
     {
+        /// <summary>
+        /// Converts a payment request input to a payment request entity.
+        /// </summary>
+        /// <param name="paymentRequest">The payment request input.</param>
+        /// <returns>The created entity.</returns>
+        public static PaymentRequestEntity ToPaymentRequestEntity(this InputPaymentRequest paymentRequest)
+        {
+            return new PaymentRequestEntity
+            {
+                Amount = paymentRequest.Amount,
+                Name = paymentRequest.Name,
+                Count = paymentRequest.Count,
+            };
+        }
+
+        /// <summary>
+        /// Converts a split input to a split detail entity.
+        /// </summary>
+        /// <param name="split">The inputted split.</param>
+        /// <returns>The created entity.</returns>
+        public static SplitDetailEntity ToSplitDetailEntity(this InputSplitwiseSplit split)
+        {
+            return new SplitDetailEntity
+            {
+                SplitwiseUserId = split.UserId,
+                Amount = split.Amount,
+            };
+        }
+
         /// <summary>
         /// Converts the entity to a data transfer object.
         /// </summary>
