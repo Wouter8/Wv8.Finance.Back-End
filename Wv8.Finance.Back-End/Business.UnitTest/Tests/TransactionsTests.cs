@@ -980,6 +980,7 @@
                         Name = "Person",
                     },
                 },
+                SplitwiseSplits = new List<InputSplitwiseSplit>(),
             };
 
             var transaction = this.TransactionManager.CreateTransaction(input);
@@ -1026,6 +1027,7 @@
                         Name = "Person",
                     },
                 },
+                SplitwiseSplits = new List<InputSplitwiseSplit>(),
             };
 
             var transaction = this.TransactionManager.CreateTransaction(input);
@@ -1057,6 +1059,7 @@
                         Name = "Person",
                     },
                 },
+                SplitwiseSplits = new List<InputSplitwiseSplit>(),
             };
             transaction = this.TransactionManager.UpdateTransaction(transaction.Id, edit);
             var prIds = transaction.PaymentRequests.Select(pr => pr.Id).ToList();
@@ -1161,6 +1164,7 @@
                 CategoryId = categoryId,
                 ReceivingAccountId = receivingAccountId,
                 PaymentRequests = new List<InputPaymentRequest>(),
+                SplitwiseSplits = new List<InputSplitwiseSplit>(),
             };
 
             return this.TransactionManager.UpdateTransaction(id, input);
@@ -1185,6 +1189,7 @@
                 ReceivingAccountId = receivingAccountId,
                 NeedsConfirmation = needsConfirmation,
                 PaymentRequests = new List<InputPaymentRequest>(),
+                SplitwiseSplits = new List<InputSplitwiseSplit>(),
             };
 
             return this.TransactionManager.CreateTransaction(input);

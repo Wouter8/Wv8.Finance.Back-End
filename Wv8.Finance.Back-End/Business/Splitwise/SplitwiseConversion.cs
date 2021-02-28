@@ -110,6 +110,7 @@ namespace PersonalFinance.Business.Splitwise
                 SplitwiseTransactionId = entity.Id,
                 SplitwiseTransaction = entity,
                 PaymentRequests = new List<PaymentRequestEntity>(),
+                SplitDetails = new List<SplitDetailEntity>(),
             };
 
             // If the transaction is (partly) mine, then create an expense transaction.

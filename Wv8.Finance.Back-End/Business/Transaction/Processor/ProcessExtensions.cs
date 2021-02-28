@@ -99,6 +99,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                 IsConfirmed = transaction.NeedsConfirmation ? false : (bool?)null,
                 Type = transaction.Type,
                 PaymentRequests = new List<PaymentRequestEntity>(),
+                SplitDetails = new List<SplitDetailEntity>(),
             };
             transaction.LastOccurence = transaction.NextOccurence.Value;
 

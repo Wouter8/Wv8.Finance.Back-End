@@ -53,7 +53,7 @@ namespace PersonalFinance.Business.Splitwise
         }
 
         /// <inheritdoc />
-        public Transaction ImportTransaction(int splitwiseId, int categoryId)
+        public Transaction CompleteTransactionImport(int splitwiseId, int categoryId)
         {
             var splitwiseTransaction = this.Context.SplitwiseTransactions.GetEntity(splitwiseId);
             var splitwiseAccount = this.Context.Accounts.GetSplitwiseEntity();
@@ -92,7 +92,10 @@ namespace PersonalFinance.Business.Splitwise
 
             // Get the new and updated expenses from Splitwise.
             var timestamp = DateTime.UtcNow;
-            var newExpenses = this.splitwiseContext.GetExpenses(lastRan);
+            var newExpenses = this.splitwiseContext.GetExpenses(lastRan)
+                // Only import expenses where the user did not pay, since these are not managed via the finance application.
+                .Where(e => e.PaidAmount == 0)
+                .ToList();
             var newExpenseIds = newExpenses.Select(t => t.Id).ToSet();
 
             // Load relevant entities and store them in a dictionary.

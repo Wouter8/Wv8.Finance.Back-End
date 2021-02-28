@@ -74,11 +74,11 @@
         #region ImportTransaction
 
         /// <summary>
-        /// Tests method <see cref="SplitwiseManager.ImportTransaction"/>.
+        /// Tests method <see cref="SplitwiseManager.CompleteTransactionImport"/>.
         /// Verifies that an exception is thrown if the Splitwise transaction contains a paid amount.
         /// </summary>
         [Fact]
-        public void Test_ImportTransaction_PaidByMe()
+        public void Test_CompleteTransactionImport_PaidByMe()
         {
             var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
             var category = this.context.GenerateCategory();
@@ -89,15 +89,15 @@
             this.context.SaveChanges();
 
             Assert.Throws<ValidationException>(() =>
-                this.SplitwiseManager.ImportTransaction(splitwiseTransaction.Id, category.Id));
+                this.SplitwiseManager.CompleteTransactionImport(splitwiseTransaction.Id, category.Id));
         }
 
         /// <summary>
-        /// Tests method <see cref="SplitwiseManager.ImportTransaction"/>.
+        /// Tests method <see cref="SplitwiseManager.CompleteTransactionImport"/>.
         /// Verifies that a transaction is correctly imported when someone paid for me.
         /// </summary>
         [Fact]
-        public void Test_ImportTransaction()
+        public void Test_CompleteTransactionImport()
         {
             var (account, _) = this.context.GenerateAccount();
             var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
@@ -108,7 +108,7 @@
 
             this.context.SaveChanges();
 
-            var transaction = this.SplitwiseManager.ImportTransaction(splitwiseTransaction.Id, category.Id);
+            var transaction = this.SplitwiseManager.CompleteTransactionImport(splitwiseTransaction.Id, category.Id);
 
             Assert.Equal(-splitwiseTransaction.PersonalAmount, transaction.PersonalAmount);
             Assert.Equal(-splitwiseTransaction.PaidAmount, transaction.Amount);

@@ -30,7 +30,7 @@ namespace PersonalFinance.Business.Splitwise
         /// <param name="splitwiseId">The identifier of the Splitwise transaction.</param>
         /// <param name="categoryId">The identifier of the category.</param>
         /// <returns>The imported transaction.</returns>
-        public Transaction ImportTransaction(int splitwiseId, int categoryId);
+        public Transaction CompleteTransactionImport(int splitwiseId, int categoryId);
 
         /// <summary>
         /// Imports new/updated transactions from Splitwise.
