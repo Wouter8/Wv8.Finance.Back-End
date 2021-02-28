@@ -135,7 +135,7 @@
                     {
                         var splits = new Split
                             {
-                                UserId = 0, // TODO: this should be Maybe where it is None for the user.
+                                UserId = Maybe<int>.None,
                                 Amount = personalAmount,
                             }
                             .Enumerate()
@@ -210,7 +210,14 @@
 
                     // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
                     if (transaction.SplitwiseTransactionId.HasValue)
+                    {
                         this.Revert(transaction.SplitwiseTransaction);
+
+                        // If the transaction has splits, then it is defined in this application and the expense should
+                        // be removed.
+                        if (transaction.SplitDetails.Any())
+                            this.splitwiseContext.DeleteExpense(transaction.SplitwiseTransactionId.Value);
+                    }
 
                     break;
                 case TransactionType.Income:

@@ -23,6 +23,12 @@ namespace PersonalFinance.Data.External.Splitwise
             List<Split> splits);
 
         /// <summary>
+        /// Deletes an expense in Splitwise.
+        /// </summary>
+        /// <param name="id">The identifier of the expense in Splitwise.</param>
+        public void DeleteExpense(int id);
+
+        /// <summary>
         /// Gets all expenses which were updated/created after the specified timestamp.
         /// </summary>
         /// <param name="updatedAfter">The timestamp after which an expense must have been created/updated to be

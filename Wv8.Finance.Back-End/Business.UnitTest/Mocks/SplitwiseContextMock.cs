@@ -29,6 +29,12 @@ namespace Business.UnitTest.Mocks
         }
 
         /// <inheritdoc />
+        public void DeleteExpense(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
         public List<Expense> GetExpenses(DateTime updatedAfter)
         {
             return this.Expenses

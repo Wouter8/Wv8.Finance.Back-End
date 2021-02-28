@@ -11,6 +11,7 @@ namespace PersonalFinance.Data.External.Splitwise
     using PersonalFinance.Data.External.Splitwise.RequestResults;
     using RestSharp;
     using RestSharp.Serializers.NewtonsoftJson;
+    using Wv8.Core;
 
     /// <summary>
     /// A class containing functionality to communicate with Splitwise.
@@ -63,10 +64,11 @@ namespace PersonalFinance.Data.External.Splitwise
                 var split = item.split;
                 var index = item.i;
 
+                var splitUserId = split.UserId.ValueOrElse(this.userId);
                 var paidAmount = split.UserId == this.userId ? splits.Sum(s => s.Amount) : 0;
 
                 request
-                    .AddParameter($"users__{index}__user_id", split.UserId)
+                    .AddParameter($"users__{index}__user_id", splitUserId)
                     .AddParameter($"users__{index}__owed_share", split.Amount)
                     .AddParameter($"users__{index}__paid_share", paidAmount);
             }
@@ -75,6 +77,14 @@ namespace PersonalFinance.Data.External.Splitwise
                 .Expenses
                 .Single()
                 .ToDomainObject(this.userId);
+        }
+
+        /// <inheritdoc/>
+        public void DeleteExpense(int id)
+        {
+            var request = new RestRequest($"delete_expense/{id}", Method.POST);
+
+            this.Execute<VoidResult>(request);
         }
 
         /// <inheritdoc/>
