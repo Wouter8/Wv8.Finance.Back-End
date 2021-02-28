@@ -170,6 +170,11 @@ namespace PersonalFinance.Data.Extensions
 
             entity.HasKey(sd => new { sd.TransactionId, sd.SplitwiseUserId });
             entity.Property(sd => sd.Amount).HasPrecision(12, 2);
+
+            builder.Entity<TransactionEntity>()
+                .HasMany(t => t.SplitDetails)
+                .WithOne()
+                .HasForeignKey(sd => sd.TransactionId);
         }
     }
 }
