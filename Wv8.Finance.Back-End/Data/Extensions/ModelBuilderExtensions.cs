@@ -1,5 +1,6 @@
 namespace PersonalFinance.Data.Extensions
 {
+    using System;
     using Microsoft.EntityFrameworkCore;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Models;
@@ -25,6 +26,7 @@ namespace PersonalFinance.Data.Extensions
             builder.BuildPaymentRequestEntity();
             builder.BuildSplitwiseTransactionEntity();
             builder.BuildSplitDetailEntity();
+            builder.BuildSynchronizationTimesEntity();
         }
 
         /// <summary>
@@ -175,6 +177,19 @@ namespace PersonalFinance.Data.Extensions
                 .HasMany(t => t.SplitDetails)
                 .WithOne()
                 .HasForeignKey(sd => sd.TransactionId);
+        }
+
+        /// <summary>
+        /// Adds the required properties to the fields of the synchronization times entity.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        private static void BuildSynchronizationTimesEntity(this ModelBuilder builder)
+        {
+            var entity = builder.Entity<SynchronizationTimesEntity>();
+
+            entity.ToTable("SynchronizationTimes");
+
+            entity.HasData(new SynchronizationTimesEntity { Id = 1, SplitwiseLastRun = DateTime.MinValue });
         }
     }
 }

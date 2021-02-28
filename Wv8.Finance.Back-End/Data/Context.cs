@@ -66,6 +66,11 @@
         /// </summary>
         public DbSet<SplitwiseTransactionEntity> SplitwiseTransactions { get; set; }
 
+        /// <summary>
+        /// The set of synchronization times. This should only contain a single entry.
+        /// </summary>
+        public DbSet<SynchronizationTimesEntity> SynchronizationTimes { get; set; }
+
         /// <inheritdoc/>
         public DateTime CreationTime { get; set; }
 

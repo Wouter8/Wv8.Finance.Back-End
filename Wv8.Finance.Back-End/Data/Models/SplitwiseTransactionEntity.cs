@@ -48,7 +48,6 @@ namespace PersonalFinance.Data.Models
 
         /// <summary>
         /// The timestamp at which this transaction was last modified in Splitwise.
-        /// The highest value of all imported Splitwise transactions is used to always get new Splitwise transactions.
         /// </summary>
         public DateTime UpdatedAt { get; set; }
 

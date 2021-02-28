@@ -1,5 +1,6 @@
 namespace PersonalFinance.Data.Extensions
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
@@ -312,5 +313,19 @@ namespace PersonalFinance.Data.Extensions
         }
 
         #endregion Retrieve Extensions
+
+        #region Data Extensions
+
+        /// <summary>
+        /// Sets the synchronization time for Splitwise synchronization to the provided timestamp.
+        /// </summary>
+        /// <param name="context">The database context.</param>
+        /// <param name="timestamp">The timestamp.</param>
+        public static void SetSplitwiseSynchronizationTime(this Context context, DateTime timestamp)
+        {
+            context.SynchronizationTimes.Single().SplitwiseLastRun = timestamp;
+        }
+
+        #endregion Data Extensions
     }
 }

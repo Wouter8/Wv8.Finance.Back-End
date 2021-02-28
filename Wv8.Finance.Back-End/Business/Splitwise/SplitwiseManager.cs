@@ -88,21 +88,13 @@ namespace PersonalFinance.Business.Splitwise
         /// <inheritdoc />
         public void ImportFromSplitwise()
         {
-            // We request all expenses from Splitwise which were updated after the last known updated at timestamp.
-            // This way we always get all new expenses.
-            var latestUpdated = this.Context.SplitwiseTransactions
-                .Select(t => t.UpdatedAt)
-                .OrderByDescending(t => t)
-                .Take(1)
-                .AsEnumerable()
-                .SingleOrNone()
-                .ValueOrElse(DateTime.MinValue);
+            var lastRan = this.Context.SynchronizationTimes
+                .Single()
+                .SplitwiseLastRun;
 
             // Get the new and updated expenses from Splitwise.
-            var newExpenses = this.splitwiseContext.GetExpenses(latestUpdated)
-                // Filter expenses for which the user paid, as these are managed from this application.
-                .Where(e => e.PaidAmount == 0)
-                .ToList();
+            var timestamp = DateTime.UtcNow;
+            var newExpenses = this.splitwiseContext.GetExpenses(lastRan);
             var newExpenseIds = newExpenses.Select(t => t.Id).ToSet();
 
             // Load relevant entities and store them in a dictionary.
@@ -121,10 +113,20 @@ namespace PersonalFinance.Business.Splitwise
             {
                 var processor = new TransactionProcessor(this.Context);
 
+                this.Context.SetSplitwiseSynchronizationTime(timestamp);
+
                 foreach (var newExpense in newExpenses)
                 {
                     var splitwiseTransactionMaybe = splitwiseTransactionsById.TryGetValue(newExpense.Id);
-                    var knownSplitwiseTransaction = splitwiseTransactionMaybe.IsSome;
+
+                    if (splitwiseTransactionMaybe.IsSome &&
+                        splitwiseTransactionMaybe.Value.UpdatedAt == newExpense.UpdatedAt)
+                    {
+                        // The last updated at is equal to the one stored, meaning that the latest update was
+                        // triggered by this application and is already handled.
+                        continue;
+                    }
+
                     var splitwiseTransaction = splitwiseTransactionMaybe.ValueOrElse(new SplitwiseTransactionEntity());
                     var transaction = transactionsBySplitwiseId.TryGetValue(splitwiseTransaction.Id);
 
@@ -170,7 +172,7 @@ namespace PersonalFinance.Business.Splitwise
                     }
 
                     // If it is a new expense, then add it to the context.
-                    if (!knownSplitwiseTransaction)
+                    if (splitwiseTransactionMaybe.IsNone)
                         this.Context.SplitwiseTransactions.Add(splitwiseTransaction);
 
                     // If the transaction existed and has not yet been imported, then the transaction is already updated above.
