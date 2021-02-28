@@ -2,6 +2,8 @@ namespace PersonalFinance.Data.External.Splitwise
 {
     using System;
     using System.Collections.Generic;
+    using NodaTime;
+    using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Data.External.Splitwise.Models;
 
     /// <summary>
@@ -9,6 +11,18 @@ namespace PersonalFinance.Data.External.Splitwise
     /// </summary>
     public interface ISplitwiseContext
     {
+        /// <summary>
+        /// Creates an expense in Splitwise.
+        /// </summary>
+        /// <param name="description">The description.</param>
+        /// <param name="date">The date.</param>
+        /// <param name="splits">The splits. This should also contain an entry for the user.</param>
+        /// <returns>The created expense.</returns>
+        public Expense CreateExpense(
+            string description,
+            LocalDate date,
+            List<Split> splits);
+
         /// <summary>
         /// Gets all expenses which were updated/created after the specified timestamp.
         /// </summary>

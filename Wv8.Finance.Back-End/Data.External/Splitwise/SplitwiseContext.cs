@@ -5,6 +5,7 @@ namespace PersonalFinance.Data.External.Splitwise
     using System.Linq;
     using System.Net;
     using Microsoft.Extensions.Options;
+    using NodaTime;
     using PersonalFinance.Common;
     using PersonalFinance.Data.External.Splitwise.Models;
     using PersonalFinance.Data.External.Splitwise.RequestResults;
@@ -47,6 +48,36 @@ namespace PersonalFinance.Data.External.Splitwise
         }
 
         /// <inheritdoc/>
+        public Expense CreateExpense(string description, LocalDate date, List<Split> splits)
+        {
+            var dateString = date.ToDateTimeUnspecified().ToString("O");
+
+            var request = new RestRequest("create_expense", Method.POST);
+
+            request
+                .AddParameter("group_id", this.groupId)
+                .AddParameter("description", description)
+                .AddParameter("date", dateString);
+            foreach (var item in splits.Select((split, i) => new { i, split }))
+            {
+                var split = item.split;
+                var index = item.i;
+
+                var paidAmount = split.UserId == this.userId ? splits.Sum(s => s.Amount) : 0;
+
+                request
+                    .AddParameter($"users__{index}__user_id", split.UserId)
+                    .AddParameter($"users__{index}__owed_share", split.Amount)
+                    .AddParameter($"users__{index}__paid_share", paidAmount);
+            }
+
+            return this.Execute<CreateExpenseResult>(request)
+                .Expenses
+                .Single()
+                .ToDomainObject(this.userId);
+        }
+
+        /// <inheritdoc/>
         public List<Expense> GetExpenses(DateTime updatedAfter)
         {
             var updatedAfterString = updatedAfter.ToString("O");
@@ -61,9 +92,6 @@ namespace PersonalFinance.Data.External.Splitwise
 
             return this.Execute<GetExpensesResult>(request)
                 .Expenses
-                // Only return expenses for the user where someone else paid.
-                // Expenses where the user paid should be added in the Finance application.
-                .Where(e => e.Users.Any(u => u.UserId == this.userId && u.PaidShare > 0))
                 .Select(e => e.ToDomainObject(this.userId))
                 .ToList();
         }

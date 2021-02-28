@@ -3,6 +3,7 @@ namespace Business.UnitTest.Mocks
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using NodaTime;
     using PersonalFinance.Data.External.Splitwise;
     using PersonalFinance.Data.External.Splitwise.Models;
 
@@ -20,6 +21,12 @@ namespace Business.UnitTest.Mocks
         /// The list of mocked users.
         /// </summary>
         public List<User> Users { get; } = new List<User>();
+
+        /// <inheritdoc />
+        public Expense CreateExpense(string description, LocalDate date, List<Split> splits)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <inheritdoc />
         public List<Expense> GetExpenses(DateTime updatedAfter)
