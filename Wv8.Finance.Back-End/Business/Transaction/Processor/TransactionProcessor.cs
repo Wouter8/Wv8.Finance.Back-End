@@ -186,7 +186,7 @@
                     break;
                 case TransactionType.Transfer:
                     var (receiverHistoricalBalances, _) =
-                        this.GetBalanceEntriesToEdit(transaction.AccountId, transaction.Date);
+                        this.GetBalanceEntriesToEdit(transaction.ReceivingAccountId.Value, transaction.Date);
 
                     foreach (var historicalBalance in historicalBalances)
                         historicalBalance.Balance += transaction.Amount;
