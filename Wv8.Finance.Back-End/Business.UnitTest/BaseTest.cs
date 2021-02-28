@@ -31,7 +31,7 @@ namespace Business.UnitTest
     /// A class with basic functionality for tests.
     /// </summary>
     [Collection("Tests")]
-    public abstract class BaseTest : BeforeAfterTestAttribute, IDisposable
+    public abstract class BaseTest : IDisposable
     {
         /// <summary>
         /// The database context to assert things by manually querying the database.
