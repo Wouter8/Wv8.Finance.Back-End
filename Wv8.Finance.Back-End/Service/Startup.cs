@@ -154,8 +154,9 @@ namespace PersonalFinance.Service
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
             using var context = serviceScope.ServiceProvider.GetService<Context>();
+            var splitwiseContext = serviceScope.ServiceProvider.GetService<ISplitwiseContext>();
 
-            var processor = new TransactionProcessor(context);
+            var processor = new TransactionProcessor(context, splitwiseContext);
             processor.ProcessAll();
         }
     }

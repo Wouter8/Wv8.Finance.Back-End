@@ -10,7 +10,6 @@ namespace Business.UnitTest.Helpers
     using PersonalFinance.Data;
     using PersonalFinance.Data.External.Splitwise.Models;
     using PersonalFinance.Data.Models;
-    using Wv8.Core.Collections;
 
     /// <summary>
     /// A class containing extension methods for a <see cref="Context"/> with which entities can be generated.

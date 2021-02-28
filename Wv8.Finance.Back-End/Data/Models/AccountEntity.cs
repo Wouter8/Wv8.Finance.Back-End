@@ -1,6 +1,5 @@
 ﻿namespace PersonalFinance.Data.Models
 {
-    using System.Collections.Generic;
     using PersonalFinance.Common.Enums;
 
     /// <summary>

@@ -4,10 +4,13 @@
     using System.Collections.Generic;
     using System.Linq;
     using NodaTime;
+    using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
+    using PersonalFinance.Data.External.Splitwise;
+    using PersonalFinance.Data.External.Splitwise.Models;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
@@ -18,12 +21,19 @@
     public class TransactionProcessor : BaseManager
     {
         /// <summary>
+        /// The splitwise context.
+        /// </summary>
+        private readonly ISplitwiseContext splitwiseContext;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="TransactionProcessor"/> class.
         /// </summary>
         /// <param name="context">The database context.</param>
-        public TransactionProcessor(Context context)
+        /// <param name="splitwiseContext">The Splitwise context.</param>
+        public TransactionProcessor(Context context, ISplitwiseContext splitwiseContext)
             : base(context)
         {
+            this.splitwiseContext = splitwiseContext;
         }
 
         /// <summary>
@@ -118,6 +128,30 @@
                     var budgets = this.Context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
                     foreach (var budget in budgets)
                         budget.Spent += Math.Abs(personalAmount);
+
+                    // If Splitwise splits are defined, but there is no linked Splitwise transaction yet, then create
+                    // the transaction in Splitwise.
+                    if (transaction.SplitDetails.Any() && !transaction.SplitwiseTransactionId.HasValue)
+                    {
+                        var splits = new Split
+                            {
+                                UserId = 0, // TODO: this should be Maybe where it is None for the user.
+                                Amount = personalAmount,
+                            }
+                            .Enumerate()
+                            .Concat(
+                                transaction.SplitDetails.Select(sd => new Split
+                                {
+                                    UserId = sd.SplitwiseUserId,
+                                    Amount = sd.Amount,
+                                }))
+                            .ToList();
+
+                        var expense = this.splitwiseContext.CreateExpense(transaction.Description, transaction.Date, splits);
+
+                        transaction.SplitwiseTransactionId = expense.Id;
+                        transaction.SplitwiseTransaction = expense.ToSplitwiseTransactionEntity();
+                    }
 
                     // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
                     if (transaction.SplitwiseTransactionId.HasValue)

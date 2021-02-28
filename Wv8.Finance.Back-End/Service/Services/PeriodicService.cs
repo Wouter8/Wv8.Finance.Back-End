@@ -7,6 +7,7 @@
     using Microsoft.Extensions.Hosting;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Data;
+    using PersonalFinance.Data.External.Splitwise;
 
     /// <summary>
     /// A class for a service which handles a periodic run to process all needing objects.
@@ -66,7 +67,9 @@
                 .CreateScope();
 
             using var context = serviceScope.ServiceProvider.GetService<Context>();
-            var processor = new TransactionProcessor(context);
+            var splitwiseContext = serviceScope.ServiceProvider.GetService<ISplitwiseContext>();
+
+            var processor = new TransactionProcessor(context, splitwiseContext);
 
             processor.ProcessAll();
         }

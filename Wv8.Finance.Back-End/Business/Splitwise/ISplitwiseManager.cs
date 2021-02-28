@@ -2,7 +2,6 @@ namespace PersonalFinance.Business.Splitwise
 {
     using System.Collections.Generic;
     using PersonalFinance.Common.DataTransfer.Output;
-    using Wv8.Core;
 
     /// <summary>
     /// An interface for a manager with functionality related to Splitwise.

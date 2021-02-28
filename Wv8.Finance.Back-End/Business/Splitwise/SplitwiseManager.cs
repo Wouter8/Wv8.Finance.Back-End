@@ -9,8 +9,6 @@ namespace PersonalFinance.Business.Splitwise
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.External.Splitwise;
-    using PersonalFinance.Data.Models;
-    using Wv8.Core;
     using Wv8.Core.Collections;
     using Wv8.Core.EntityFramework;
     using Wv8.Core.Exceptions;
@@ -64,7 +62,7 @@ namespace PersonalFinance.Business.Splitwise
 
             return this.ConcurrentInvoke(() =>
             {
-                var processor = new TransactionProcessor(this.Context);
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
                 // If the user paid anything for the transaction, then create an expense transaction for the default account.
                 if (splitwiseTransaction.PaidAmount > 0)
@@ -111,7 +109,7 @@ namespace PersonalFinance.Business.Splitwise
 
             this.ConcurrentInvoke(() =>
             {
-                var processor = new TransactionProcessor(this.Context);
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
                 this.Context.SetSplitwiseSynchronizationTime(timestamp);
 
@@ -127,8 +125,7 @@ namespace PersonalFinance.Business.Splitwise
                         continue;
                     }
 
-                    var splitwiseTransaction = splitwiseTransactionMaybe.ValueOrElse(new SplitwiseTransactionEntity());
-                    var transaction = transactionsBySplitwiseId.TryGetValue(splitwiseTransaction.Id);
+                    var transaction = transactionsBySplitwiseId.TryGetValue(newExpense.Id);
 
                     // Revert the transaction before updating values.
                     if (transaction.IsSome)
@@ -139,14 +136,10 @@ namespace PersonalFinance.Business.Splitwise
                         this.Context.Transactions.Remove(transaction.Value);
                     }
 
-                    // Set all fields on new or known expense.
-                    splitwiseTransaction.Id = newExpense.Id;
-                    splitwiseTransaction.Date = newExpense.Date;
-                    splitwiseTransaction.Description = newExpense.Description;
-                    splitwiseTransaction.IsDeleted = newExpense.IsDeleted;
-                    splitwiseTransaction.UpdatedAt = newExpense.UpdatedAt;
-                    splitwiseTransaction.PaidAmount = newExpense.PaidAmount;
-                    splitwiseTransaction.PersonalAmount = newExpense.PersonalAmount;
+                    var splitwiseTransaction = splitwiseTransactionMaybe
+                        .Match(
+                            sw => sw.UpdateValues(newExpense),
+                            newExpense.ToSplitwiseTransactionEntity());
 
                     // If the transaction was already completely imported, then also update the transaction.
                     if (transaction.IsSome)

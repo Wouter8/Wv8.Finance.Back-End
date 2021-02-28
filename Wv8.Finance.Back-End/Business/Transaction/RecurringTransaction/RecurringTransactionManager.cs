@@ -8,6 +8,7 @@
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
+    using PersonalFinance.Data.External.Splitwise;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.EntityFramework;
@@ -25,13 +26,20 @@
         private readonly TransactionValidator validator;
 
         /// <summary>
+        /// The Splitwise context.
+        /// </summary>
+        private readonly ISplitwiseContext splitwiseContext;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="RecurringTransactionManager"/> class.
         /// </summary>
         /// <param name="context">The database context.</param>
-        public RecurringTransactionManager(Context context)
+        /// <param name="splitwiseContext">The Splitwise context.</param>
+        public RecurringTransactionManager(Context context, ISplitwiseContext splitwiseContext)
             : base(context)
         {
             this.validator = new TransactionValidator();
+            this.splitwiseContext = splitwiseContext;
         }
 
         /// <inheritdoc />
@@ -89,7 +97,7 @@
 
             return this.ConcurrentInvoke(() =>
             {
-                var processor = new TransactionProcessor(this.Context);
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
                 var entity = this.Context.RecurringTransactions.GetEntity(id);
                 if (type != entity.Type) // TODO: Add test for this case
@@ -170,7 +178,7 @@
 
             return this.ConcurrentInvoke(() =>
             {
-                var processor = new TransactionProcessor(this.Context);
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
                 var account = this.Context.Accounts.GetEntity(accountId, false);
 
@@ -218,7 +226,7 @@
         {
             this.ConcurrentInvoke(() =>
             {
-                var processor = new TransactionProcessor(this.Context);
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
                 var entity = this.Context.RecurringTransactions.GetEntity(id);
 

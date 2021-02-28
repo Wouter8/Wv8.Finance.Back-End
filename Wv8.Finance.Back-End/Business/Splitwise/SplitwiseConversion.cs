@@ -4,7 +4,6 @@ namespace PersonalFinance.Business.Splitwise
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Models;
-    using Wv8.Core;
     using SW = PersonalFinance.Data.External.Splitwise.Models;
 
     /// <summary>
@@ -12,6 +11,45 @@ namespace PersonalFinance.Business.Splitwise
     /// </summary>
     public static class SplitwiseConversion
     {
+        /// <summary>
+        /// Updates the values of a Splitwise transaction with the values from an expense.
+        /// </summary>
+        /// <param name="entity">The Splitwise transaction entity to be updated.</param>
+        /// <param name="expense">The expense.</param>
+        /// <returns>The updated entity.</returns>
+        public static SplitwiseTransactionEntity UpdateValues(this SplitwiseTransactionEntity entity, SW.Expense expense)
+        {
+            entity.Id = expense.Id;
+            entity.Date = expense.Date;
+            entity.Description = expense.Description;
+            entity.IsDeleted = expense.IsDeleted;
+            entity.UpdatedAt = expense.UpdatedAt;
+            entity.PaidAmount = expense.PaidAmount;
+            entity.PersonalAmount = expense.PersonalAmount;
+
+            return entity;
+        }
+
+        /// <summary>
+        /// Converts an expense from Splitwise to a Splitwise transaction entity.
+        /// </summary>
+        /// <param name="expense">The expense.</param>
+        /// <returns>The created entity.</returns>
+        public static SplitwiseTransactionEntity ToSplitwiseTransactionEntity(this SW.Expense expense)
+        {
+            return new SplitwiseTransactionEntity
+            {
+                Id = expense.Id,
+                Date = expense.Date,
+                Description = expense.Description,
+                Imported = false,
+                IsDeleted = expense.IsDeleted,
+                PaidAmount = expense.PaidAmount,
+                PersonalAmount = expense.PersonalAmount,
+                UpdatedAt = expense.UpdatedAt,
+            };
+        }
+
         /// <summary>
         /// Converts the entity to a data transfer object.
         /// </summary>

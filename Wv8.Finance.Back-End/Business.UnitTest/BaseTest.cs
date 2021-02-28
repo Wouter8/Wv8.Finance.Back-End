@@ -112,7 +112,7 @@ namespace Business.UnitTest
         /// <summary>
         /// The transaction processor.
         /// </summary>
-        protected TransactionProcessor TransactionProcessor => new (this.context);
+        protected TransactionProcessor TransactionProcessor => new (this.context, this.SplitwiseContextMock);
 
         /// <summary>
         /// The Splitwise context mock.

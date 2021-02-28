@@ -104,7 +104,7 @@ namespace PersonalFinance.Business.Transaction
 
             return this.ConcurrentInvoke(() =>
             {
-                var processor = new TransactionProcessor(this.Context);
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
                 var entity = this.Context.Transactions.GetEntity(id);
 
@@ -157,7 +157,7 @@ namespace PersonalFinance.Business.Transaction
                 foreach (var inputPr in input.PaymentRequests)
                 {
                     var updatedPr = inputPr.Id
-                        .Select(id => existingPaymentRequests[id])
+                        .Select(prId => existingPaymentRequests[prId])
                         .ValueOrElse(new PaymentRequestEntity());
 
                     if (updatedPr.PaidCount > inputPr.Count)
@@ -195,7 +195,7 @@ namespace PersonalFinance.Business.Transaction
 
             return this.ConcurrentInvoke(() =>
             {
-                var processor = new TransactionProcessor(this.Context);
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
                 var account = this.Context.Accounts.GetEntity(input.AccountId, false);
 
@@ -250,7 +250,7 @@ namespace PersonalFinance.Business.Transaction
 
             return this.ConcurrentInvoke(() =>
             {
-                var processor = new TransactionProcessor(this.Context);
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
                 var entity = this.Context.Transactions.GetEntity(id);
                 this.validator.Amount(amount, entity.Type);
@@ -282,7 +282,7 @@ namespace PersonalFinance.Business.Transaction
         {
             this.ConcurrentInvoke(() =>
             {
-                var processor = new TransactionProcessor(this.Context);
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
                 var entity = this.Context.Transactions.GetEntity(id);
 

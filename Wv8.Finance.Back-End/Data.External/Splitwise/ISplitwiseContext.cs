@@ -3,7 +3,6 @@ namespace PersonalFinance.Data.External.Splitwise
     using System;
     using System.Collections.Generic;
     using NodaTime;
-    using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Data.External.Splitwise.Models;
 
     /// <summary>

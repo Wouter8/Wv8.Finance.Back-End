@@ -2,14 +2,12 @@
 {
     using System;
     using System.Linq;
-    using System.Threading;
     using Business.UnitTest.Helpers;
     using NodaTime;
     using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Extensions;
-    using Wv8.Core;
     using Wv8.Core.Collections;
     using Wv8.Core.Exceptions;
     using Xunit;
