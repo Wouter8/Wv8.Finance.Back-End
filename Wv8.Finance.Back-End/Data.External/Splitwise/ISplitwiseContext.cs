@@ -13,11 +13,13 @@ namespace PersonalFinance.Data.External.Splitwise
         /// <summary>
         /// Creates an expense in Splitwise.
         /// </summary>
+        /// <param name="totalAmount">The total amount of the transaction.</param>
         /// <param name="description">The description.</param>
         /// <param name="date">The date.</param>
         /// <param name="splits">The splits. This should also contain an entry for the user.</param>
         /// <returns>The created expense.</returns>
         public Expense CreateExpense(
+            decimal totalAmount,
             string description,
             LocalDate date,
             List<Split> splits);

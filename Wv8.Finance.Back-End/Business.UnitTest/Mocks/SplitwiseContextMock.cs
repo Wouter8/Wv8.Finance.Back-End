@@ -13,6 +13,11 @@ namespace Business.UnitTest.Mocks
     public class SplitwiseContextMock : ISplitwiseContext
     {
         /// <summary>
+        /// The identifier used for the next transaction.
+        /// </summary>
+        private static int nextExpenseId = 0;
+
+        /// <summary>
         /// The list of mocked expenses.
         /// </summary>
         public List<Expense> Expenses { get; } = new List<Expense>();
@@ -23,15 +28,30 @@ namespace Business.UnitTest.Mocks
         public List<User> Users { get; } = new List<User>();
 
         /// <inheritdoc />
-        public Expense CreateExpense(string description, LocalDate date, List<Split> splits)
+        public Expense CreateExpense(decimal totalAmount, string description, LocalDate date, List<Split> splits)
         {
-            throw new NotImplementedException();
+            var totalAmountPositive = Math.Abs(totalAmount);
+            var personalAmount = totalAmountPositive - splits.Sum(s => s.Amount);
+            var expense = new Expense
+            {
+                Id = ++nextExpenseId,
+                Date = date,
+                Description = description,
+                PaidAmount = totalAmountPositive,
+                PersonalAmount = personalAmount,
+                UpdatedAt = DateTime.Now,
+                IsDeleted = false,
+            };
+
+            this.Expenses.Add(expense);
+
+            return expense;
         }
 
         /// <inheritdoc />
         public void DeleteExpense(int id)
         {
-            throw new NotImplementedException();
+            this.Expenses.RemoveAll(e => e.Id == id);
         }
 
         /// <inheritdoc />

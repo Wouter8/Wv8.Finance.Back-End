@@ -122,7 +122,7 @@
             if (!splitwiseSplits.Any()) return;
 
             var sum = splitwiseSplits.Sum(s => s.Amount);
-            if (sum > amount)
+            if (sum > Math.Abs(amount))
             {
                 throw new ValidationException(
                     "The amount split can not exceed the total amount of the transaction.");

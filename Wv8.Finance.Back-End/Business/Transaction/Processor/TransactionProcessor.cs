@@ -116,6 +116,28 @@
             if (newHistoricalEntry.IsSome)
                 addedDailyBalances.Add(newHistoricalEntry.Value);
 
+            // If Splitwise splits are defined, but there is no linked Splitwise transaction yet, then create
+            // the transaction in Splitwise.
+            if (transaction.SplitDetails.Any() && !transaction.SplitwiseTransactionId.HasValue)
+            {
+                var splits = transaction.SplitDetails
+                    .Select(sd => new Split
+                        {
+                            UserId = sd.SplitwiseUserId,
+                            Amount = sd.Amount,
+                        })
+                    .ToList();
+
+                var expense = this.splitwiseContext.CreateExpense(
+                    transaction.Amount, transaction.Description, transaction.Date, splits);
+
+                transaction.SplitwiseTransactionId = expense.Id;
+                transaction.SplitwiseTransaction = expense.ToSplitwiseTransactionEntity();
+
+                // The category is known at this point, so set imported to true.
+                transaction.SplitwiseTransaction.Imported = true;
+            }
+
             var personalAmount = transaction.PersonalAmount;
 
             switch (transaction.Type)
@@ -128,30 +150,6 @@
                     var budgets = this.Context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
                     foreach (var budget in budgets)
                         budget.Spent += Math.Abs(personalAmount);
-
-                    // If Splitwise splits are defined, but there is no linked Splitwise transaction yet, then create
-                    // the transaction in Splitwise.
-                    if (transaction.SplitDetails.Any() && !transaction.SplitwiseTransactionId.HasValue)
-                    {
-                        var splits = new Split
-                            {
-                                UserId = Maybe<int>.None,
-                                Amount = personalAmount,
-                            }
-                            .Enumerate()
-                            .Concat(
-                                transaction.SplitDetails.Select(sd => new Split
-                                {
-                                    UserId = sd.SplitwiseUserId,
-                                    Amount = sd.Amount,
-                                }))
-                            .ToList();
-
-                        var expense = this.splitwiseContext.CreateExpense(transaction.Description, transaction.Date, splits);
-
-                        transaction.SplitwiseTransactionId = expense.Id;
-                        transaction.SplitwiseTransaction = expense.ToSplitwiseTransactionEntity();
-                    }
 
                     // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
                     if (transaction.SplitwiseTransactionId.HasValue)

@@ -1144,6 +1144,62 @@
 
         #endregion PaymentRequests
 
+        #region SplitwiseSplits
+
+        /// <summary>
+        /// Tests method <see cref="ITransactionManager.CreateTransaction"/>.
+        /// Verifies that a transaction with specified Splitwise splits is correctly created.
+        /// </summary>
+        [Fact]
+        public void Test_CreateTransaction_SplitwiseSplits()
+        {
+            this.SplitwiseContextMock.GenerateUser(1, "Wouter", "van Acht");
+            this.SplitwiseContextMock.GenerateUser(2, "Jeroen");
+
+            var account = this.GenerateAccount();
+            var splitwiseAccount = this.GenerateAccount(AccountType.Splitwise);
+            var category = this.GenerateCategory();
+
+            var input = new InputTransaction
+            {
+                AccountId = account.Id,
+                Description = "Transaction",
+                DateString = DateTime.Today.ToDateString(),
+                Amount = -300,
+                CategoryId = category.Id,
+                ReceivingAccountId = Maybe<int>.None,
+                NeedsConfirmation = false,
+                PaymentRequests = new List<InputPaymentRequest>(),
+                SplitwiseSplits = new List<InputSplitwiseSplit>
+                {
+                    new InputSplitwiseSplit
+                    {
+                        Amount = 100,
+                        UserId = 1,
+                    },
+                    new InputSplitwiseSplit
+                    {
+                        Amount = 150,
+                        UserId = 2,
+                    },
+                },
+            };
+
+            var transaction = this.TransactionManager.CreateTransaction(input);
+            account = this.AccountManager.GetAccount(account.Id);
+
+            Assert.True(transaction.SplitwiseTransaction.IsSome);
+            Assert.True(transaction.SplitwiseTransaction.Value.Imported);
+            Assert.Equal(250, transaction.SplitwiseTransaction.Value.OwedByOthers);
+            Assert.Equal(50, transaction.SplitwiseTransaction.Value.PersonalAmount);
+            Assert.Equal(300, transaction.SplitwiseTransaction.Value.PaidAmount);
+            Assert.Equal(-50, transaction.PersonalAmount);
+
+            Assert.Equal(-300, account.CurrentBalance);
+        }
+
+        #endregion SplitwiseSplits
+
         #region Helpers
 
         private Transaction UpdateTransaction(

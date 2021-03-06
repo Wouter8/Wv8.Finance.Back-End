@@ -49,28 +49,33 @@ namespace PersonalFinance.Data.External.Splitwise
         }
 
         /// <inheritdoc/>
-        public Expense CreateExpense(string description, LocalDate date, List<Split> splits)
+        public Expense CreateExpense(decimal totalAmount, string description, LocalDate date, List<Split> splits)
         {
             var dateString = date.ToDateTimeUnspecified().ToString("O");
 
             var request = new RestRequest("create_expense", Method.POST);
 
+            var totalAmountPositive = Math.Abs(totalAmount);
+            var amountSplit = splits.Sum(s => s.Amount);
+            var personalAmount = totalAmountPositive - amountSplit;
+
             request
                 .AddParameter("group_id", this.groupId)
                 .AddParameter("description", description)
-                .AddParameter("date", dateString);
+                .AddParameter("date", dateString)
+                // Add the payer information.
+                .AddParameter("users__0__user_id", this.userId)
+                .AddParameter("users__0__owed_share", personalAmount)
+                .AddParameter("users__0__paid_share", totalAmountPositive);
             foreach (var item in splits.Select((split, i) => new { i, split }))
             {
                 var split = item.split;
-                var index = item.i;
-
-                var splitUserId = split.UserId.ValueOrElse(this.userId);
-                var paidAmount = split.UserId == this.userId ? splits.Sum(s => s.Amount) : 0;
+                var index = item.i + 1; // The first index is reserved for the payer.
 
                 request
-                    .AddParameter($"users__{index}__user_id", splitUserId)
+                    .AddParameter($"users__{index}__user_id", split.UserId)
                     .AddParameter($"users__{index}__owed_share", split.Amount)
-                    .AddParameter($"users__{index}__paid_share", paidAmount);
+                    .AddParameter($"users__{index}__paid_share", 0);
             }
 
             return this.Execute<CreateExpenseResult>(request)

@@ -64,7 +64,6 @@ namespace PersonalFinance.Business.Splitwise
             {
                 var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
-                // If the user paid anything for the transaction, then create an expense transaction for the default account.
                 if (splitwiseTransaction.PaidAmount > 0)
                 {
                     throw new ValidationException(
@@ -94,6 +93,7 @@ namespace PersonalFinance.Business.Splitwise
             var timestamp = DateTime.UtcNow;
             var newExpenses = this.splitwiseContext.GetExpenses(lastRan)
                 // Only import expenses where the user did not pay, since these are not managed via the finance application.
+                // Note that updates to expenses with a paid amount should be manually handled.
                 .Where(e => e.PaidAmount == 0)
                 .ToList();
             var newExpenseIds = newExpenses.Select(t => t.Id).ToSet();

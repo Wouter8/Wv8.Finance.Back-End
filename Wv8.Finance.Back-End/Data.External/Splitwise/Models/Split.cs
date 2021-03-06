@@ -8,9 +8,9 @@ namespace PersonalFinance.Data.External.Splitwise.Models
     public class Split
     {
         /// <summary>
-        /// The user identifier from Splitwise. If <c>None</c>, then the user identifier of this application will be used.
+        /// The user identifier from Splitwise.
         /// </summary>
-        public Maybe<int> UserId { get; set; }
+        public int UserId { get; set; }
 
         /// <summary>
         /// The amount split.
