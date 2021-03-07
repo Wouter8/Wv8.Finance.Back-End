@@ -4,10 +4,12 @@ namespace Data.External.IntegrationTest
     using Microsoft.Extensions.Options;
     using PersonalFinance.Common;
     using PersonalFinance.Data.External.Splitwise;
+    using Xunit;
 
     /// <summary>
     /// The base class for all test classes for integration tests.
     /// </summary>
+    [Collection("Tests")]
     public class BaseTest
     {
         /// <summary>
