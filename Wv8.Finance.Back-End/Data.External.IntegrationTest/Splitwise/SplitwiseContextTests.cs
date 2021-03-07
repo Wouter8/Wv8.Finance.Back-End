@@ -34,8 +34,8 @@ namespace Data.External.IntegrationTest.Splitwise
         [Fact]
         public void Test_CreateExpense_MultiSplit()
         {
-            var totalAmount = 100;
-            var date = new LocalDate(2021, 3, 7);
+            var totalAmount = -100;
+            var date = DateTime.UtcNow.ToLocalDate();
             var description = "Split expense";
             var splits = new List<Split>
             {
@@ -46,7 +46,7 @@ namespace Data.External.IntegrationTest.Splitwise
             var expense = this.splitwiseContext.CreateExpense(totalAmount, description, date, splits);
 
             Assert.Equal(20, expense.PersonalAmount);
-            Assert.Equal(totalAmount, expense.PaidAmount);
+            Assert.Equal(-totalAmount, expense.PaidAmount);
             Assert.Equal(date, expense.Date);
             Assert.Equal(description, expense.Description);
             Assert.False(expense.IsDeleted);
@@ -59,8 +59,8 @@ namespace Data.External.IntegrationTest.Splitwise
         [Fact]
         public void Test_CreateExpense_SingleSplit()
         {
-            var totalAmount = 100;
-            var date = new LocalDate(2021, 3, 7);
+            var totalAmount = -100;
+            var date = DateTime.UtcNow.ToLocalDate();
             var description = "Split expense";
             var splits = new List<Split>
             {
@@ -70,7 +70,7 @@ namespace Data.External.IntegrationTest.Splitwise
             var expense = this.splitwiseContext.CreateExpense(totalAmount, description, date, splits);
 
             Assert.Equal(50, expense.PersonalAmount);
-            Assert.Equal(totalAmount, expense.PaidAmount);
+            Assert.Equal(-totalAmount, expense.PaidAmount);
             Assert.Equal(date, expense.Date);
             Assert.Equal(description, expense.Description);
             Assert.False(expense.IsDeleted);
@@ -83,8 +83,8 @@ namespace Data.External.IntegrationTest.Splitwise
         [Fact]
         public void Test_CreateExpense_CompleteSplit()
         {
-            var totalAmount = 100;
-            var date = new LocalDate(2021, 3, 7);
+            var totalAmount = -100;
+            var date = DateTime.UtcNow.ToLocalDate();
             var description = "Split expense";
             var splits = new List<Split>
             {
@@ -95,7 +95,7 @@ namespace Data.External.IntegrationTest.Splitwise
             var expense = this.splitwiseContext.CreateExpense(totalAmount, description, date, splits);
 
             Assert.Equal(0, expense.PersonalAmount);
-            Assert.Equal(totalAmount, expense.PaidAmount);
+            Assert.Equal(-totalAmount, expense.PaidAmount);
             Assert.Equal(date, expense.Date);
             Assert.Equal(description, expense.Description);
             Assert.False(expense.IsDeleted);
@@ -108,11 +108,11 @@ namespace Data.External.IntegrationTest.Splitwise
         [Fact]
         public void Test_DeleteExpense()
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var expense = this.splitwiseContext.CreateExpense(
-                10,
+                -100,
                 "Description",
-                new LocalDate(2021, 3, 7),
+                DateTime.UtcNow.ToLocalDate(),
                 new Split { UserId = this.otherUserId1, Amount = 50 }.Singleton());
 
             this.splitwiseContext.DeleteExpense(expense.Id);
@@ -130,20 +130,20 @@ namespace Data.External.IntegrationTest.Splitwise
         public void Test_GetExpenses()
         {
             var oldExpense = this.splitwiseContext.CreateExpense(
-                10,
+                -100,
                 "Description",
-                new LocalDate(2021, 3, 7),
+                DateTime.UtcNow.ToLocalDate(),
                 new Split { UserId = this.otherUserId1, Amount = 50 }.Singleton());
 
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
-            // Wait to make sure the updatedAfter is actually after "now".
-            Thread.Sleep(100);
+            // Sleep to make sure the following expense is created after "now".
+            Thread.Sleep(1000);
 
             var newExpense = this.splitwiseContext.CreateExpense(
-                10,
+                -100,
                 "Description",
-                new LocalDate(2021, 3, 7),
+                DateTime.UtcNow.ToLocalDate(),
                 new Split { UserId = this.otherUserId1, Amount = 50 }.Singleton());
 
             var expenses = this.splitwiseContext.GetExpenses(now);

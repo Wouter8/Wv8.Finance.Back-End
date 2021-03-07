@@ -61,7 +61,7 @@ namespace PersonalFinance.Data.External.Splitwise
 
             request
                 .AddParameter("group_id", this.groupId)
-                .AddParameter("cost", totalAmount)
+                .AddParameter("cost", totalAmountPositive)
                 .AddParameter("description", description)
                 .AddParameter("date", dateString)
                 // Add the payer information.
