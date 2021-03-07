@@ -1,7 +1,5 @@
 namespace PersonalFinance.Data.External.Splitwise.Models
 {
-    using Wv8.Core;
-
     /// <summary>
     /// A class for objects representing the split amount for a user of a transaction.
     /// </summary>

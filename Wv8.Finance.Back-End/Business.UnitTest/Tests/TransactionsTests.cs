@@ -13,6 +13,7 @@
     using PersonalFinance.Common.Exceptions;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
+    using Wv8.Core.Collections;
     using Wv8.Core.Exceptions;
     using Xunit;
 
@@ -899,6 +900,63 @@
             Assert.Equal(-100, transaction.PersonalAmount);
 
             Assert.Equal(-500, account.CurrentBalance);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="ITransactionManager.CreateTransaction"/>.
+        /// Verifies that a transaction with specified Splitwise splits is correctly created.
+        /// </summary>
+        [Fact]
+        public void Test_CreateTransaction_SplitwiseValidation()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var splitwiseAccount = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var splitwiseUser = this.SplitwiseContextMock.GenerateUser(1, "User1");
+
+            this.context.SaveChanges();
+
+            // Wrong transaction type
+            var input = this.GetInputTransaction(
+                account.Id,
+                TransactionType.Income,
+                categoryId: category.Id,
+                amount: 50,
+                splitwiseSplits: new InputSplitwiseSplit { Amount = 25, UserId = 1 }.Singleton());
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.CreateTransaction(input),
+                "Payment requests and Splitwise splits can only be specified on expenses.");
+
+            // Splits greater than amount
+            input.Amount = -10;
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.CreateTransaction(input),
+                "The amount split can not exceed the total amount of the transaction.");
+
+            input.Amount = -100;
+
+            // Split without amount
+            input.SplitwiseSplits = new InputSplitwiseSplit { Amount = 0, UserId = 1 }.Singleton();
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.CreateTransaction(input),
+                "Splits must have an amount greater than 0.");
+
+            // 2 splits for same user
+            input.SplitwiseSplits = new List<InputSplitwiseSplit>
+            {
+                new InputSplitwiseSplit { Amount = 10, UserId = 1 },
+                new InputSplitwiseSplit { Amount = 20, UserId = 1 },
+            };
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.CreateTransaction(input),
+                "A user can only be linked to a single split.");
+
+            // Unknown Splitwise user
+            input.SplitwiseSplits = new InputSplitwiseSplit { Amount = 10, UserId = 2 }.Singleton();
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.CreateTransaction(input),
+                "Unknown Splitwise user(s) specified.");
         }
 
         /// <summary>
