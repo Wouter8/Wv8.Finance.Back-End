@@ -51,7 +51,8 @@ namespace PersonalFinance.Data.External.Splitwise
         /// <inheritdoc/>
         public Expense CreateExpense(decimal totalAmount, string description, LocalDate date, List<Split> splits)
         {
-            var dateString = date.ToDateTimeUnspecified().ToString("O");
+            var utcDate = DateTime.SpecifyKind(date.ToDateTimeUnspecified(), DateTimeKind.Utc);
+            var dateString = utcDate.ToString("O");
 
             var request = new RestRequest("create_expense", Method.POST);
 
