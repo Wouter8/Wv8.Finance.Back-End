@@ -1186,6 +1186,8 @@
             };
 
             var transaction = this.TransactionManager.CreateTransaction(input);
+            var expense =
+                this.SplitwiseContextMock.Expenses.Single(e => e.Id == transaction.SplitwiseTransaction.Value.Id);
             account = this.AccountManager.GetAccount(account.Id);
 
             Assert.True(transaction.SplitwiseTransaction.IsSome);
@@ -1195,7 +1197,89 @@
             Assert.Equal(300, transaction.SplitwiseTransaction.Value.PaidAmount);
             Assert.Equal(-50, transaction.PersonalAmount);
 
+            Assert.Equal(transaction.SplitwiseTransactionId.Value, expense.Id);
+            Assert.Equal(transaction.SplitwiseTransaction.Value.PaidAmount, expense.PaidAmount);
+            Assert.Equal(transaction.SplitwiseTransaction.Value.PersonalAmount, expense.PersonalAmount);
+            Assert.Equal(transaction.Date, expense.Date.ToDateString());
+            Assert.False(expense.IsDeleted);
+
             Assert.Equal(-300, account.CurrentBalance);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="ITransactionManager.CreateTransaction"/>.
+        /// Verifies that a transaction with specified Splitwise splits is correctly created.
+        /// </summary>
+        [Fact]
+        public void Test_CreateTransaction_SplitwiseSplitsAndPaymentRequests()
+        {
+            this.SplitwiseContextMock.GenerateUser(1, "Wouter", "van Acht");
+            this.SplitwiseContextMock.GenerateUser(2, "Jeroen");
+
+            var account = this.GenerateAccount();
+            var splitwiseAccount = this.GenerateAccount(AccountType.Splitwise);
+            var category = this.GenerateCategory();
+
+            var input = new InputTransaction
+            {
+                AccountId = account.Id,
+                Description = "Transaction",
+                DateString = DateTime.Today.ToDateString(),
+                Amount = -500,
+                CategoryId = category.Id,
+                ReceivingAccountId = Maybe<int>.None,
+                NeedsConfirmation = false,
+                PaymentRequests = new List<InputPaymentRequest>
+                {
+                    new InputPaymentRequest
+                    {
+                        Id = Maybe<int>.None,
+                        Amount = 50,
+                        Count = 2,
+                        Name = "Group 1",
+                    },
+                    new InputPaymentRequest
+                    {
+                        Id = Maybe<int>.None,
+                        Amount = 50,
+                        Count = 1,
+                        Name = "Person",
+                    },
+                },
+                SplitwiseSplits = new List<InputSplitwiseSplit>
+                {
+                    new InputSplitwiseSplit
+                    {
+                        Amount = 100,
+                        UserId = 1,
+                    },
+                    new InputSplitwiseSplit
+                    {
+                        Amount = 150,
+                        UserId = 2,
+                    },
+                },
+            };
+
+            var transaction = this.TransactionManager.CreateTransaction(input);
+            var expense =
+                this.SplitwiseContextMock.Expenses.Single(e => e.Id == transaction.SplitwiseTransaction.Value.Id);
+            account = this.AccountManager.GetAccount(account.Id);
+
+            Assert.True(transaction.SplitwiseTransaction.IsSome);
+            Assert.True(transaction.SplitwiseTransaction.Value.Imported);
+            Assert.Equal(250, transaction.SplitwiseTransaction.Value.OwedByOthers);
+            Assert.Equal(250, transaction.SplitwiseTransaction.Value.PersonalAmount);
+            Assert.Equal(500, transaction.SplitwiseTransaction.Value.PaidAmount);
+            Assert.Equal(-100, transaction.PersonalAmount);
+
+            Assert.Equal(transaction.SplitwiseTransactionId.Value, expense.Id);
+            Assert.Equal(transaction.SplitwiseTransaction.Value.PaidAmount, expense.PaidAmount);
+            Assert.Equal(transaction.SplitwiseTransaction.Value.PersonalAmount, expense.PersonalAmount);
+            Assert.Equal(transaction.Date, expense.Date.ToDateString());
+            Assert.False(expense.IsDeleted);
+
+            Assert.Equal(-500, account.CurrentBalance);
         }
 
         #endregion SplitwiseSplits
