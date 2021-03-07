@@ -13,14 +13,20 @@ namespace Data.External.IntegrationTest
         /// <summary>
         /// The Splitwise context.
         /// </summary>
-        protected SplitwiseContext splitwiseContext;
+        protected readonly SplitwiseContext splitwiseContext;
+
+        /// <summary>
+        /// The application settings.
+        /// </summary>
+        protected readonly IOptions<ApplicationSettings> settings;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTest"/> class.
         /// </summary>
         protected BaseTest()
         {
-            this.splitwiseContext = new SplitwiseContext(this.GetApplicationSettings());
+            this.settings = this.GetApplicationSettings();
+            this.splitwiseContext = new SplitwiseContext(this.settings);
         }
 
         private IOptions<ApplicationSettings> GetApplicationSettings()
