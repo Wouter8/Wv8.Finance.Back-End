@@ -1,12 +1,16 @@
 ﻿namespace Business.UnitTest.Tests
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using Business.UnitTest.Helpers;
     using NodaTime;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common;
+    using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.Enums;
+    using PersonalFinance.Data.Extensions;
+    using PersonalFinance.Data.External.Splitwise.Models;
     using PersonalFinance.Data.Models;
     using Xunit;
 
@@ -174,6 +178,70 @@
             this.RefreshContext();
 
             this.TransactionProcessor.ProcessAll();
+        }
+
+        /// <summary>
+        /// Tests method <see cref="TransactionProcessor.ProcessAll"/>.
+        /// Verifies that a transaction with Splitwise splits is correctly processed.
+        /// </summary>
+        [Fact]
+        public void Test_Transaction_SplitDetails()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var user1 = this.SplitwiseContextMock.GenerateUser(1, "User1");
+            var user2 = this.SplitwiseContextMock.GenerateUser(2, "User2");
+
+            var transaction = this.context.GenerateTransaction(
+                account,
+                TransactionType.Expense,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                -50,
+                category,
+                splitDetails: new List<SplitDetailEntity>
+                {
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = user1.Id,
+                        Amount = 20,
+                    },
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = user2.Id,
+                        Amount = 15,
+                    },
+                });
+
+            this.context.SaveChanges();
+
+            this.TransactionProcessor.ProcessAll();
+
+            this.RefreshContext();
+
+            account = this.context.Accounts.GetEntity(account.Id);
+            splitwiseAccount = this.context.Accounts.GetEntity(splitwiseAccount.Id);
+            var expenses = this.SplitwiseContextMock.Expenses;
+            var splitwiseTransaction = this.context.SplitwiseTransactions.Single();
+
+            Assert.Equal(-50, account.CurrentBalance);
+            Assert.Equal(35, splitwiseAccount.CurrentBalance);
+
+            var expense = Assert.Single(expenses);
+            Assert.Equal(15, expense.PersonalAmount);
+            Assert.Equal(50, expense.PaidAmount);
+            Assert.Equal(transaction.Date, expense.Date);
+            Assert.Equal(transaction.Description, expense.Description);
+
+            Assert.Equal(transaction.Date, splitwiseTransaction.Date);
+            Assert.Equal(transaction.Description, splitwiseTransaction.Description);
+            Assert.True(splitwiseTransaction.Imported);
+            Assert.Equal(50, splitwiseTransaction.PaidAmount);
+            Assert.Equal(15, splitwiseTransaction.PersonalAmount);
+            Assert.Equal(35, splitwiseTransaction.OwedByOthers);
+            Assert.Equal(0, splitwiseTransaction.OwedToOthers);
         }
 
         /// <summary>

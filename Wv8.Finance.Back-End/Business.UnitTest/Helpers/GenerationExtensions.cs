@@ -128,6 +128,7 @@ namespace Business.UnitTest.Helpers
             AccountEntity receivingAccount = null,
             RecurringTransactionEntity recurringTransaction = null,
             SplitwiseTransactionEntity splitwiseTransaction = null,
+            List<SplitDetailEntity> splitDetails = null,
             bool needsConfirmation = false)
         {
             if ((type == TransactionType.Expense || type == TransactionType.Income) && category == null)
@@ -145,7 +146,7 @@ namespace Business.UnitTest.Helpers
                 ReceivingAccount = receivingAccount,
                 NeedsConfirmation = needsConfirmation,
                 PaymentRequests = new List<PaymentRequestEntity>(),
-                SplitDetails = new List<SplitDetailEntity>(),
+                SplitDetails = splitDetails ?? new List<SplitDetailEntity>(),
                 Processed = false,
                 IsConfirmed = !needsConfirmation,
                 Type = type,
