@@ -36,5 +36,11 @@ namespace PersonalFinance.Business.Splitwise
         /// Imports new/updated transactions from Splitwise.
         /// </summary>
         public void ImportFromSplitwise();
+
+        /// <summary>
+        /// Gets the information about the Splitwise importer.
+        /// </summary>
+        /// <returns>Information about the importer.</returns>
+        public ImporterInformation GetImporterInformation();
     }
 }
