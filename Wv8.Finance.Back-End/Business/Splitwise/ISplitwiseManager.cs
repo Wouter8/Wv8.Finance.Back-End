@@ -1,7 +1,9 @@
 namespace PersonalFinance.Business.Splitwise
 {
+    using System;
     using System.Collections.Generic;
     using PersonalFinance.Common.DataTransfer.Output;
+    using PersonalFinance.Common.Enums;
 
     /// <summary>
     /// An interface for a manager with functionality related to Splitwise.
@@ -35,10 +37,11 @@ namespace PersonalFinance.Business.Splitwise
         /// <summary>
         /// Imports new/updated transactions from Splitwise.
         /// </summary>
-        public void ImportFromSplitwise();
+        /// <returns>The result of running the importer.</returns>
+        public ImportResult ImportFromSplitwise();
 
         /// <summary>
-        /// Gets the information about the Splitwise importer.
+        /// Gets information about the importer.
         /// </summary>
         /// <returns>Information about the importer.</returns>
         public ImporterInformation GetImporterInformation();

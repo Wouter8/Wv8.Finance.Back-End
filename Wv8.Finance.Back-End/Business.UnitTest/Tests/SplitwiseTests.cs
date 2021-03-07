@@ -2,6 +2,8 @@
 {
     using System;
     using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Business.UnitTest.Helpers;
     using NodaTime;
     using PersonalFinance.Business.Splitwise;
@@ -437,6 +439,30 @@
             Assert.True(splitwiseTransaction.IsDeleted);
         }
 
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.ImportFromSplitwise"/>.
+        /// Verifies that the importer can only run once.
+        /// </summary>
+        [Fact]
+        public async void Test_ImportFromSplitwise_RunOnce()
+        {
+            this.SplitwiseContextMock.ExtraTimeWhenImporting = true;
+
+            var task = Task.Factory.StartNew(() =>
+            {
+                var result1 = this.SplitwiseManager.ImportFromSplitwise();
+                Assert.Equal(ImportResult.Completed, result1);
+            });
+
+            // Sleep so that the first import task is started before this one.
+            Thread.Sleep(250);
+
+            var result2 = this.SplitwiseManager.ImportFromSplitwise();
+            Assert.Equal(ImportResult.AlreadyRunning, result2);
+
+            await task;
+        }
+
         #endregion ImportFromSplitwise
 
         #region GetSplitwiseUsers
@@ -474,5 +500,51 @@
         }
 
         #endregion GetSplitwiseUsers
+
+        #region GetImporterInformation
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.GetImporterInformation"/>.
+        /// Verifies that The last run value is correctly set.
+        /// </summary>
+        [Fact]
+        public void Test_GetImporterInformation_LastRun()
+        {
+            var timestamp = new DateTime(2021, 03, 07, 15, 40, 10);
+            this.SetSplitwiseLastRunTime(timestamp);
+            this.context.SaveChanges();
+
+            var information = this.SplitwiseManager.GetImporterInformation();
+
+            Assert.Equal(timestamp, information.LastRunTimestamp);
+            Assert.Equal(ImportState.NotRunning, information.CurrentState);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.GetImporterInformation"/>.
+        /// Verifies that the state is correctly returned when the importer is running.
+        /// </summary>
+        [Fact]
+        public async void Test_GetImporterInformation_CurrentlyRunning()
+        {
+            this.SplitwiseContextMock.ExtraTimeWhenImporting = true;
+
+            var task = Task.Factory.StartNew(() => this.SplitwiseManager.ImportFromSplitwise());
+
+            // Sleep so that the import task is actually started.
+            Thread.Sleep(250);
+
+            var information = this.SplitwiseManager.GetImporterInformation();
+            Assert.Equal(ImportState.Running, information.CurrentState);
+
+            await task;
+        }
+
+        #endregion GetImporterInformation
+
+        private void SetSplitwiseLastRunTime(DateTime timestamp)
+        {
+            this.context.SynchronizationTimes.Single().SplitwiseLastRun = timestamp;
+        }
     }
 }

@@ -27,7 +27,7 @@ namespace PersonalFinance.Business.Splitwise
         /// <summary>
         /// The current status of the importer.
         /// </summary>
-        private static ImportStatus importStatus = ImportStatus.NotRunning;
+        private static ImportState importStatus = ImportState.NotRunning;
 
         /// <summary>
         /// The Splitwise context.
@@ -94,121 +94,123 @@ namespace PersonalFinance.Business.Splitwise
         }
 
         /// <inheritdoc />
-        public void ImportFromSplitwise()
+        public ImportResult ImportFromSplitwise()
         {
             lock (SplitwiseManager.lockObj)
             {
-                if (SplitwiseManager.importStatus != ImportStatus.NotRunning)
-                    return;
+                if (SplitwiseManager.importStatus == ImportState.Running)
+                    return ImportResult.AlreadyRunning;
 
-                SplitwiseManager.importStatus = ImportStatus.Running;
+                SplitwiseManager.importStatus = ImportState.Running;
+            }
 
-                var lastRan = this.Context.SynchronizationTimes
-                    .Single()
-                    .SplitwiseLastRun;
+            var lastRan = this.Context.SynchronizationTimes
+                .Single()
+                .SplitwiseLastRun;
 
-                // Get the new and updated expenses from Splitwise.
-                var timestamp = DateTime.UtcNow;
-                var newExpenses = this.splitwiseContext.GetExpenses(lastRan)
-                    // Only import expenses where the user did not pay, since these are not managed via the finance application.
-                    // Note that updates to expenses with a paid amount should be manually handled.
-                    .Where(e => e.PaidAmount == 0)
-                    .ToList();
-                var newExpenseIds = newExpenses.Select(t => t.Id).ToSet();
+            // Get the new and updated expenses from Splitwise.
+            var timestamp = DateTime.UtcNow;
+            var newExpenses = this.splitwiseContext.GetExpenses(lastRan)
+                // Only import expenses where the user did not pay, since these are not managed via the finance application.
+                // Note that updates to expenses with a paid amount should be manually handled.
+                .Where(e => e.PaidAmount == 0)
+                .ToList();
+            var newExpenseIds = newExpenses.Select(t => t.Id).ToSet();
 
-                // Load relevant entities and store them in a dictionary.
-                var splitwiseTransactionsById = this.Context.SplitwiseTransactions
-                    .Where(t => newExpenseIds.Contains(t.Id))
-                    .AsEnumerable()
-                    .ToDictionary(t => t.Id);
-                var transactionsBySplitwiseId = this.Context.Transactions
-                    .IncludeAll()
-                    .Where(t => t.SplitwiseTransactionId.HasValue)
-                    .Where(t => newExpenseIds.Contains(t.SplitwiseTransactionId.Value))
-                    .AsEnumerable()
-                    .ToDictionary(t => t.SplitwiseTransactionId.Value);
+            // Load relevant entities and store them in a dictionary.
+            var splitwiseTransactionsById = this.Context.SplitwiseTransactions
+                .Where(t => newExpenseIds.Contains(t.Id))
+                .AsEnumerable()
+                .ToDictionary(t => t.Id);
+            var transactionsBySplitwiseId = this.Context.Transactions
+                .IncludeAll()
+                .Where(t => t.SplitwiseTransactionId.HasValue)
+                .Where(t => newExpenseIds.Contains(t.SplitwiseTransactionId.Value))
+                .AsEnumerable()
+                .ToDictionary(t => t.SplitwiseTransactionId.Value);
 
-                this.ConcurrentInvoke(() =>
+            this.ConcurrentInvoke(() =>
+            {
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
+
+                this.Context.SetSplitwiseSynchronizationTime(timestamp);
+
+                foreach (var newExpense in newExpenses)
                 {
-                    var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
+                    var splitwiseTransactionMaybe = splitwiseTransactionsById.TryGetValue(newExpense.Id);
 
-                    this.Context.SetSplitwiseSynchronizationTime(timestamp);
-
-                    foreach (var newExpense in newExpenses)
+                    if (splitwiseTransactionMaybe.IsSome &&
+                        splitwiseTransactionMaybe.Value.UpdatedAt == newExpense.UpdatedAt)
                     {
-                        var splitwiseTransactionMaybe = splitwiseTransactionsById.TryGetValue(newExpense.Id);
-
-                        if (splitwiseTransactionMaybe.IsSome &&
-                            splitwiseTransactionMaybe.Value.UpdatedAt == newExpense.UpdatedAt)
-                        {
-                            // The last updated at is equal to the one stored, meaning that the latest update was
-                            // triggered by this application and is already handled.
-                            continue;
-                        }
-
-                        var transaction = transactionsBySplitwiseId.TryGetValue(newExpense.Id);
-
-                        // Revert the transaction before updating values.
-                        if (transaction.IsSome)
-                        {
-                            processor.RevertIfProcessed(transaction.Value);
-
-                            // Remove the transaction, it is re-added if needed.
-                            this.Context.Transactions.Remove(transaction.Value);
-                        }
-
-                        var splitwiseTransaction = splitwiseTransactionMaybe
-                            .Match(
-                                sw => sw.UpdateValues(newExpense),
-                                newExpense.ToSplitwiseTransactionEntity());
-
-                        // If the transaction was already completely imported, then also update the transaction.
-                        if (transaction.IsSome)
-                        {
-                            if (!splitwiseTransaction.IsDeleted)
-                            {
-                                // If the account or category is now obsolete, then the Splitwise transaction has to be re-imported.
-                                if (transaction.Value.Account.IsObsolete || transaction.Value.Category.IsObsolete)
-                                {
-                                    splitwiseTransaction.Imported = false;
-                                }
-                                // Otherwise, create a new transaction for the new Splitwise transaction.
-                                else
-                                {
-                                    transaction =
-                                        splitwiseTransaction.ToTransaction(transaction.Value.Account,
-                                            transaction.Value.Category);
-
-                                    processor.ProcessIfNeeded(transaction.Value);
-
-                                    this.Context.Transactions.Add(transaction.Value);
-                                }
-                            }
-                        }
-
-                        // If it is a new expense, then add it to the context.
-                        if (splitwiseTransactionMaybe.IsNone)
-                            this.Context.SplitwiseTransactions.Add(splitwiseTransaction);
-
-                        // If the transaction existed and has not yet been imported, then the transaction is already updated above.
+                        // The last updated at is equal to the one stored, meaning that the latest update was
+                        // triggered by this application and is already handled.
+                        continue;
                     }
 
-                    this.Context.SaveChanges();
-                });
+                    var transaction = transactionsBySplitwiseId.TryGetValue(newExpense.Id);
 
-                SplitwiseManager.importStatus = ImportStatus.NotRunning;
-            }
+                    // Revert the transaction before updating values.
+                    if (transaction.IsSome)
+                    {
+                        processor.RevertIfProcessed(transaction.Value);
+
+                        // Remove the transaction, it is re-added if needed.
+                        this.Context.Transactions.Remove(transaction.Value);
+                    }
+
+                    var splitwiseTransaction = splitwiseTransactionMaybe
+                        .Match(
+                            sw => sw.UpdateValues(newExpense),
+                            newExpense.ToSplitwiseTransactionEntity());
+
+                    // If the transaction was already completely imported, then also update the transaction.
+                    if (transaction.IsSome)
+                    {
+                        if (!splitwiseTransaction.IsDeleted)
+                        {
+                            // If the account or category is now obsolete, then the Splitwise transaction has to be re-imported.
+                            if (transaction.Value.Account.IsObsolete || transaction.Value.Category.IsObsolete)
+                            {
+                                splitwiseTransaction.Imported = false;
+                            }
+                            // Otherwise, create a new transaction for the new Splitwise transaction.
+                            else
+                            {
+                                transaction =
+                                    splitwiseTransaction.ToTransaction(transaction.Value.Account,
+                                        transaction.Value.Category);
+
+                                processor.ProcessIfNeeded(transaction.Value);
+
+                                this.Context.Transactions.Add(transaction.Value);
+                            }
+                        }
+                    }
+
+                    // If it is a new expense, then add it to the context.
+                    if (splitwiseTransactionMaybe.IsNone)
+                        this.Context.SplitwiseTransactions.Add(splitwiseTransaction);
+
+                    // If the transaction existed and has not yet been imported, then the transaction is already updated above.
+                }
+
+                this.Context.SaveChanges();
+            });
+
+            SplitwiseManager.importStatus = ImportState.NotRunning;
+
+            return ImportResult.Completed;
         }
 
         /// <inheritdoc />
         public ImporterInformation GetImporterInformation()
         {
-            var lastRan = this.Context.SynchronizationTimes.Single().SplitwiseLastRun;
+            var lastRunTimestamp = this.Context.SynchronizationTimes.Single().SplitwiseLastRun;
 
             return new ImporterInformation
             {
-                LastRun = lastRan,
-                Status = SplitwiseManager.importStatus,
+                LastRunTimestamp = lastRunTimestamp,
+                CurrentState = SplitwiseManager.importStatus,
             };
         }
     }

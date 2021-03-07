@@ -4,18 +4,18 @@ namespace PersonalFinance.Common.DataTransfer.Output
     using PersonalFinance.Common.Enums;
 
     /// <summary>
-    /// A class representing information about an importer.
+    /// Information about an importer.
     /// </summary>
     public class ImporterInformation
     {
         /// <summary>
-        /// The current status of the importer.
+        /// The timestamp at which the importer ran successfully last.
         /// </summary>
-        public ImportStatus Status { get; set; }
+        public DateTime LastRunTimestamp { get; set; }
 
         /// <summary>
-        /// The timestamp at which the importer completed its' last run.
+        /// The current state of the importer.
         /// </summary>
-        public DateTime LastRun { get; set; }
+        public ImportState CurrentState { get; set; }
     }
 }

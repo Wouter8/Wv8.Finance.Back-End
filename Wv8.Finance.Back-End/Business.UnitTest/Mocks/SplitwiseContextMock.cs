@@ -3,6 +3,7 @@ namespace Business.UnitTest.Mocks
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using NodaTime;
     using PersonalFinance.Data.External.Splitwise;
     using PersonalFinance.Data.External.Splitwise.Models;
@@ -16,6 +17,12 @@ namespace Business.UnitTest.Mocks
         /// The identifier used for the next transaction.
         /// </summary>
         private static int nextExpenseId = 0;
+
+        /// <summary>
+        /// If this is <c>true</c>, then an extra delay is added when calling method
+        /// <see cref="ISplitwiseContext.GetExpenses"/>.
+        /// </summary>
+        public bool ExtraTimeWhenImporting { get; set; } = false;
 
         /// <summary>
         /// The list of mocked expenses.
@@ -57,6 +64,9 @@ namespace Business.UnitTest.Mocks
         /// <inheritdoc />
         public List<Expense> GetExpenses(DateTime updatedAfter)
         {
+            if (this.ExtraTimeWhenImporting)
+                Thread.Sleep(1000);
+
             return this.Expenses
                 .Where(e => e.UpdatedAt > updatedAfter)
                 .ToList();

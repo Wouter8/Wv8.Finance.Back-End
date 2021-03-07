@@ -11,7 +11,6 @@ namespace PersonalFinance.Data.External.Splitwise
     using PersonalFinance.Data.External.Splitwise.RequestResults;
     using RestSharp;
     using RestSharp.Serializers.NewtonsoftJson;
-    using Wv8.Core;
 
     /// <summary>
     /// A class containing functionality to communicate with Splitwise.
