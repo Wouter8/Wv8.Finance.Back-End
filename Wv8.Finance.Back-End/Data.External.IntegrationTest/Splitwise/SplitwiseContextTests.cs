@@ -3,6 +3,8 @@ namespace Data.External.IntegrationTest.Splitwise
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
+    using NodaTime;
     using PersonalFinance.Common;
     using PersonalFinance.Data.External.Splitwise;
     using PersonalFinance.Data.External.Splitwise.Models;
@@ -33,7 +35,7 @@ namespace Data.External.IntegrationTest.Splitwise
         public void Test_CreateExpense_MultiSplit()
         {
             var totalAmount = 100;
-            var date = DateTime.Today.ToLocalDate();
+            var date = new LocalDate(2021, 3, 7);
             var description = "Split expense";
             var splits = new List<Split>
             {
@@ -58,7 +60,7 @@ namespace Data.External.IntegrationTest.Splitwise
         public void Test_CreateExpense_SingleSplit()
         {
             var totalAmount = 100;
-            var date = DateTime.Today.ToLocalDate();
+            var date = new LocalDate(2021, 3, 7);
             var description = "Split expense";
             var splits = new List<Split>
             {
@@ -82,7 +84,7 @@ namespace Data.External.IntegrationTest.Splitwise
         public void Test_CreateExpense_CompleteSplit()
         {
             var totalAmount = 100;
-            var date = DateTime.Today.ToLocalDate();
+            var date = new LocalDate(2021, 3, 7);
             var description = "Split expense";
             var splits = new List<Split>
             {
@@ -110,7 +112,7 @@ namespace Data.External.IntegrationTest.Splitwise
             var expense = this.splitwiseContext.CreateExpense(
                 10,
                 "Description",
-                DateTime.Today.ToLocalDate(),
+                new LocalDate(2021, 3, 7),
                 new Split { UserId = this.otherUserId1, Amount = 50 }.Singleton());
 
             this.splitwiseContext.DeleteExpense(expense.Id);
@@ -130,13 +132,19 @@ namespace Data.External.IntegrationTest.Splitwise
             var oldExpense = this.splitwiseContext.CreateExpense(
                 10,
                 "Description",
-                DateTime.Today.ToLocalDate(),
+                new LocalDate(2021, 3, 7),
                 new Split { UserId = this.otherUserId1, Amount = 50 }.Singleton());
 
             var now = DateTime.Now;
 
+            // Wait to make sure the updatedAfter is actually after "now".
+            Thread.Sleep(100);
+
             var newExpense = this.splitwiseContext.CreateExpense(
-                10, "Description", DateTime.Today.ToLocalDate(), new Split { UserId = this.otherUserId1, Amount = 50 }.Singleton());
+                10,
+                "Description",
+                new LocalDate(2021, 3, 7),
+                new Split { UserId = this.otherUserId1, Amount = 50 }.Singleton());
 
             var expenses = this.splitwiseContext.GetExpenses(now);
 
