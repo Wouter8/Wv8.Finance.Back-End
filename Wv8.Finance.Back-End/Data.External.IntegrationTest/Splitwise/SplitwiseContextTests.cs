@@ -109,6 +109,10 @@ namespace Data.External.IntegrationTest.Splitwise
         public void Test_DeleteExpense()
         {
             var now = DateTime.UtcNow;
+
+            // Sleep to make sure the following expense is created after "now".
+            Thread.Sleep(1000);
+
             var expense = this.splitwiseContext.CreateExpense(
                 -100,
                 "Description",
