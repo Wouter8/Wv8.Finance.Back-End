@@ -96,7 +96,8 @@ namespace PersonalFinance.Service
             services.AddTransient<ISplitwiseContext, SplitwiseContext>();
 
             // Services
-            services.AddHostedService<PeriodicService>();
+            services.AddHostedService<PeriodicProcessorService>();
+            services.AddHostedService<PeriodicSplitwiseImporter>();
         }
 
         /// <summary>

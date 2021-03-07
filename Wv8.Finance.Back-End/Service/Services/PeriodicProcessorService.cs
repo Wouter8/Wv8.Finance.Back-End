@@ -10,9 +10,9 @@
     using PersonalFinance.Data.External.Splitwise;
 
     /// <summary>
-    /// A class for a service which handles a periodic run to process all needing objects.
+    /// A class for a service which handles a periodic run to process all needed objects.
     /// </summary>
-    public class PeriodicService : IHostedService, IDisposable
+    public class PeriodicProcessorService : IHostedService, IDisposable
     {
         /// <summary>
         /// The timer.
@@ -20,10 +20,10 @@
         private Timer timer;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PeriodicService"/> class.
+        /// Initializes a new instance of the <see cref="PeriodicProcessorService"/> class.
         /// </summary>
         /// <param name="services">The service provider.</param>
-        public PeriodicService(IServiceProvider services)
+        public PeriodicProcessorService(IServiceProvider services)
         {
             this.Services = services;
         }
@@ -36,7 +36,7 @@
         /// <inheritdoc />
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            this.timer = new Timer(this.DoWork, null, TimeSpan.Zero, TimeSpan.FromHours(6));
+            this.timer = new Timer(this.ProcessAll, null, TimeSpan.Zero, TimeSpan.FromHours(6));
 
             return Task.CompletedTask;
         }
@@ -59,7 +59,7 @@
         /// This method retrieves the process service and runs it.
         /// </summary>
         /// <param name="state">The state. This is not used.</param>
-        private void DoWork(object state)
+        private void ProcessAll(object state)
         {
             using var scope = this.Services.CreateScope();
             using var serviceScope = scope.ServiceProvider
