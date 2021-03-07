@@ -37,10 +37,11 @@ namespace PersonalFinance.Business.Account
         }
 
         /// <inheritdoc />
-        public List<Account> GetAccounts(bool includeObsolete)
+        public List<Account> GetAccounts(bool includeObsolete, Maybe<AccountType> type)
         {
             return this.Context.Accounts
                 .IncludeAll()
+                .WhereIf(type.IsSome, a => a.Type == type.Value)
                 .WhereIf(!includeObsolete, a => !a.IsObsolete)
                 .OrderByDescending(a => a.IsDefault)
                 .ThenBy(a => a.Description)

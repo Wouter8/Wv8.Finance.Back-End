@@ -2,6 +2,8 @@
 {
     using System.Collections.Generic;
     using System.Linq;
+    using Business.UnitTest.Helpers;
+    using PersonalFinance.Business.Account;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;
@@ -54,7 +56,7 @@
         public void GetAccounts()
         {
             // Empty database.
-            var retrievedAccounts = this.AccountManager.GetAccounts(true);
+            var retrievedAccounts = this.AccountManager.GetAccounts(true, Maybe<AccountType>.None);
             Assert.Empty(retrievedAccounts);
 
             // Create accounts.
@@ -77,7 +79,7 @@
             savedAccounts[defaultAccountIndex] = this.AccountManager.GetAccount(savedAccounts[defaultAccountIndex].Id);
 
             // Load all active accounts (all active). Verify default account is first.
-            retrievedAccounts = this.AccountManager.GetAccounts(false);
+            retrievedAccounts = this.AccountManager.GetAccounts(false, Maybe<AccountType>.None);
             Assert.Equal(savedAccounts[defaultAccountIndex].Id, retrievedAccounts.First().Id);
             Assert.Equal(accountCount, retrievedAccounts.Count);
 
@@ -90,19 +92,57 @@
             }
 
             // Load active and inactive accounts (all active).
-            retrievedAccounts = this.AccountManager.GetAccounts(true);
+            retrievedAccounts = this.AccountManager.GetAccounts(true, Maybe<AccountType>.None);
             Assert.Equal(accountCount, retrievedAccounts.Count);
 
             // Set account obsolete
             this.AccountManager.SetAccountObsolete(savedAccounts.Last().Id, true);
 
             // Load all active accounts (all except 1)
-            retrievedAccounts = this.AccountManager.GetAccounts(false);
+            retrievedAccounts = this.AccountManager.GetAccounts(false, Maybe<AccountType>.None);
             Assert.Equal(accountCount - 1, retrievedAccounts.Count);
 
             // Load active and inactive accounts (should return all again).
-            retrievedAccounts = this.AccountManager.GetAccounts(true);
+            retrievedAccounts = this.AccountManager.GetAccounts(true, Maybe<AccountType>.None);
             Assert.Equal(accountCount, retrievedAccounts.Count);
+        }
+
+        /// <summary>
+        /// Tests the <see cref="IAccountManager.GetAccounts"/> method.
+        /// Validates that the account type filter works correctly.
+        /// </summary>
+        [Fact]
+        public void GetAccounts_TypeFilter()
+        {
+            var (account1, _) = this.context.GenerateAccount();
+            var (account2, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var (account3, _) = this.context.GenerateAccount(AccountType.Splitwise, isObsolete: true);
+
+            this.context.SaveChanges();
+
+            var accounts = this.AccountManager.GetAccounts(false, Maybe<AccountType>.None);
+            Assert.Equal(2, accounts.Count);
+            Assert.Contains(accounts, a => a.Id == account1.Id);
+            Assert.Contains(accounts, a => a.Id == account2.Id);
+            Assert.DoesNotContain(accounts, a => a.Id == account3.Id);
+
+            accounts = this.AccountManager.GetAccounts(true, Maybe<AccountType>.None);
+            Assert.Equal(3, accounts.Count);
+            Assert.Contains(accounts, a => a.Id == account1.Id);
+            Assert.Contains(accounts, a => a.Id == account2.Id);
+            Assert.Contains(accounts, a => a.Id == account3.Id);
+
+            accounts = this.AccountManager.GetAccounts(false, AccountType.Splitwise);
+            Assert.Single(accounts);
+            Assert.DoesNotContain(accounts, a => a.Id == account1.Id);
+            Assert.Contains(accounts, a => a.Id == account2.Id);
+            Assert.DoesNotContain(accounts, a => a.Id == account3.Id);
+
+            accounts = this.AccountManager.GetAccounts(true, AccountType.Splitwise);
+            Assert.Equal(2, accounts.Count);
+            Assert.DoesNotContain(accounts, a => a.Id == account1.Id);
+            Assert.Contains(accounts, a => a.Id == account2.Id);
+            Assert.Contains(accounts, a => a.Id == account3.Id);
         }
 
         #endregion GetAccounts
