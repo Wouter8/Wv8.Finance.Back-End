@@ -100,7 +100,7 @@ namespace PersonalFinance.Business.Transaction
             this.validator.Description(input.Description);
             var date = this.validator.DateString(input.DateString, "date");
             var type = this.GetTransactionType(input.CategoryId, input.ReceivingAccountId, input.Amount);
-            this.validator.PaymentRequests(input.PaymentRequests, type, input.Amount);
+            this.validator.Splits(this.splitwiseContext, input.PaymentRequests, input.SplitwiseSplits, type, input.Amount);
 
             return this.ConcurrentInvoke(() =>
             {
@@ -129,8 +129,6 @@ namespace PersonalFinance.Business.Transaction
                     if (receivingAccount.Value.Id == account.Id)
                         throw new ValidationException("Sender account can not be the same as receiver account.");
                 }
-
-                this.validator.SplitwiseSplits(input.SplitwiseSplits, input.Amount, this.splitwiseContext);
 
                 processor.RevertIfProcessed(entity);
 
@@ -191,7 +189,7 @@ namespace PersonalFinance.Business.Transaction
             this.validator.Description(input.Description);
             var date = this.validator.DateString(input.DateString, "date");
             var type = this.GetTransactionType(input.CategoryId, input.ReceivingAccountId, input.Amount);
-            this.validator.PaymentRequests(input.PaymentRequests, type, input.Amount);
+            this.validator.Splits(this.splitwiseContext, input.PaymentRequests, input.SplitwiseSplits, type, input.Amount);
 
             return this.ConcurrentInvoke(() =>
             {
@@ -211,8 +209,6 @@ namespace PersonalFinance.Business.Transaction
                     if (receivingAccount.Value.Id == account.Id)
                         throw new ValidationException("Sender account can not be the same as receiver account.");
                 }
-
-                this.validator.SplitwiseSplits(input.SplitwiseSplits, input.Amount, this.splitwiseContext);
 
                 var entity = new TransactionEntity
                 {

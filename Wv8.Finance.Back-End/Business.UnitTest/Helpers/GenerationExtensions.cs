@@ -145,6 +145,7 @@ namespace Business.UnitTest.Helpers
                 ReceivingAccount = receivingAccount,
                 NeedsConfirmation = needsConfirmation,
                 PaymentRequests = new List<PaymentRequestEntity>(),
+                SplitDetails = new List<SplitDetailEntity>(),
                 Processed = false,
                 IsConfirmed = !needsConfirmation,
                 Type = type,

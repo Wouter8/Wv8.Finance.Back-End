@@ -139,6 +139,7 @@ namespace Business.UnitTest
         /// <param name="receivingAccountId">The identifier of the receiving account.</param>
         /// <param name="needsConfirmation">A value indicating if the transaction has to be confirmed.</param>
         /// <param name="paymentRequests">The payment requests of the transaction.</param>
+        /// <param name="splitwiseSplits">The Splitwise splits of the transaction.</param>
         /// <returns>The created transaction.</returns>
         protected InputTransaction GetInputTransaction(
             int accountId,
@@ -149,7 +150,8 @@ namespace Business.UnitTest
             int? categoryId = null,
             int? receivingAccountId = null,
             bool needsConfirmation = false,
-            List<InputPaymentRequest> paymentRequests = null)
+            List<InputPaymentRequest> paymentRequests = null,
+            List<InputSplitwiseSplit> splitwiseSplits = null)
         {
             if ((type == TransactionType.Expense || type == TransactionType.Income) && !categoryId.HasValue)
                 throw new Exception("Specify a category for an income or expense transaction.");
@@ -166,6 +168,7 @@ namespace Business.UnitTest
                 ReceivingAccountId = receivingAccountId.ToMaybe(),
                 NeedsConfirmation = needsConfirmation,
                 PaymentRequests = paymentRequests ?? new List<InputPaymentRequest>(),
+                SplitwiseSplits = splitwiseSplits ?? new List<InputSplitwiseSplit>(),
             };
         }
 

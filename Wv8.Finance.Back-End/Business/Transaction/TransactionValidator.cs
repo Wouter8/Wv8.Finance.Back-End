@@ -75,57 +75,44 @@
         }
 
         /// <summary>
-        /// Validates a list of payment requests.
+        /// Validates a list of payment requests and Splitwise splits.
         /// </summary>
+        /// <param name="splitwiseContext">The Splitwise context.</param>
         /// <param name="paymentRequests">The list of payment requests.</param>
+        /// <param name="splitwiseSplits">The list of Splitwise splits.</param>
         /// <param name="type">The type of the transaction.</param>
-        /// <param name="transactionAmount">The amount of the transaction.</param>
-        public void PaymentRequests(
-            List<InputPaymentRequest> paymentRequests, TransactionType type, decimal transactionAmount)
+        /// <param name="totalAmount">The amount of the transaction.</param>
+        public void Splits(
+            ISplitwiseContext splitwiseContext,
+            List<InputPaymentRequest> paymentRequests,
+            List<InputSplitwiseSplit> splitwiseSplits,
+            TransactionType type,
+            decimal totalAmount)
         {
-            if (!paymentRequests.Any())
+            if (!paymentRequests.Any() && !splitwiseSplits.Any())
                 return;
 
+            totalAmount = Math.Abs(totalAmount);
+            var sumPaymentRequests = paymentRequests.Sum(pr => pr.Count * pr.Amount);
+            var sumSplitwiseSplits = splitwiseSplits.Sum(s => s.Amount);
+            var personalAmount = totalAmount - sumSplitwiseSplits;
+
             if (type != TransactionType.Expense)
-                throw new ValidationException("Payment requests can only be specified on expenses.");
-
-            var sum = paymentRequests.Sum(pr => pr.Count * pr.Amount);
-            var absTransactionAmount = Math.Abs(transactionAmount);
-            if (sum > absTransactionAmount)
             {
-                throw new ValidationException($"The amount of the payment requests ({-sum}) can not exceed the " +
-                                              $"transaction amount ({transactionAmount})");
+                throw new ValidationException(
+                    "Payment requests and Splitwise splits can only be specified on expenses.");
             }
 
-            foreach (var paymentRequest in paymentRequests)
-            {
-                if (paymentRequest.Count <= 0)
-                    throw new ValidationException("A payment request must at least need 1 payment.");
-
-                if (string.IsNullOrWhiteSpace(paymentRequest.Name))
-                    throw new ValidationException("A payment request must specify a name.");
-
-                if (paymentRequest.Amount <= 0)
-                    throw new ValidationException("A payment request must have an amount greater than 0.");
-            }
-        }
-
-        /// <summary>
-        /// Validates a list of Splitwise splits.
-        /// </summary>
-        /// <param name="splitwiseSplits">The splits to be validated.</param>
-        /// <param name="amount">The total amount of the transaction.</param>
-        /// <param name="splitwiseContext">The Splitwise context.</param>
-        public void SplitwiseSplits(
-            List<InputSplitwiseSplit> splitwiseSplits, decimal amount, ISplitwiseContext splitwiseContext)
-        {
-            if (!splitwiseSplits.Any()) return;
-
-            var sum = splitwiseSplits.Sum(s => s.Amount);
-            if (sum > Math.Abs(amount))
+            if (sumSplitwiseSplits > totalAmount)
             {
                 throw new ValidationException(
                     "The amount split can not exceed the total amount of the transaction.");
+            }
+            if (sumPaymentRequests > personalAmount)
+            {
+                throw new ValidationException(
+                    $"The amount of the payment requests ({sumPaymentRequests}) can not exceed the personal " +
+                    $"amount ({personalAmount})");
             }
 
             if (splitwiseSplits.Any(s => s.Amount <= 0))
@@ -138,6 +125,18 @@
             var splitwiseUserIds = splitwiseContext.GetUsers().Select(u => u.Id).ToSet();
             if (!inputtedUserIds.IsSubsetOf(splitwiseUserIds))
                 throw new ValidationException("Unknown Splitwise user(s) specified.");
+
+            foreach (var paymentRequest in paymentRequests)
+            {
+                if (paymentRequest.Count <= 0)
+                    throw new ValidationException("A payment request must at least have 1 requested payment.");
+
+                if (string.IsNullOrWhiteSpace(paymentRequest.Name))
+                    throw new ValidationException("A payment request must specify a name.");
+
+                if (paymentRequest.Amount <= 0)
+                    throw new ValidationException("A payment request must have an amount greater than 0.");
+            }
         }
     }
 }

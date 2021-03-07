@@ -27,6 +27,21 @@ namespace Business.UnitTest.Helpers
                 CategoryId = transaction.CategoryId.ToMaybe(),
                 ReceivingAccountId = transaction.ReceivingAccountId.ToMaybe(),
                 PaymentRequests = transaction.PaymentRequests.Select(pr => pr.ToInput()).ToList(),
+                SplitwiseSplits = transaction.SplitDetails.Select(pr => pr.ToInput()).ToList(),
+            };
+        }
+
+        /// <summary>
+        /// Converts a <see cref="SplitDetailEntity"/> to a <see cref="InputSplitwiseSplit"/>.
+        /// </summary>
+        /// <param name="splitDetail">The entity.</param>
+        /// <returns>The converted object.</returns>
+        public static InputSplitwiseSplit ToInput(this SplitDetailEntity splitDetail)
+        {
+            return new InputSplitwiseSplit
+            {
+                UserId = splitDetail.SplitwiseUserId,
+                Amount = splitDetail.Amount,
             };
         }
 

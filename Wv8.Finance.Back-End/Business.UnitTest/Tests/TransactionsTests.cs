@@ -623,78 +623,7 @@
         [Fact]
         public void Test_UpdateTransaction_SplitwiseSplits()
         {
-            var account = this.GenerateAccount();
-            var category = this.GenerateCategory();
-
-            var input = new InputTransaction
-            {
-                AccountId = account.Id,
-                Description = "Transaction",
-                DateString = DateTime.Today.ToDateString(),
-                Amount = -300,
-                CategoryId = category.Id,
-                ReceivingAccountId = Maybe<int>.None,
-                NeedsConfirmation = false,
-                PaymentRequests = new List<InputPaymentRequest>(),
-                SplitwiseSplits = new List<InputSplitwiseSplit>
-                {
-                    new InputSplitwiseSplit
-                    {
-                        Amount = 100,
-                        UserId = 1,
-                    },
-                    new InputSplitwiseSplit
-                    {
-                        Amount = 150,
-                        UserId = 2,
-                    },
-                },
-            };
-
-            var transaction = this.TransactionManager.CreateTransaction(input);
-            var prGroup = transaction.PaymentRequests.Single(pr => pr.Count == 4);
-            var prPerson = transaction.PaymentRequests.Single(pr => pr.Count == 1);
-
-            var edit = new InputTransaction
-            {
-                Amount = transaction.Amount,
-                Description = transaction.Description,
-                AccountId = transaction.AccountId,
-                CategoryId = transaction.CategoryId,
-                DateString = transaction.Date,
-                ReceivingAccountId = Maybe<int>.None,
-                PaymentRequests = new List<InputPaymentRequest>
-                {
-                    new InputPaymentRequest
-                    {
-                        Id = prGroup.Id,
-                        Amount = 50,
-                        Count = 6,
-                        Name = "Group",
-                    },
-                    new InputPaymentRequest
-                    {
-                        Id = Maybe<int>.None,
-                        Amount = 100,
-                        Count = 1,
-                        Name = "Person",
-                    },
-                },
-                SplitwiseSplits = new List<InputSplitwiseSplit>(),
-            };
-            transaction = this.TransactionManager.UpdateTransaction(transaction.Id, edit);
-            var prIds = transaction.PaymentRequests.Select(pr => pr.Id).ToList();
-
-            Assert.DoesNotContain(prPerson.Id, prIds);
-            Assert.Contains(prGroup.Id, prIds);
-
-            account = this.AccountManager.GetAccount(account.Id);
-
-            Assert.Equal(2, transaction.PaymentRequests.Count);
-            Assert.Equal(400, transaction.PaymentRequests.Sum(pr => pr.AmountDue));
-            Assert.Equal(-100, transaction.PersonalAmount);
-
-            Assert.Equal(-500, account.CurrentBalance);
+            // TODO.
         }
 
         #endregion UpdateTransaction
