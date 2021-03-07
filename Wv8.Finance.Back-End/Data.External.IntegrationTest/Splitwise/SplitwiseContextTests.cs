@@ -4,7 +4,6 @@ namespace Data.External.IntegrationTest.Splitwise
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
-    using NodaTime;
     using PersonalFinance.Common;
     using PersonalFinance.Data.External.Splitwise;
     using PersonalFinance.Data.External.Splitwise.Models;
@@ -14,7 +13,6 @@ namespace Data.External.IntegrationTest.Splitwise
     /// <summary>
     /// A test class for the <see cref="SplitwiseContext"/>.
     /// </summary>
-    /// <remarks>These tests should be ran manually if any logic for communicating with Splitwise is changed.</remarks>
     public class SplitwiseContextTests : BaseTest
     {
         /// <summary>
