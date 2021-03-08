@@ -132,6 +132,7 @@
                 entity.NeedsConfirmation = input.NeedsConfirmation;
                 entity.Interval = input.Interval;
                 entity.IntervalUnit = input.IntervalUnit;
+                entity.SplitDetails = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity()).ToList();
 
                 if (updateInstances)
                 {
@@ -205,6 +206,8 @@
                     IntervalUnit = input.IntervalUnit,
                     NeedsConfirmation = input.NeedsConfirmation,
                     NextOccurence = startPeriod,
+                    PaymentRequests = new List<PaymentRequestEntity>(), // TODO: Payment requests
+                    SplitDetails = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity()).ToList(),
                 };
 
                 processor.ProcessIfNeeded(entity);

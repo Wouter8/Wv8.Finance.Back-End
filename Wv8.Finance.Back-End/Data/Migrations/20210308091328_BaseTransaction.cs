@@ -25,7 +25,7 @@
                     CategoryId = table.Column<int>(type: "int", nullable: true),
                     AccountId = table.Column<int>(type: "int", nullable: false),
                     ReceivingAccountId = table.Column<int>(type: "int", nullable: true),
-                    NeedsConfirmation = table.Column<bool>(type: "bit", nullable: false)
+                    NeedsConfirmation = table.Column<bool>(type: "bit", nullable: false),
                 },
                 constraints: table =>
                 {

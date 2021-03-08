@@ -1,8 +1,10 @@
 ﻿namespace PersonalFinance.Business.Transaction.RecurringTransaction
 {
     using System;
+    using System.Linq;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Category;
+    using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Data.Models;
@@ -46,6 +48,7 @@
                 NextOccurence = entity.NextOccurence.ToMaybe().Select(dt => dt.ToDateString()),
                 Finished = entity.Finished,
                 NeedsConfirmation = entity.NeedsConfirmation,
+                SplitDetails = entity.SplitDetails.Select(sd => sd.AsSplitDetail()).ToList(),
             };
         }
     }

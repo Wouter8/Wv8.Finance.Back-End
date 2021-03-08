@@ -9,6 +9,7 @@
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.Enums;
+    using PersonalFinance.Data.Extensions;
     using Wv8.Core;
     using Wv8.Core.Collections;
     using Wv8.Core.Exceptions;
@@ -580,6 +581,83 @@
             var input = this.GetInputRecurringTransaction(normalAccount.Id, TransactionType.Transfer, receivingAccountId: account.Id);
 
             Assert.Throws<ValidationException>(() => this.RecurringTransactionManager.CreateRecurringTransaction(input));
+        }
+
+        /// <summary>
+        /// Tests method <see cref="IRecurringTransactionManager.CreateRecurringTransaction"/>.
+        /// Verifies that a transaction with specified Splitwise splits is correctly created.
+        /// </summary>
+        [Fact]
+        public void Test_CreateRecurringTransaction_SplitwiseSplits()
+        {
+            this.SplitwiseContextMock.GenerateUser(1, "Wouter", "van Acht");
+            this.SplitwiseContextMock.GenerateUser(2, "Jeroen");
+
+            var (account, _) = this.context.GenerateAccount();
+            var splitwiseAccount = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            this.context.SaveChanges();
+
+            var input = new InputRecurringTransaction
+            {
+                AccountId = account.Id,
+                Description = "Transaction",
+                StartDateString = DateTime.Today.ToDateString(),
+                EndDateString = null,
+                Amount = -300,
+                CategoryId = category.Id,
+                ReceivingAccountId = Maybe<int>.None,
+                NeedsConfirmation = false,
+                Interval = 1,
+                IntervalUnit = IntervalUnit.Months,
+                PaymentRequests = new List<InputPaymentRequest>(),
+                SplitwiseSplits = new List<InputSplitwiseSplit>
+                {
+                    new InputSplitwiseSplit
+                    {
+                        Amount = 100,
+                        UserId = 1,
+                    },
+                    new InputSplitwiseSplit
+                    {
+                        Amount = 150,
+                        UserId = 2,
+                    },
+                },
+            };
+
+            var recurringTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(input);
+
+            this.RefreshContext();
+
+            var transaction = this.context.Transactions.IncludeAll()
+                .Single(t => t.RecurringTransactionId == recurringTransaction.Id);
+            var expense =
+                this.SplitwiseContextMock.Expenses.Single(e => e.Id == transaction.SplitwiseTransaction.Id);
+            account = this.context.Accounts.GetEntity(account.Id);
+
+            Wv8Assert.IsSome(transaction.SplitwiseTransaction.ToMaybe());
+            Assert.True(transaction.SplitwiseTransaction.Imported);
+            Assert.Equal(250, transaction.SplitwiseTransaction.OwedByOthers);
+            Assert.Equal(50, transaction.SplitwiseTransaction.PersonalAmount);
+            Assert.Equal(300, transaction.SplitwiseTransaction.PaidAmount);
+            Assert.Equal(-50, transaction.PersonalAmount);
+
+            Assert.Equal(transaction.SplitwiseTransactionId.Value, expense.Id);
+            Assert.Equal(transaction.SplitwiseTransaction.PaidAmount, expense.PaidAmount);
+            Assert.Equal(transaction.SplitwiseTransaction.PersonalAmount, expense.PersonalAmount);
+            Assert.Equal(transaction.Date, expense.Date);
+            Assert.False(expense.IsDeleted);
+
+            Assert.Equal(2, recurringTransaction.SplitDetails.Count);
+            Assert.Contains(recurringTransaction.SplitDetails, sd => sd.SplitwiseUserId == 1 && sd.Amount == 100);
+            Assert.Contains(recurringTransaction.SplitDetails, sd => sd.SplitwiseUserId == 2 && sd.Amount == 150);
+            Assert.Equal(2, transaction.SplitDetails.Count);
+            Assert.Contains(transaction.SplitDetails, sd => sd.SplitwiseUserId == 1 && sd.Amount == 100);
+            Assert.Contains(transaction.SplitDetails, sd => sd.SplitwiseUserId == 2 && sd.Amount == 150);
+
+            Assert.Equal(-300, account.CurrentBalance);
         }
 
         #endregion CreateRecurringTransaction

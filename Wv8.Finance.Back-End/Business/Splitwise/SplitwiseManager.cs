@@ -176,9 +176,8 @@ namespace PersonalFinance.Business.Splitwise
                             // Otherwise, create a new transaction for the new Splitwise transaction.
                             else
                             {
-                                transaction =
-                                    splitwiseTransaction.ToTransaction(transaction.Value.Account,
-                                        transaction.Value.Category);
+                                transaction = splitwiseTransaction.ToTransaction(
+                                    transaction.Value.Account, transaction.Value.Category);
 
                                 processor.ProcessIfNeeded(transaction.Value);
 

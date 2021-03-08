@@ -1,6 +1,5 @@
 namespace PersonalFinance.Business.Splitwise
 {
-    using System;
     using System.Collections.Generic;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;

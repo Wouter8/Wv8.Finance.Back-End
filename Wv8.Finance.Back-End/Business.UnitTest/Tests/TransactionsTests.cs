@@ -1126,6 +1126,10 @@
             Assert.Equal(transaction.Date, expense.Date.ToDateString());
             Assert.False(expense.IsDeleted);
 
+            Assert.Equal(2, transaction.SplitDetails.Count);
+            Assert.Contains(transaction.SplitDetails, sd => sd.SplitwiseUserId == 1 && sd.Amount == 100);
+            Assert.Contains(transaction.SplitDetails, sd => sd.SplitwiseUserId == 2 && sd.Amount == 150);
+
             Assert.Equal(-300, account.CurrentBalance);
         }
 

@@ -29,6 +29,19 @@ namespace Business.UnitTest.Helpers
         /// <param name="testCode">The code that should throw the exception.</param>
         /// <param name="exceptionMessage">The expected message of the exception.</param>
         /// <typeparam name="TException">The type of the expected message.</typeparam>
+        public static void Throws<TException>(Action testCode, string exceptionMessage)
+            where TException : Exception
+        {
+            var exception = Xunit.Assert.Throws<TException>(testCode);
+            Xunit.Assert.Contains(exceptionMessage, exception.Message);
+        }
+
+        /// <summary>
+        /// Asserts that an exception is thrown with a specific message.
+        /// </summary>
+        /// <param name="testCode">The code that should throw the exception.</param>
+        /// <param name="exceptionMessage">The expected message of the exception.</param>
+        /// <typeparam name="TException">The type of the expected message.</typeparam>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public static async Task ThrowsAsync<TException>(Func<Task> testCode, string exceptionMessage)
             where TException : Exception

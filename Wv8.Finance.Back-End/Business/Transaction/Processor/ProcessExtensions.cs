@@ -2,9 +2,11 @@ namespace PersonalFinance.Business.Transaction.Processor
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using NodaTime;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Common.Exceptions;
+    using PersonalFinance.Data.External.Splitwise;
     using PersonalFinance.Data.Models;
 
     /// <summary>
@@ -99,7 +101,12 @@ namespace PersonalFinance.Business.Transaction.Processor
                 IsConfirmed = transaction.NeedsConfirmation ? false : (bool?)null,
                 Type = transaction.Type,
                 PaymentRequests = new List<PaymentRequestEntity>(),
-                SplitDetails = new List<SplitDetailEntity>(),
+                SplitDetails = transaction.SplitDetails.Select(sd =>
+                    new SplitDetailEntity
+                    {
+                        Amount = sd.Amount,
+                        SplitwiseUserId = sd.SplitwiseUserId,
+                    }).ToList(),
             };
             transaction.LastOccurence = transaction.NextOccurence.Value;
 
@@ -112,7 +119,9 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// Verifies that the entities linked to a transaction are not obsolete.
         /// </summary>
         /// <param name="transaction">The transaction.</param>
-        public static void VerifyEntitiesNotObsolete(this TransactionEntity transaction)
+        /// <param name="splitwiseContext">The Splitwise context.</param>
+        public static void VerifyEntitiesNotObsolete(
+            this TransactionEntity transaction, ISplitwiseContext splitwiseContext)
         {
             if (transaction.Account == null)
                 throw new ArgumentNullException(nameof(transaction.Account));
@@ -127,13 +136,22 @@ namespace PersonalFinance.Business.Transaction.Processor
                 throw new IsObsoleteException($"Receiver is obsolete.");
             if (transaction.CategoryId.HasValue && transaction.Category.IsObsolete)
                 throw new IsObsoleteException($"Category is obsolete.");
+
+            var currentSplitwiseUserIds = splitwiseContext.GetUsers().Select(u => u.Id).ToList();
+            foreach (var splitDetail in transaction.SplitDetails)
+            {
+                if (!currentSplitwiseUserIds.Contains(splitDetail.SplitwiseUserId))
+                    throw new IsObsoleteException("Splitwise user is obsolete.");
+            }
         }
 
         /// <summary>
         /// Verifies that the entities linked to a recurring transaction are not obsolete.
         /// </summary>
         /// <param name="transaction">The transaction.</param>
-        public static void VerifyEntitiesNotObsolete(this RecurringTransactionEntity transaction)
+        /// <param name="splitwiseContext">The Splitwise context.</param>
+        public static void VerifyEntitiesNotObsolete(
+            this RecurringTransactionEntity transaction, ISplitwiseContext splitwiseContext)
         {
             if (transaction.Account == null)
                 throw new ArgumentNullException(nameof(transaction.Account));
@@ -148,6 +166,13 @@ namespace PersonalFinance.Business.Transaction.Processor
                 throw new IsObsoleteException($"Receiver is obsolete.");
             if (transaction.CategoryId.HasValue && transaction.Category.IsObsolete)
                 throw new IsObsoleteException($"Category is obsolete.");
+
+            var currentSplitwiseUserIds = splitwiseContext.GetUsers().Select(u => u.Id).ToList();
+            foreach (var splitDetail in transaction.SplitDetails)
+            {
+                if (!currentSplitwiseUserIds.Contains(splitDetail.SplitwiseUserId))
+                    throw new IsObsoleteException("Splitwise user is obsolete.");
+            }
         }
 
         /// <summary>

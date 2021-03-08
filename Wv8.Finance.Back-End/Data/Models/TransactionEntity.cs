@@ -1,9 +1,7 @@
 namespace PersonalFinance.Data.Models
 {
-    using System.Collections.Generic;
     using System.Linq;
     using NodaTime;
-    using PersonalFinance.Common.Enums;
 
     /// <summary>
     /// An entity representing a transaction. This can be an income, expense or transfer.

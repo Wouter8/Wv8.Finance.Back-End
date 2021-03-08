@@ -4,7 +4,6 @@ namespace Business.UnitTest.Helpers
     using System.Collections.Generic;
     using Business.UnitTest.Mocks;
     using NodaTime;
-    using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
@@ -115,6 +114,8 @@ namespace Business.UnitTest.Helpers
         /// <param name="receivingAccount">The receiving account.</param>
         /// <param name="recurringTransaction">The recurring transaction from which this is an instance.</param>
         /// <param name="splitwiseTransaction">The Splitwise transaction which is linked to this transaction.</param>
+        /// <param name="paymentRequests">The payment requests that are linked to this transaction.</param>
+        /// <param name="splitDetails">The split details which are linked to this transaction.</param>
         /// <param name="needsConfirmation">A value indicating if the transaction has to be confirmed.</param>
         /// <returns>The created transaction.</returns>
         public static TransactionEntity GenerateTransaction(
@@ -128,7 +129,7 @@ namespace Business.UnitTest.Helpers
             AccountEntity receivingAccount = null,
             RecurringTransactionEntity recurringTransaction = null,
             SplitwiseTransactionEntity splitwiseTransaction = null,
-            List<PaymentRequestEntity> paymentrequests = null,
+            List<PaymentRequestEntity> paymentRequests = null,
             List<SplitDetailEntity> splitDetails = null,
             bool needsConfirmation = false)
         {
@@ -146,7 +147,7 @@ namespace Business.UnitTest.Helpers
                 Category = category,
                 ReceivingAccount = receivingAccount,
                 NeedsConfirmation = needsConfirmation,
-                PaymentRequests = paymentrequests ?? new List<PaymentRequestEntity>(),
+                PaymentRequests = paymentRequests ?? new List<PaymentRequestEntity>(),
                 SplitDetails = splitDetails ?? new List<SplitDetailEntity>(),
                 Processed = false,
                 IsConfirmed = !needsConfirmation,
@@ -171,6 +172,8 @@ namespace Business.UnitTest.Helpers
         /// <param name="needsConfirmation">A value indicating if the transaction has to be confirmed.</param>
         /// <param name="interval">The interval.</param>
         /// <param name="intervalUnit">The interval unit.</param>
+        /// <param name="paymentRequests">The payment requests that are linked to this transaction.</param>
+        /// <param name="splitDetails">The split details which are linked to this transaction.</param>
         /// <returns>The created transaction.</returns>
         public static RecurringTransactionEntity GenerateRecurringTransaction(
             this Context context,

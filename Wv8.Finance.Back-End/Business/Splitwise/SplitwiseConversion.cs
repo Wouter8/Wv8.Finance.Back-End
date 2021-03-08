@@ -70,6 +70,21 @@ namespace PersonalFinance.Business.Splitwise
         }
 
         /// <summary>
+        /// Converts the entity to a data transfer object.
+        /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <returns>The data transfer object.</returns>
+        public static SplitDetail AsSplitDetail(this SplitDetailEntity entity)
+        {
+            return new SplitDetail
+            {
+                TransactionId = entity.TransactionId,
+                SplitwiseUserId = entity.SplitwiseUserId,
+                Amount = entity.Amount,
+            };
+        }
+
+        /// <summary>
         /// Converts the user to a data transfer object.
         /// </summary>
         /// <param name="user">The user.</param>

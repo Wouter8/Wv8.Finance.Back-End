@@ -7,10 +7,9 @@
     using NodaTime;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common;
-    using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.Enums;
+    using PersonalFinance.Common.Exceptions;
     using PersonalFinance.Data.Extensions;
-    using PersonalFinance.Data.External.Splitwise.Models;
     using PersonalFinance.Data.Models;
     using Xunit;
 
@@ -245,6 +244,48 @@
         }
 
         /// <summary>
+        /// Tests method <see cref="TransactionProcessor.ProcessAll"/>.
+        /// Verifies that an exception is thrown if a transaction is processed that has a split to a user which is no
+        /// longer in the Splitwise group.
+        /// </summary>
+        [Fact]
+        public void Test_Transaction_SplitDetails_UserObsolete()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var user1 = this.SplitwiseContextMock.GenerateUser(1, "User1");
+
+            var transaction = this.context.GenerateTransaction(
+                account,
+                TransactionType.Expense,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                -50,
+                category,
+                splitDetails: new List<SplitDetailEntity>
+                {
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = user1.Id,
+                        Amount = 20,
+                    },
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = 2,
+                        Amount = 15,
+                    },
+                });
+
+            this.context.SaveChanges();
+
+            Wv8Assert.Throws<IsObsoleteException>(
+                () => this.TransactionProcessor.ProcessAll(),
+                "Splitwise user is obsolete.");
+        }
+
+        /// <summary>
         /// Tests that recurring transactions get properly processed.
         /// </summary>
         [Fact]
@@ -338,6 +379,123 @@
             Assert.Equal(8, instances.Count);
             Assert.Equal(1, instances.Count(t => t.Processed));
             Assert.Equal(7, instances.Count(t => !t.Processed));
+        }
+
+        /// <summary>
+        /// Tests method <see cref="TransactionProcessor.ProcessAll"/>.
+        /// Verifies that a recurring transaction with Splitwise splits is correctly processed.
+        /// </summary>
+        [Fact]
+        public void Test_RecurringTransaction_SplitDetails()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var user1 = this.SplitwiseContextMock.GenerateUser(1, "User1");
+            var user2 = this.SplitwiseContextMock.GenerateUser(2, "User2");
+
+            var recurringTransaction = this.context.GenerateRecurringTransaction(
+                account,
+                TransactionType.Expense,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                null,
+                -50,
+                category,
+                interval: 1,
+                intervalUnit: IntervalUnit.Months,
+                splitDetails: new List<SplitDetailEntity>
+                {
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = user1.Id,
+                        Amount = 20,
+                    },
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = user2.Id,
+                        Amount = 15,
+                    },
+                });
+
+            this.context.SaveChanges();
+
+            this.TransactionProcessor.ProcessAll();
+
+            this.RefreshContext();
+
+            account = this.context.Accounts.GetEntity(account.Id);
+            splitwiseAccount = this.context.Accounts.GetEntity(splitwiseAccount.Id);
+            var expenses = this.SplitwiseContextMock.Expenses;
+            var splitwiseTransaction = this.context.SplitwiseTransactions.Single();
+            var transaction = this.context.Transactions.IncludeAll().Single();
+
+            Assert.Equal(-50, account.CurrentBalance);
+            Assert.Equal(35, splitwiseAccount.CurrentBalance);
+
+            var expense = Assert.Single(expenses);
+            Assert.Equal(15, expense.PersonalAmount);
+            Assert.Equal(50, expense.PaidAmount);
+            Assert.Equal(recurringTransaction.StartDate, expense.Date);
+            Assert.Equal(recurringTransaction.Description, expense.Description);
+
+            Assert.Equal(recurringTransaction.StartDate, splitwiseTransaction.Date);
+            Assert.Equal(recurringTransaction.Description, splitwiseTransaction.Description);
+            Assert.True(splitwiseTransaction.Imported);
+            Assert.Equal(50, splitwiseTransaction.PaidAmount);
+            Assert.Equal(15, splitwiseTransaction.PersonalAmount);
+            Assert.Equal(35, splitwiseTransaction.OwedByOthers);
+            Assert.Equal(0, splitwiseTransaction.OwedToOthers);
+
+            Assert.Equal(2, transaction.SplitDetails.Count);
+            Assert.Contains(transaction.SplitDetails, sd => sd.SplitwiseUserId == 1 && sd.Amount == 20);
+            Assert.Contains(transaction.SplitDetails, sd => sd.SplitwiseUserId == 2 && sd.Amount == 15);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="TransactionProcessor.ProcessAll"/>.
+        /// Verifies that an exception is thrown if a Splitwise user specified on a recurring transaction that is to be
+        /// processed is no longer part of the group.
+        /// </summary>
+        [Fact]
+        public void Test_RecurringTransaction_SplitDetails_UserObsolete()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var user1 = this.SplitwiseContextMock.GenerateUser(1, "User1");
+
+            var recurringTransaction = this.context.GenerateRecurringTransaction(
+                account,
+                TransactionType.Expense,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                null,
+                -50,
+                category,
+                interval: 1,
+                intervalUnit: IntervalUnit.Months,
+                splitDetails: new List<SplitDetailEntity>
+                {
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = user1.Id,
+                        Amount = 20,
+                    },
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = 2,
+                        Amount = 15,
+                    },
+                });
+
+            this.context.SaveChanges();
+
+            Wv8Assert.Throws<IsObsoleteException>(
+                () => this.TransactionProcessor.ProcessAll(),
+                "Splitwise user is obsolete.");
         }
 
         /// <summary>

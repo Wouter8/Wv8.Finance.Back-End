@@ -6,9 +6,6 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using PersonalFinance.Business.Splitwise;
-    using PersonalFinance.Business.Transaction.Processor;
-    using PersonalFinance.Data;
-    using PersonalFinance.Data.External.Splitwise;
 
     /// <summary>
     /// A class for a service which handles a periodic run to import expenses from Splitwise.

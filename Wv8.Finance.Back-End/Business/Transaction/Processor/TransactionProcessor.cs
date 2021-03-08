@@ -109,7 +109,7 @@
         private void Process(
             TransactionEntity transaction, List<DailyBalanceEntity> addedDailyBalances)
         {
-            transaction.VerifyEntitiesNotObsolete();
+            transaction.VerifyEntitiesNotObsolete(this.splitwiseContext);
 
             var (historicalEntriesToEdit, newHistoricalEntry) =
                 this.GetBalanceEntriesToEdit(transaction.AccountId, transaction.Date, addedDailyBalances);
@@ -261,7 +261,7 @@
         /// <remarks>Note that the context is not saved.</remarks>
         private void Process(RecurringTransactionEntity transaction, List<DailyBalanceEntity> addedDailyBalances)
         {
-            transaction.VerifyEntitiesNotObsolete();
+            transaction.VerifyEntitiesNotObsolete(this.splitwiseContext);
 
             var instances = new List<TransactionEntity>();
             while (!transaction.Finished)

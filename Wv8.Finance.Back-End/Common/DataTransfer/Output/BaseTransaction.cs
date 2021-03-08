@@ -1,16 +1,16 @@
-namespace PersonalFinance.Data.Models
+namespace PersonalFinance.Common.DataTransfer.Output
 {
     using System.Collections.Generic;
-    using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
+    using Wv8.Core;
 
     /// <summary>
-    /// A base class for a transaction. This can be a recurring transaction or a normal transaction.
+    /// A class for a data transfer object representing a base transaction.
     /// </summary>
-    public class BaseTransactionEntity
+    public class BaseTransaction
     {
         /// <summary>
-        /// The identifier.
+        /// The identifier of this transaction.
         /// </summary>
         public int Id { get; set; }
 
@@ -33,13 +33,13 @@ namespace PersonalFinance.Data.Models
         /// The identifier of the category this transaction belongs to.
         /// This value is not set for transfer transactions.
         /// </summary>
-        public int? CategoryId { get; set; }
+        public Maybe<int> CategoryId { get; set; }
 
         /// <summary>
         /// the category this transaction belongs to.
         /// This is not set for transfer transactions.
         /// </summary>
-        public CategoryEntity Category { get; set; }
+        public Maybe<Category> Category { get; set; }
 
         /// <summary>
         /// The identifier of the account this transaction belongs to.
@@ -49,19 +49,19 @@ namespace PersonalFinance.Data.Models
         /// <summary>
         /// The account this transaction belongs to.
         /// </summary>
-        public AccountEntity Account { get; set; }
+        public Account Account { get; set; }
 
         /// <summary>
         /// The identifier of the account that is the receiver.
         /// Only has a value when this transaction is a transfer transaction.
         /// </summary>
-        public int? ReceivingAccountId { get; set; }
+        public Maybe<int> ReceivingAccountId { get; set; }
 
         /// <summary>
         /// The account that is the receiver.
         /// Only has a value when this transaction is a transfer transaction.
         /// </summary>
-        public AccountEntity ReceivingAccount { get; set; }
+        public Maybe<Account> ReceivingAccount { get; set; }
 
         /// <summary>
         /// A value indicating if this transaction needs to be manually confirmed before being processed.
@@ -70,14 +70,8 @@ namespace PersonalFinance.Data.Models
         public bool NeedsConfirmation { get; set; }
 
         /// <summary>
-        /// The splits, containing all specifications of amounts in this transaction paid for others.
-        /// This can only have entries when a <see cref="SplitwiseTransaction"/> is linked.
+        /// The collection of split details which are linked to this transaction.
         /// </summary>
-        public List<SplitDetailEntity> SplitDetails { get; set; }
-
-        /// <summary>
-        /// The collection of payment requests which are linked to this transaction.
-        /// </summary>
-        public List<PaymentRequestEntity> PaymentRequests { get; set; }
+        public List<SplitDetail> SplitDetails { get; set; }
     }
 }

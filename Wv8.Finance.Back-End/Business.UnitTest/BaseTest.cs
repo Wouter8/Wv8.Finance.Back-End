@@ -239,7 +239,6 @@ namespace Business.UnitTest
         /// <param name="iconName">The icon name.</param>
         /// <param name="iconColor">The icon color.</param>
         /// <returns>The created account.</returns>
-        [Obsolete("Use context.GenerateAccount instead.")]
         protected Account GenerateAccount(
             AccountType type = AccountType.Normal,
             string description = null,
@@ -265,7 +264,6 @@ namespace Business.UnitTest
         /// <param name="iconName">The icon name.</param>
         /// <param name="iconColor">The icon color.</param>
         /// <returns>The created account.</returns>
-        [Obsolete("Use context.GenerateCategory instead.")]
         protected Category GenerateCategory(
             decimal? expectedMonthlyAmount = null,
             string description = null,
@@ -292,7 +290,6 @@ namespace Business.UnitTest
         /// <param name="iconName">The icon name.</param>
         /// <param name="iconColor">The icon color.</param>
         /// <returns>The create child category.</returns>
-        [Obsolete("Use context.GenerateCategory instead.")]
         protected Category GenerateCategoryWithParent(
             decimal? expectedMonthlyAmount = null,
             string description = null,
@@ -318,7 +315,6 @@ namespace Business.UnitTest
         /// <param name="startDate">The start date.</param>
         /// <param name="endDate">The end date.</param>
         /// <returns>The created budget.</returns>
-        [Obsolete("Use context.GenerateBudget instead.")]
         protected Budget GenerateBudget(
             int? categoryId = null,
             decimal? amount = null,
@@ -353,7 +349,6 @@ namespace Business.UnitTest
         /// <param name="paymentRequests">The payment requests of the transaction.</param>
         /// <param name="splitwiseSplits">The Splitwise splits of the transaction.</param>
         /// <returns>The created transaction.</returns>
-        [Obsolete("Use context.GenerateTransaction instead.")]
         protected Transaction GenerateTransaction(
             int? accountId = null,
             TransactionType type = TransactionType.Expense,
