@@ -180,10 +180,12 @@
             // Add the new id columns
             migrationBuilder.AddColumn<int>(
                 name: "Id2",
-                table: "RecurringTransactions");
+                table: "RecurringTransactions",
+                defaultValue: 1);
             migrationBuilder.AddColumn<int>(
                 name: "Id2",
-                table: "Transactions");
+                table: "Transactions",
+                defaultValue: 1);
 
             migrationBuilder.Sql(@"
                 UPDATE rt 
