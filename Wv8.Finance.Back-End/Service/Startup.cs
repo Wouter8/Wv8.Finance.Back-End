@@ -128,9 +128,6 @@ namespace PersonalFinance.Service
             });
 
             this.UpdateDatabase(app);
-
-            // Process everything on startup
-            this.ProcessAll(app);
         }
 
         /// <summary>
@@ -145,22 +142,6 @@ namespace PersonalFinance.Service
             using var context = serviceScope.ServiceProvider.GetService<Context>();
 
             context.Database.Migrate();
-        }
-
-        /// <summary>
-        /// Processes all unprocessed transactions in the past.
-        /// </summary>
-        /// <param name="app">The application builder.</param>
-        private void ProcessAll(IApplicationBuilder app)
-        {
-            using var serviceScope = app.ApplicationServices
-                .GetRequiredService<IServiceScopeFactory>()
-                .CreateScope();
-            using var context = serviceScope.ServiceProvider.GetService<Context>();
-            var splitwiseContext = serviceScope.ServiceProvider.GetService<ISplitwiseContext>();
-
-            var processor = new TransactionProcessor(context, splitwiseContext);
-            processor.ProcessAll();
         }
     }
 }
