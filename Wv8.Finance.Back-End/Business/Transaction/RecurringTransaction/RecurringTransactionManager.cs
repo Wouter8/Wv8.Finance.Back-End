@@ -4,6 +4,7 @@
     using System.Linq;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
+    using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
@@ -74,26 +75,15 @@
 
         /// <inheritdoc />
         public RecurringTransaction UpdateRecurringTransaction(
-            int id,
-            int accountId,
-            string description,
-            string startDate,
-            Maybe<string> endDate,
-            decimal amount,
-            Maybe<int> categoryId,
-            Maybe<int> receivingAccountId,
-            int interval,
-            IntervalUnit intervalUnit,
-            bool needsConfirmation,
-            bool updateInstances)
+            int id, InputRecurringTransaction input, bool updateInstances)
         {
-            this.validator.Description(description);
-            var startPeriod = this.validator.DateString(startDate, nameof(startDate));
-            var endPeriod = endDate.Select(d => this.validator.DateString(d, nameof(endDate)));
+            this.validator.Description(input.Description);
+            var startPeriod = this.validator.DateString(input.StartDateString, "startDate");
+            var endPeriod = input.EndDateString.Select(d => this.validator.DateString(d, "endDate"));
             if (endPeriod.IsSome)
                 this.validator.Period(startPeriod, endPeriod);
-            this.validator.Interval(interval);
-            var type = this.GetTransactionType(categoryId, receivingAccountId, amount);
+            this.validator.Interval(input.Interval);
+            var type = this.GetTransactionType(input.CategoryId, input.ReceivingAccountId, input.Amount);
 
             return this.ConcurrentInvoke(() =>
             {
@@ -106,32 +96,32 @@
                 if (!updateInstances && startPeriod != entity.StartDate)
                     throw new ValidationException($"Updating the start date without updating already created instances is not supported.");
 
-                var account = this.Context.Accounts.GetEntity(accountId, false);
+                var account = this.Context.Accounts.GetEntity(input.AccountId, false);
 
-                var category = categoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
+                var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
                 AccountEntity receivingAccount = null;
-                if (receivingAccountId.IsSome)
+                if (input.ReceivingAccountId.IsSome)
                 {
-                    receivingAccount = this.Context.Accounts.GetEntity(receivingAccountId.Value, false);
+                    receivingAccount = this.Context.Accounts.GetEntity(input.ReceivingAccountId.Value, false);
 
                     if (receivingAccount.Id == account.Id)
                         throw new ValidationException("Sender account can not be the same as receiver account.");
                 }
 
-                entity.AccountId = accountId;
+                entity.AccountId = input.AccountId;
                 entity.Account = account;
-                entity.Description = description;
+                entity.Description = input.Description;
                 entity.StartDate = startPeriod;
                 entity.EndDate = endPeriod.ToNullable();
-                entity.Amount = amount;
-                entity.CategoryId = categoryId.ToNullable();
+                entity.Amount = input.Amount;
+                entity.CategoryId = input.CategoryId.ToNullable();
                 entity.Category = category.ToNullIfNone();
-                entity.ReceivingAccountId = receivingAccountId.ToNullable();
+                entity.ReceivingAccountId = input.ReceivingAccountId.ToNullable();
                 entity.ReceivingAccount = receivingAccount;
-                entity.NeedsConfirmation = needsConfirmation;
-                entity.Interval = interval;
-                entity.IntervalUnit = intervalUnit;
+                entity.NeedsConfirmation = input.NeedsConfirmation;
+                entity.Interval = input.Interval;
+                entity.IntervalUnit = input.IntervalUnit;
 
                 if (updateInstances)
                 {
@@ -156,38 +146,28 @@
         }
 
         /// <inheritdoc />
-        public RecurringTransaction CreateRecurringTransaction(
-            int accountId,
-            string description,
-            string startDate,
-            Maybe<string> endDate,
-            decimal amount,
-            Maybe<int> categoryId,
-            Maybe<int> receivingAccountId,
-            int interval,
-            IntervalUnit intervalUnit,
-            bool needsConfirmation)
+        public RecurringTransaction CreateRecurringTransaction(InputRecurringTransaction input)
         {
-            this.validator.Description(description);
-            var startPeriod = this.validator.DateString(startDate, nameof(startDate));
-            var endPeriod = endDate.Select(d => this.validator.DateString(d, nameof(endDate)));
+            this.validator.Description(input.Description);
+            var startPeriod = this.validator.DateString(input.StartDateString, "startDate");
+            var endPeriod = input.EndDateString.Select(d => this.validator.DateString(d, "endDate"));
             if (endPeriod.IsSome)
                 this.validator.Period(startPeriod, endPeriod);
-            this.validator.Interval(interval);
-            var type = this.GetTransactionType(categoryId, receivingAccountId, amount);
+            this.validator.Interval(input.Interval);
+            var type = this.GetTransactionType(input.CategoryId, input.ReceivingAccountId, input.Amount);
 
             return this.ConcurrentInvoke(() =>
             {
                 var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
-                var account = this.Context.Accounts.GetEntity(accountId, false);
+                var account = this.Context.Accounts.GetEntity(input.AccountId, false);
 
-                var category = categoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
+                var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
                 AccountEntity receivingAccount = null;
-                if (receivingAccountId.IsSome)
+                if (input.ReceivingAccountId.IsSome)
                 {
-                    receivingAccount = this.Context.Accounts.GetEntity(receivingAccountId.Value, false);
+                    receivingAccount = this.Context.Accounts.GetEntity(input.ReceivingAccountId.Value, false);
 
                     if (receivingAccount.Id == account.Id)
                         throw new ValidationException("Sender account can not be the same as receiver account.");
@@ -195,20 +175,20 @@
 
                 var entity = new RecurringTransactionEntity
                 {
-                    Description = description,
+                    Description = input.Description,
                     Type = type,
-                    Amount = amount,
+                    Amount = input.Amount,
                     StartDate = startPeriod,
                     EndDate = endPeriod.ToNullable(),
-                    AccountId = accountId,
+                    AccountId = input.AccountId,
                     Account = account,
-                    CategoryId = categoryId.ToNullable(),
+                    CategoryId = input.CategoryId.ToNullable(),
                     Category = category.ToNullIfNone(),
-                    ReceivingAccountId = receivingAccountId.ToNullable(),
+                    ReceivingAccountId = input.ReceivingAccountId.ToNullable(),
                     ReceivingAccount = receivingAccount,
-                    Interval = interval,
-                    IntervalUnit = intervalUnit,
-                    NeedsConfirmation = needsConfirmation,
+                    Interval = input.Interval,
+                    IntervalUnit = input.IntervalUnit,
+                    NeedsConfirmation = input.NeedsConfirmation,
                     NextOccurence = startPeriod,
                 };
 

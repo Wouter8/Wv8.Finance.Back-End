@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using Business.UnitTest.Helpers;
     using NodaTime;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common;
@@ -23,10 +24,11 @@
         [Fact]
         public void GetRecurringTransaction()
         {
-            var rTransaction = this.GenerateRecurringTransaction();
+            var (account, _) = this.context.GenerateAccount();
+            var rTransaction = this.context.GenerateRecurringTransaction(account);
             var retrieved = this.RecurringTransactionManager.GetRecurringTransaction(rTransaction.Id);
 
-            this.AssertEqual(rTransaction, retrieved);
+            this.AssertEqual(rTransaction.AsRecurringTransaction(), retrieved);
         }
 
         #endregion GetRecurringTransaction
@@ -39,21 +41,20 @@
         [Fact]
         public void GetRecurringTransactionsByFilter()
         {
-            var account1 = this.GenerateAccount();
-            var account2 = this.GenerateAccount();
-            var category = this.GenerateCategory();
-            var rTransaction1 = this.GenerateRecurringTransaction(
-                accountId: account1.Id,
-                categoryId: category.Id);
-            var rTransaction2 = this.GenerateRecurringTransaction(
-                accountId: account1.Id,
-                type: TransactionType.Transfer,
-                receivingAccountId: account2.Id);
-            var finishedRecurringTransactions = this.GenerateRecurringTransaction(
-                accountId: account1.Id,
+            var (account1, _) = this.context.GenerateAccount();
+            var (account2, _) = this.context.GenerateAccount();
+            var category = this.context.GenerateCategory();
+            var rTransaction1 = this.context.GenerateRecurringTransaction(
+                account1, category: category);
+            var rTransaction2 = this.context.GenerateRecurringTransaction(
+                account1,
+                TransactionType.Transfer,
+                receivingAccount: account2);
+            var finishedRecurringTransactions = this.context.GenerateRecurringTransaction(
+                account1,
                 startDate: LocalDate.FromDateTime(DateTime.Today).PlusDays(-7),
                 endDate: LocalDate.FromDateTime(DateTime.Today),
-                categoryId: category.Id);
+                category: category);
 
             // No filters
             var retrieved =
@@ -101,7 +102,10 @@
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
-            var rTransaction = this.GenerateRecurringTransaction(
+            var (account, _) = this.context.GenerateAccount();
+
+            var rTransaction = this.context.GenerateRecurringTransaction(
+                account,
                 startDate: startDate,
                 endDate: endDate,
                 interval: interval,
@@ -116,8 +120,8 @@
 
             var newAccount = this.GenerateAccount().Id;
             var newDescription = "Description";
-            var newStartDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-1).ToDateString();
-            var newEndDate = LocalDate.FromDateTime(DateTime.Today).ToDateString();
+            var newStartDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-1);
+            var newEndDate = LocalDate.FromDateTime(DateTime.Today);
             var newAmount = -30;
             var newCategory = this.GenerateCategory().Id;
             var newInterval = 1;
@@ -125,16 +129,18 @@
 
             var updated = this.RecurringTransactionManager.UpdateRecurringTransaction(
                 rTransaction.Id,
-                newAccount,
-                newDescription,
-                newStartDate,
-                newEndDate,
-                newAmount,
-                newCategory,
-                Maybe<int>.None,
-                newInterval,
-                newIntervalUnit,
-                true,
+                this.GetInputRecurringTransaction(
+                    newAccount,
+                    TransactionType.Expense,
+                    newDescription,
+                    newStartDate,
+                    newEndDate,
+                    newAmount,
+                    newCategory,
+                    null,
+                    true,
+                    newInterval,
+                    newIntervalUnit),
                 true);
 
             instances = this.context.Transactions
@@ -163,7 +169,9 @@
             var interval = 1;
             var intervalUnit = IntervalUnit.Weeks;
 
-            var rTransaction = this.GenerateRecurringTransaction(
+            var (account, _) = this.context.GenerateAccount();
+            var rTransaction = this.context.GenerateRecurringTransaction(
+                account,
                 startDate: startDate,
                 endDate: endDate,
                 interval: interval,
@@ -178,8 +186,8 @@
 
             var newAccount = this.GenerateAccount().Id;
             var newDescription = "Description";
-            var newStartDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-1).ToDateString();
-            var newEndDate = Maybe<string>.None;
+            var newStartDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-1);
+            var newEndDate = (LocalDate?)null;
             var newAmount = -30;
             var newCategory = this.GenerateCategory().Id;
             var newInterval = 1;
@@ -187,16 +195,18 @@
 
             var updated = this.RecurringTransactionManager.UpdateRecurringTransaction(
                 rTransaction.Id,
+                this.GetInputRecurringTransaction(
                 newAccount,
+                TransactionType.Expense,
                 newDescription,
                 newStartDate,
                 newEndDate,
                 newAmount,
                 newCategory,
-                Maybe<int>.None,
-                newInterval,
-                newIntervalUnit,
+                null,
                 true,
+                newInterval,
+                newIntervalUnit),
                 true);
 
             instances = this.context.Transactions
@@ -231,16 +241,18 @@
             var intervalUnit = IntervalUnit.Weeks;
 
             var rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
-                account,
-                description,
-                startDate.ToDateString(),
-                endDate.ToDateString(),
-                amount,
-                category,
-                Maybe<int>.None,
-                interval,
-                intervalUnit,
-                false);
+                this.GetInputRecurringTransaction(
+                    account,
+                    TransactionType.Expense,
+                    description,
+                    startDate,
+                    endDate,
+                    amount,
+                    category,
+                    null,
+                    false,
+                    interval,
+                    intervalUnit));
 
             // Try to update start date without updating instances.
             var newStartDate = LocalDate.FromDateTime(DateTime.Today).PlusDays(-1);
@@ -248,32 +260,36 @@
             Assert.Throws<ValidationException>(() =>
                 this.RecurringTransactionManager.UpdateRecurringTransaction(
                     rTransaction.Id,
-                    account,
-                    description,
-                    newStartDate.ToString(),
-                    endDate.ToString(),
-                    amount,
-                    category,
-                    Maybe<int>.None,
-                    interval,
-                    intervalUnit,
-                    false,
+                    this.GetInputRecurringTransaction(
+                        account,
+                        TransactionType.Expense,
+                        description,
+                        newStartDate,
+                        endDate,
+                        amount,
+                        category,
+                        null,
+                        false,
+                        interval,
+                        intervalUnit),
                     false));
 
             // Try to update type of transaction
             Assert.Throws<ValidationException>(() =>
                 this.RecurringTransactionManager.UpdateRecurringTransaction(
                     rTransaction.Id,
-                    account,
-                    description,
-                    newStartDate.ToString(),
-                    endDate.ToString(),
-                    amount,
-                    Maybe<int>.None,
-                    account2,
-                    interval,
-                    intervalUnit,
-                    false,
+                    this.GetInputRecurringTransaction(
+                        account,
+                        TransactionType.Expense,
+                        description,
+                        newStartDate,
+                        endDate,
+                        amount,
+                        null,
+                        account2,
+                        false,
+                        interval,
+                        intervalUnit),
                     false));
         }
 
@@ -297,16 +313,18 @@
             var intervalUnit = IntervalUnit.Weeks;
 
             var rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
-                account,
-                description,
-                startDate.ToDateString(),
-                endDate.ToDateString(),
-                amount,
-                category,
-                Maybe<int>.None,
-                interval,
-                intervalUnit,
-                false);
+                this.GetInputRecurringTransaction(
+                    account,
+                    TransactionType.Expense,
+                    description,
+                    startDate,
+                    endDate,
+                    amount,
+                    category,
+                    null,
+                    false,
+                    interval,
+                    intervalUnit));
 
             var instances = this.context.Transactions
                 .Where(t => t.RecurringTransactionId == rTransaction.Id &&
@@ -333,16 +351,18 @@
             var intervalUnit = IntervalUnit.Weeks;
 
             var rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
-                account,
-                description,
-                startDate.ToDateString(),
-                endDate,
-                amount,
-                category,
-                Maybe<int>.None,
-                interval,
-                intervalUnit,
-                false);
+                this.GetInputRecurringTransaction(
+                    account,
+                    TransactionType.Expense,
+                    description,
+                    startDate,
+                    null,
+                    amount,
+                    category,
+                    null,
+                    false,
+                    interval,
+                    intervalUnit));
 
             var instances = this.context.Transactions
                 .Where(t => t.RecurringTransactionId == rTransaction.Id &&
@@ -374,16 +394,18 @@
             var intervalUnit = IntervalUnit.Weeks;
 
             var rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
-                account.Id,
-                description,
-                startDate.ToDateString(),
-                endDate.ToDateString(),
-                amount,
-                category,
-                Maybe<int>.None,
-                interval,
-                intervalUnit,
-                false);
+                this.GetInputRecurringTransaction(
+                    account.Id,
+                    TransactionType.Expense,
+                    description,
+                    startDate,
+                    endDate,
+                    amount,
+                    category,
+                    null,
+                    false,
+                    interval,
+                    intervalUnit));
 
             // Delete recurring transaction and delete 2 instances.
             this.RecurringTransactionManager.DeleteRecurringTransaction(rTransaction.Id, true);
@@ -397,16 +419,18 @@
             Assert.Empty(instances);
 
             rTransaction = this.RecurringTransactionManager.CreateRecurringTransaction(
-                account.Id,
-                description,
-                startDate.ToDateString(),
-                endDate.ToDateString(),
-                amount,
-                category,
-                Maybe<int>.None,
-                interval,
-                intervalUnit,
-                false);
+                this.GetInputRecurringTransaction(
+                    account.Id,
+                    TransactionType.Expense,
+                    description,
+                    startDate,
+                    endDate,
+                    amount,
+                    category,
+                    null,
+                    false,
+                    interval,
+                    intervalUnit));
 
             // Delete recurring transaction but leave 2 instances.
             this.RecurringTransactionManager.DeleteRecurringTransaction(rTransaction.Id, false);

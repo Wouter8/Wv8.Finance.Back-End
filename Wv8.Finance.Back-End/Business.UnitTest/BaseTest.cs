@@ -172,10 +172,63 @@ namespace Business.UnitTest
             };
         }
 
+        /// <summary>
+        /// Creates an account with specified, or random values.
+        /// </summary>
+        /// <param name="accountId">The identifier of the account.</param>
+        /// <param name="type">The type of the recurring transaction.</param>
+        /// <param name="description">The description of the recurring transaction.</param>
+        /// <param name="startDate">The start date of the recurring transaction.</param>
+        /// <param name="endDate">The end date of the recurring transaction.</param>
+        /// <param name="amount">The amount.</param>
+        /// <param name="categoryId">The identifier of the category.</param>
+        /// <param name="receivingAccountId">The identifier of the receiving account.</param>
+        /// <param name="needsConfirmation">The value for needs confirmation.</param>
+        /// <param name="interval">The interval.</param>
+        /// <param name="intervalUnit">The interval unit.</param>
+        /// <param name="paymentRequests">The payment requests of the transaction.</param>
+        /// <param name="splitwiseSplits">The Splitwise splits of the transaction.</param>
+        /// <returns>The created transaction.</returns>
+        protected InputRecurringTransaction GetInputRecurringTransaction(
+            int accountId,
+            TransactionType type = TransactionType.Expense,
+            string description = null,
+            LocalDate? startDate = null,
+            LocalDate? endDate = null,
+            decimal? amount = null,
+            int? categoryId = null,
+            int? receivingAccountId = null,
+            bool needsConfirmation = false,
+            int interval = 1,
+            IntervalUnit intervalUnit = IntervalUnit.Weeks,
+            List<InputPaymentRequest> paymentRequests = null,
+            List<InputSplitwiseSplit> splitwiseSplits = null)
+        {
+            if ((type == TransactionType.Expense || type == TransactionType.Income) && !categoryId.HasValue)
+                throw new Exception("Specify a category for an income or expense transaction.");
+            if (type == TransactionType.Transfer && !receivingAccountId.HasValue)
+                throw new Exception("Specify a receiving account for a transfer transaction.");
+
+            return new InputRecurringTransaction
+            {
+                AccountId = accountId,
+                Amount = amount ?? (type == TransactionType.Expense ? -50 : 50),
+                Description = description ?? this.GetRandomString(),
+                StartDateString = startDate.ToMaybe().ValueOrElse(DateTime.Now.ToLocalDate()).ToDateString(),
+                EndDateString = endDate.ToMaybe().Select(d => d.ToDateString()),
+                CategoryId = categoryId.ToMaybe(),
+                ReceivingAccountId = receivingAccountId.ToMaybe(),
+                NeedsConfirmation = needsConfirmation,
+                Interval = interval,
+                IntervalUnit = intervalUnit,
+                PaymentRequests = paymentRequests ?? new List<InputPaymentRequest>(),
+                SplitwiseSplits = splitwiseSplits ?? new List<InputSplitwiseSplit>(),
+            };
+        }
+
         #endregion InputHelpers
 
         #region CreateHelpers
-        // TODO: These method should not call manager/controller methods, but rather add entities directly to the database.
 
         /// <summary>
         /// Creates an account with specified, or random values.
@@ -186,6 +239,7 @@ namespace Business.UnitTest
         /// <param name="iconName">The icon name.</param>
         /// <param name="iconColor">The icon color.</param>
         /// <returns>The created account.</returns>
+        [Obsolete("Use context.GenerateAccount instead.")]
         protected Account GenerateAccount(
             AccountType type = AccountType.Normal,
             string description = null,
@@ -211,6 +265,7 @@ namespace Business.UnitTest
         /// <param name="iconName">The icon name.</param>
         /// <param name="iconColor">The icon color.</param>
         /// <returns>The created account.</returns>
+        [Obsolete("Use context.GenerateCategory instead.")]
         protected Category GenerateCategory(
             decimal? expectedMonthlyAmount = null,
             string description = null,
@@ -237,6 +292,7 @@ namespace Business.UnitTest
         /// <param name="iconName">The icon name.</param>
         /// <param name="iconColor">The icon color.</param>
         /// <returns>The create child category.</returns>
+        [Obsolete("Use context.GenerateCategory instead.")]
         protected Category GenerateCategoryWithParent(
             decimal? expectedMonthlyAmount = null,
             string description = null,
@@ -262,6 +318,7 @@ namespace Business.UnitTest
         /// <param name="startDate">The start date.</param>
         /// <param name="endDate">The end date.</param>
         /// <returns>The created budget.</returns>
+        [Obsolete("Use context.GenerateBudget instead.")]
         protected Budget GenerateBudget(
             int? categoryId = null,
             decimal? amount = null,
@@ -296,6 +353,7 @@ namespace Business.UnitTest
         /// <param name="paymentRequests">The payment requests of the transaction.</param>
         /// <param name="splitwiseSplits">The Splitwise splits of the transaction.</param>
         /// <returns>The created transaction.</returns>
+        [Obsolete("Use context.GenerateTransaction instead.")]
         protected Transaction GenerateTransaction(
             int? accountId = null,
             TransactionType type = TransactionType.Expense,
@@ -332,59 +390,6 @@ namespace Business.UnitTest
             };
 
             return this.TransactionManager.CreateTransaction(input);
-        }
-
-        /// <summary>
-        /// Creates an recurring transaction with specified, or random values.
-        /// </summary>
-        /// <param name="accountId">The identifier of the account.</param>
-        /// <param name="type">The type of the recurring transaction.</param>
-        /// <param name="description">The description of the recurring transaction.</param>
-        /// <param name="startDate">The start date of the recurring transaction.</param>
-        /// <param name="endDate">The end date of the recurring transaction.</param>
-        /// <param name="amount">The amount.</param>
-        /// <param name="categoryId">The identifier of the category.</param>
-        /// <param name="receivingAccountId">The identifier of the receiving account.</param>
-        /// <param name="needsConfirmation">The value for needs confirmation.</param>
-        /// <param name="interval">The interval.</param>
-        /// <param name="intervalUnit">The interval unit.</param>
-        /// <returns>The created recurring transaction.</returns>
-        protected RecurringTransaction GenerateRecurringTransaction(
-            int? accountId = null,
-            TransactionType type = TransactionType.Expense,
-            string description = null,
-            LocalDate? startDate = null,
-            LocalDate? endDate = null,
-            decimal? amount = null,
-            int? categoryId = null,
-            int? receivingAccountId = null,
-            bool needsConfirmation = false,
-            int interval = 3,
-            IntervalUnit intervalUnit = IntervalUnit.Months)
-        {
-            if ((type == TransactionType.Income || type == TransactionType.Expense) && !categoryId.HasValue)
-                categoryId = this.GenerateCategory().Id;
-            if (type == TransactionType.Transfer && !receivingAccountId.HasValue)
-                receivingAccountId = this.GenerateAccount().Id;
-
-            if (!accountId.HasValue)
-                accountId = this.GenerateAccount().Id;
-            if (!startDate.HasValue)
-                startDate = LocalDate.FromDateTime(DateTime.Today);
-            if (!endDate.HasValue)
-                endDate = startDate.Value.PlusMonths(3);
-
-            return this.RecurringTransactionManager.CreateRecurringTransaction(
-                accountId.Value,
-                description ?? this.GetRandomString(),
-                startDate.Value.ToDateString(),
-                endDate.Value.ToDateString(),
-                amount ?? (type == TransactionType.Expense ? -50m : 50m),
-                categoryId.ToMaybe(),
-                receivingAccountId.ToMaybe(),
-                interval,
-                intervalUnit,
-                needsConfirmation);
         }
 
         #endregion CreateHelpers

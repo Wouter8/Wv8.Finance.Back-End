@@ -301,13 +301,13 @@
         [Fact]
         public void SetAccountObsolete()
         {
-            var account = this.GenerateAccount();
-            var account2 = this.GenerateAccount();
+            var (account, _) = this.context.GenerateAccount();
+            var (account2, _) = this.context.GenerateAccount();
 
             // Create 2 recurring transactions for account.
-            var rTransaction1 = this.GenerateRecurringTransaction(account.Id);
-            var rTransaction2 = this.GenerateRecurringTransaction(
-                accountId: account2.Id, type: TransactionType.Transfer, receivingAccountId: account.Id);
+            var rTransaction1 = this.context.GenerateRecurringTransaction(account);
+            var rTransaction2 = this.context.GenerateRecurringTransaction(
+                account2, type: TransactionType.Transfer, receivingAccount: account);
 
             // Set as default and obsolete.
             this.AccountManager.UpdateAccount(
