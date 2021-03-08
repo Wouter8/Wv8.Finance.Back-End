@@ -304,6 +304,7 @@ namespace PersonalFinance.Business.Transaction
                 if (entity.Completed)
                     throw new ValidationException("This payment request is already completed.");
 
+                // TODO: This should alter the account balance.
                 entity.PaidCount++;
 
                 this.Context.SaveChanges();

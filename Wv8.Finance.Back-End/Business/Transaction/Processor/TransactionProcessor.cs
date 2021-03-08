@@ -214,7 +214,10 @@
                         // If the transaction has splits, then it is defined in this application and the expense should
                         // be removed.
                         if (transaction.SplitDetails.Any())
+                        {
                             this.splitwiseContext.DeleteExpense(transaction.SplitwiseTransactionId.Value);
+                            transaction.SplitwiseTransaction.IsDeleted = true;
+                        }
                     }
 
                     break;

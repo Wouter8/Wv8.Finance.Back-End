@@ -20,6 +20,7 @@ namespace PersonalFinance.Data.Extensions
             builder.BuildAccountEntity();
             builder.BuildCategoryEntity();
             builder.BuildBudgetEntity();
+            builder.BuildBaseTransactionEntity();
             builder.BuildTransactionEntity();
             builder.BuildRecurringTransactionEntity();
             builder.BuildDailyBalanceEntity();
@@ -106,14 +107,25 @@ namespace PersonalFinance.Data.Extensions
         /// Adds the required properties to the fields of the transaction entity.
         /// </summary>
         /// <param name="builder">The builder.</param>
+        private static void BuildBaseTransactionEntity(this ModelBuilder builder)
+        {
+            var entity = builder.Entity<BaseTransactionEntity>();
+
+            entity.ToTable("BaseTransactions");
+
+            entity.Property(e => e.Description).IsRequired();
+            entity.Property(e => e.Amount).HasPrecision(12, 2);
+        }
+
+        /// <summary>
+        /// Adds the required properties to the fields of the transaction entity.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
         private static void BuildTransactionEntity(this ModelBuilder builder)
         {
             var entity = builder.Entity<TransactionEntity>();
 
             entity.ToTable("Transactions");
-
-            entity.Property(e => e.Description).IsRequired();
-            entity.Property(e => e.Amount).HasPrecision(12, 2);
         }
 
         /// <summary>
@@ -125,9 +137,6 @@ namespace PersonalFinance.Data.Extensions
             var entity = builder.Entity<RecurringTransactionEntity>();
 
             entity.ToTable("RecurringTransactions");
-
-            entity.Property(e => e.Description).IsRequired();
-            entity.Property(e => e.Amount).HasPrecision(12, 2);
         }
 
         /// <summary>
@@ -142,6 +151,11 @@ namespace PersonalFinance.Data.Extensions
 
             entity.Property(pr => pr.Name).IsRequired();
             entity.Property(pr => pr.Amount).HasPrecision(12, 2);
+
+            builder.Entity<BaseTransactionEntity>()
+                .HasMany(t => t.PaymentRequests)
+                .WithOne()
+                .HasForeignKey(pr => pr.TransactionId);
         }
 
         /// <summary>
@@ -173,7 +187,7 @@ namespace PersonalFinance.Data.Extensions
             entity.HasKey(sd => new { sd.TransactionId, sd.SplitwiseUserId });
             entity.Property(sd => sd.Amount).HasPrecision(12, 2);
 
-            builder.Entity<TransactionEntity>()
+            builder.Entity<BaseTransactionEntity>()
                 .HasMany(t => t.SplitDetails)
                 .WithOne()
                 .HasForeignKey(sd => sd.TransactionId);

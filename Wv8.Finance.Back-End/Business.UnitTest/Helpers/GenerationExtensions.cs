@@ -128,6 +128,7 @@ namespace Business.UnitTest.Helpers
             AccountEntity receivingAccount = null,
             RecurringTransactionEntity recurringTransaction = null,
             SplitwiseTransactionEntity splitwiseTransaction = null,
+            List<PaymentRequestEntity> paymentrequests = null,
             List<SplitDetailEntity> splitDetails = null,
             bool needsConfirmation = false)
         {
@@ -145,7 +146,7 @@ namespace Business.UnitTest.Helpers
                 Category = category,
                 ReceivingAccount = receivingAccount,
                 NeedsConfirmation = needsConfirmation,
-                PaymentRequests = new List<PaymentRequestEntity>(),
+                PaymentRequests = paymentrequests ?? new List<PaymentRequestEntity>(),
                 SplitDetails = splitDetails ?? new List<SplitDetailEntity>(),
                 Processed = false,
                 IsConfirmed = !needsConfirmation,
@@ -190,12 +191,15 @@ namespace Business.UnitTest.Helpers
             if (type == TransactionType.Transfer && receivingAccount == null)
                 throw new Exception("Specify a receiving account for a transfer transaction.");
 
+            var start = startDate ?? DateTime.Now.ToLocalDate();
+
             var entity = new RecurringTransactionEntity
             {
                 Account = account,
                 Amount = amount ?? (type == TransactionType.Expense ? -50 : 50),
                 Description = description ?? GetRandomString(),
-                StartDate = startDate ?? DateTime.Now.ToLocalDate(),
+                StartDate = start,
+                NextOccurence = start,
                 EndDate = endDate,
                 Category = category,
                 ReceivingAccount = receivingAccount,
@@ -204,8 +208,6 @@ namespace Business.UnitTest.Helpers
                 Interval = interval,
                 IntervalUnit = intervalUnit,
             };
-
-            entity.SetNextOccurrence();
 
             return context.RecurringTransactions.Add(entity).Entity;
         }

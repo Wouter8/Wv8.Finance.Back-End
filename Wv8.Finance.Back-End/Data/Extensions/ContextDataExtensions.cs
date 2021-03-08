@@ -118,8 +118,7 @@ namespace PersonalFinance.Data.Extensions
         /// <returns>The base query.</returns>
         public static IQueryable<PaymentRequestEntity> IncludeAll(this DbSet<PaymentRequestEntity> set)
         {
-            return set
-                .Include(pr => pr.Transaction);
+            return set;
         }
 
         #endregion Query Extensions

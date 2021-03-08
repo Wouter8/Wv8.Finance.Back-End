@@ -36,11 +36,6 @@ namespace PersonalFinance.Data.Models
         public int PaidCount { get; set; }
 
         /// <summary>
-        /// The transaction this payment request belongs to.
-        /// </summary>
-        public TransactionEntity Transaction { get; set; }
-
-        /// <summary>
         /// The completed status of this payment requests.
         /// <c>true</c> if <see cref="PaidCount"/> is equal to <see cref="Count"/>.
         /// </summary>
