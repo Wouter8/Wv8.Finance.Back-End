@@ -303,11 +303,14 @@
         {
             var (account, _) = this.context.GenerateAccount();
             var (account2, _) = this.context.GenerateAccount();
+            var category = this.context.GenerateCategory();
 
             // Create 2 recurring transactions for account.
-            var rTransaction1 = this.context.GenerateRecurringTransaction(account);
+            var rTransaction1 = this.context.GenerateRecurringTransaction(account, category: category);
             var rTransaction2 = this.context.GenerateRecurringTransaction(
                 account2, type: TransactionType.Transfer, receivingAccount: account);
+
+            this.SaveAndProcess();
 
             // Set as default and obsolete.
             this.AccountManager.UpdateAccount(

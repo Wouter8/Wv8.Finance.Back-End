@@ -48,8 +48,8 @@ namespace Business.UnitTest.Helpers
                 IsObsolete = isObsolete,
                 Icon = new IconEntity
                 {
-                    Pack = iconPack ?? GetRandomString(6),
-                    Name = iconName ?? GetRandomString(3),
+                    Pack = iconPack ?? GetRandomString(3),
+                    Name = iconName ?? GetRandomString(6),
                     Color = iconColor ?? GetRandomString(7),
                 },
             }).Entity;

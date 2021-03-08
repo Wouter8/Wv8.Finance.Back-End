@@ -25,7 +25,10 @@
         public void GetRecurringTransaction()
         {
             var (account, _) = this.context.GenerateAccount();
-            var rTransaction = this.context.GenerateRecurringTransaction(account);
+            var category = this.context.GenerateCategory();
+            var rTransaction = this.context.GenerateRecurringTransaction(account, category: category);
+            this.SaveAndProcess();
+
             var retrieved = this.RecurringTransactionManager.GetRecurringTransaction(rTransaction.Id);
 
             this.AssertEqual(rTransaction.AsRecurringTransaction(), retrieved);
@@ -55,6 +58,8 @@
                 startDate: LocalDate.FromDateTime(DateTime.Today).PlusDays(-7),
                 endDate: LocalDate.FromDateTime(DateTime.Today),
                 category: category);
+
+            this.SaveAndProcess();
 
             // No filters
             var retrieved =
@@ -103,13 +108,18 @@
             var intervalUnit = IntervalUnit.Weeks;
 
             var (account, _) = this.context.GenerateAccount();
+            var category = this.context.GenerateCategory();
 
             var rTransaction = this.context.GenerateRecurringTransaction(
                 account,
+                category: category,
                 startDate: startDate,
                 endDate: endDate,
                 interval: interval,
                 intervalUnit: intervalUnit);
+            this.SaveAndProcess();
+            this.RefreshContext();
+
             var instances = this.context.Transactions
                 .Where(t => t.RecurringTransactionId == rTransaction.Id &&
                             !t.NeedsConfirmation) // Verify needs confirmation property
@@ -170,12 +180,18 @@
             var intervalUnit = IntervalUnit.Weeks;
 
             var (account, _) = this.context.GenerateAccount();
+            var category = this.context.GenerateCategory();
             var rTransaction = this.context.GenerateRecurringTransaction(
                 account,
+                category: category,
                 startDate: startDate,
                 endDate: endDate,
                 interval: interval,
                 intervalUnit: intervalUnit);
+
+            this.SaveAndProcess();
+            this.RefreshContext();
+
             var instances = this.context.Transactions
                 .Where(t => t.RecurringTransactionId == rTransaction.Id &&
                             !t.NeedsConfirmation) // Verify needs confirmation property
@@ -269,24 +285,6 @@
                         amount,
                         category,
                         null,
-                        false,
-                        interval,
-                        intervalUnit),
-                    false));
-
-            // Try to update type of transaction
-            Assert.Throws<ValidationException>(() =>
-                this.RecurringTransactionManager.UpdateRecurringTransaction(
-                    rTransaction.Id,
-                    this.GetInputRecurringTransaction(
-                        account,
-                        TransactionType.Expense,
-                        description,
-                        newStartDate,
-                        endDate,
-                        amount,
-                        null,
-                        account2,
                         false,
                         interval,
                         intervalUnit),
