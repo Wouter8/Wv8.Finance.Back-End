@@ -13,7 +13,7 @@ namespace Data.External.IntegrationTest.Splitwise
     /// <summary>
     /// A test class for the <see cref="SplitwiseContext"/>.
     /// </summary>
-    public class SplitwiseContextTests : BaseTest
+    public class SplitwiseContextTests : BaseTest, IDisposable
     {
         /// <summary>
         /// The user id of a different user than the user of the tests.
@@ -174,6 +174,24 @@ namespace Data.External.IntegrationTest.Splitwise
 
             Assert.Equal("Wouter2", otherUser1.FirstName);
             Assert.Equal("Wouter3", otherUser2.FirstName);
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            this.ClearExpenses();
+        }
+
+        private void ClearExpenses()
+        {
+            var existingExpenses = this.splitwiseContext.GetExpenses(DateTime.MinValue)
+                .Where(e => !e.IsDeleted)
+                .ToList();
+
+            foreach (var expense in existingExpenses)
+            {
+                this.splitwiseContext.DeleteExpense(expense.Id);
+            }
         }
     }
 }
