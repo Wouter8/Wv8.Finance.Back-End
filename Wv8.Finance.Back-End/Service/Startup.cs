@@ -13,6 +13,7 @@ namespace PersonalFinance.Service
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Business.Category;
     using PersonalFinance.Business.Report;
+    using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
@@ -91,6 +92,7 @@ namespace PersonalFinance.Service
             services.AddTransient<ITransactionManager, TransactionManager>();
             services.AddTransient<IRecurringTransactionManager, RecurringTransactionManager>();
             services.AddTransient<IReportManager, ReportManager>();
+            services.AddTransient<ISplitwiseManager, SplitwiseManager>();
 
             // External contexts
             services.AddTransient<ISplitwiseContext, SplitwiseContext>();
