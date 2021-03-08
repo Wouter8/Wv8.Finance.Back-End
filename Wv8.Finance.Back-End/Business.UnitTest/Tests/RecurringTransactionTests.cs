@@ -351,6 +351,67 @@
                 "Unknown Splitwise user(s) specified.");
         }
 
+        /// <summary>
+        /// Tests the <see cref="IRecurringTransactionManager.UpdateRecurringTransaction"/> method. Verifies that an exception is thrown
+        /// when the account of the transaction that is updated is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void UpdateRecurringTransaction_SplitwiseAccount()
+        {
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var transaction = this.context.GenerateRecurringTransaction(account, category: category, amount: -50);
+            var (normalAccount, _) = this.context.GenerateAccount();
+            this.context.SaveChanges();
+
+            var edit = transaction.ToInput();
+            edit.AccountId = normalAccount.Id;
+
+            Assert.Throws<ValidationException>(() =>
+                this.RecurringTransactionManager.UpdateRecurringTransaction(transaction.Id, edit, true));
+        }
+
+        /// <summary>
+        /// Tests the <see cref="IRecurringTransactionManager.UpdateRecurringTransaction"/> method. Verifies that an exception is thrown
+        /// when the new account of the transaction that is updated is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void UpdateRecurringTransaction_SplitwiseAccount2()
+        {
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var (normalAccount, _) = this.context.GenerateAccount();
+            var transaction = this.context.GenerateRecurringTransaction(normalAccount, category: category, amount: -50);
+            this.context.SaveChanges();
+
+            var edit = transaction.ToInput();
+            edit.AccountId = account.Id;
+
+            Assert.Throws<ValidationException>(() =>
+                this.RecurringTransactionManager.UpdateRecurringTransaction(transaction.Id, edit, true));
+        }
+
+        /// <summary>
+        /// Tests the <see cref="IRecurringTransactionManager.UpdateRecurringTransaction"/> method. Verifies that an exception is thrown
+        /// when the account of the transaction that is updated is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void UpdateRecurringTransaction_Transfer_SplitwiseAccount()
+        {
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var (normalAccount, _) = this.context.GenerateAccount();
+            var (normalAccount2, _) = this.context.GenerateAccount();
+            var transaction = this.context.GenerateRecurringTransaction(
+                normalAccount, TransactionType.Transfer, receivingAccount: account, amount: 50);
+            this.context.SaveChanges();
+
+            var edit = transaction.ToInput();
+            edit.ReceivingAccountId = normalAccount2.Id;
+
+            Assert.Throws<ValidationException>(() =>
+                this.RecurringTransactionManager.UpdateRecurringTransaction(transaction.Id, edit, true));
+        }
+
         #endregion UpdateRecurringTransaction
 
         #region CreateRecurringTransaction
@@ -487,6 +548,38 @@
             Wv8Assert.Throws<ValidationException>(
                 () => this.RecurringTransactionManager.CreateRecurringTransaction(input),
                 "Unknown Splitwise user(s) specified.");
+        }
+
+        /// <summary>
+        /// Tests the <see cref="IRecurringTransactionManager.CreateRecurringTransaction"/> method. Verifies that an exception is thrown
+        /// when the account of the transaction is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void CreateRecurringTransaction_SplitwiseAccount()
+        {
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            this.context.SaveChanges();
+
+            var input = this.GetInputRecurringTransaction(account.Id, categoryId: category.Id);
+
+            Assert.Throws<ValidationException>(() => this.RecurringTransactionManager.CreateRecurringTransaction(input));
+        }
+
+        /// <summary>
+        /// Tests the <see cref="IRecurringTransactionManager.CreateRecurringTransaction"/> method. Verifies that an exception is thrown
+        /// when the receiving account of the transaction is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void CreateRecurringTransaction_Transfer_SplitwiseAccount()
+        {
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var (normalAccount, _) = this.context.GenerateAccount();
+            this.context.SaveChanges();
+
+            var input = this.GetInputRecurringTransaction(normalAccount.Id, TransactionType.Transfer, receivingAccountId: account.Id);
+
+            Assert.Throws<ValidationException>(() => this.RecurringTransactionManager.CreateRecurringTransaction(input));
         }
 
         #endregion CreateRecurringTransaction

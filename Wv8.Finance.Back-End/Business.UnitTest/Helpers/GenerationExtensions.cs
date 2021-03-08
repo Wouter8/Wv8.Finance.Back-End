@@ -184,7 +184,9 @@ namespace Business.UnitTest.Helpers
             AccountEntity receivingAccount = null,
             bool needsConfirmation = false,
             int interval = 1,
-            IntervalUnit intervalUnit = IntervalUnit.Weeks)
+            IntervalUnit intervalUnit = IntervalUnit.Weeks,
+            List<PaymentRequestEntity> paymentRequests = null,
+            List<SplitDetailEntity> splitDetails = null)
         {
             if ((type == TransactionType.Expense || type == TransactionType.Income) && category == null)
                 throw new Exception("Specify a category for an income or expense transaction.");
@@ -207,6 +209,8 @@ namespace Business.UnitTest.Helpers
                 Type = type,
                 Interval = interval,
                 IntervalUnit = intervalUnit,
+                PaymentRequests = paymentRequests ?? new List<PaymentRequestEntity>(),
+                SplitDetails = splitDetails ?? new List<SplitDetailEntity>(),
             };
 
             return context.RecurringTransactions.Add(entity).Entity;

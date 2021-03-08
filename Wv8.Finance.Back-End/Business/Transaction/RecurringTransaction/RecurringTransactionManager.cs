@@ -91,6 +91,11 @@
                 var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
                 var entity = this.Context.RecurringTransactions.GetEntity(id);
+
+                this.validator.AccountType(entity.Account.Type);
+                if (entity.ReceivingAccount != null)
+                    this.validator.AccountType(entity.ReceivingAccount.Type);
+
                 if (type != entity.Type) // TODO: Add test for this case
                     throw new ValidationException("Changing the type of transaction is not possible.");
 
@@ -98,6 +103,8 @@
                     throw new ValidationException($"Updating the start date without updating already created instances is not supported.");
 
                 var account = this.Context.Accounts.GetEntity(input.AccountId, false);
+
+                this.validator.AccountType(account.Type);
 
                 var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
@@ -108,6 +115,8 @@
 
                     if (receivingAccount.Id == account.Id)
                         throw new ValidationException("Sender account can not be the same as receiver account.");
+
+                    this.validator.AccountType(receivingAccount.Type);
                 }
 
                 entity.AccountId = input.AccountId;
@@ -164,6 +173,8 @@
 
                 var account = this.Context.Accounts.GetEntity(input.AccountId, false);
 
+                this.validator.AccountType(account.Type);
+
                 var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
                 AccountEntity receivingAccount = null;
@@ -173,6 +184,8 @@
 
                     if (receivingAccount.Id == account.Id)
                         throw new ValidationException("Sender account can not be the same as receiver account.");
+
+                    this.validator.AccountType(receivingAccount.Type);
                 }
 
                 var entity = new RecurringTransactionEntity
