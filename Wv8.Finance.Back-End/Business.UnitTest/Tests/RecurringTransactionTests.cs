@@ -1,13 +1,16 @@
 ﻿namespace Business.UnitTest.Tests
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using Business.UnitTest.Helpers;
     using NodaTime;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common;
+    using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;
+    using Wv8.Core.Collections;
     using Wv8.Core.Exceptions;
     using Xunit;
 
@@ -291,6 +294,63 @@
                     false));
         }
 
+        /// <summary>
+        /// Tests method <see cref="IRecurringTransactionManager.UpdateRecurringTransaction"/>.
+        /// Verifies that an exception is thrown in all cases where the input is incorrect.
+        /// </summary>
+        [Fact]
+        public void Test_UpdateRecurringTransaction_SplitwiseValidation()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var splitwiseAccount = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var transaction = this.context.GenerateRecurringTransaction(account, category: category);
+
+            var splitwiseUser = this.SplitwiseContextMock.GenerateUser(1, "User1");
+
+            this.context.SaveChanges();
+
+            var input = transaction.ToInput();
+            input.SplitwiseSplits = new InputSplitwiseSplit { Amount = 25, UserId = 1 }.Singleton();
+
+            // Wrong transaction type
+            input.Amount = 100;
+            Wv8Assert.Throws<ValidationException>(
+                () => this.RecurringTransactionManager.UpdateRecurringTransaction(transaction.Id, input, true),
+                "Payment requests and Splitwise splits can only be specified on expenses.");
+
+            // Splits greater than amount
+            input.Amount = -10;
+            Wv8Assert.Throws<ValidationException>(
+                () => this.RecurringTransactionManager.UpdateRecurringTransaction(transaction.Id, input, true),
+                "The amount split can not exceed the total amount of the transaction.");
+
+            input.Amount = -100;
+
+            // Split without amount
+            input.SplitwiseSplits = new InputSplitwiseSplit { Amount = 0, UserId = 1 }.Singleton();
+            Wv8Assert.Throws<ValidationException>(
+                () => this.RecurringTransactionManager.UpdateRecurringTransaction(transaction.Id, input, true),
+                "Splits must have an amount greater than 0.");
+
+            // 2 splits for same user
+            input.SplitwiseSplits = new List<InputSplitwiseSplit>
+            {
+                new InputSplitwiseSplit { Amount = 10, UserId = 1 },
+                new InputSplitwiseSplit { Amount = 20, UserId = 1 },
+            };
+            Wv8Assert.Throws<ValidationException>(
+                () => this.RecurringTransactionManager.UpdateRecurringTransaction(transaction.Id, input, true),
+                "A user can only be linked to a single split.");
+
+            // Unknown Splitwise user
+            input.SplitwiseSplits = new InputSplitwiseSplit { Amount = 10, UserId = 2 }.Singleton();
+            Wv8Assert.Throws<ValidationException>(
+                () => this.RecurringTransactionManager.UpdateRecurringTransaction(transaction.Id, input, true),
+                "Unknown Splitwise user(s) specified.");
+        }
+
         #endregion UpdateRecurringTransaction
 
         #region CreateRecurringTransaction
@@ -370,6 +430,63 @@
             Assert.False(rTransaction.Finished);
             Assert.Equal(endDate, rTransaction.EndDate);
             Assert.Equal(3, instances.Count);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="IRecurringTransactionManager.CreateRecurringTransaction"/>.
+        /// Verifies that an exception is thrown in all cases where the input is incorrect.
+        /// </summary>
+        [Fact]
+        public void Test_CreateRecurringTransaction_SplitwiseValidation()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var splitwiseAccount = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var splitwiseUser = this.SplitwiseContextMock.GenerateUser(1, "User1");
+
+            this.context.SaveChanges();
+
+            // Wrong transaction type
+            var input = this.GetInputRecurringTransaction(
+                account.Id,
+                TransactionType.Income,
+                categoryId: category.Id,
+                amount: 50,
+                splitwiseSplits: new InputSplitwiseSplit { Amount = 25, UserId = 1 }.Singleton());
+            Wv8Assert.Throws<ValidationException>(
+                () => this.RecurringTransactionManager.CreateRecurringTransaction(input),
+                "Payment requests and Splitwise splits can only be specified on expenses.");
+
+            // Splits greater than amount
+            input.Amount = -10;
+            Wv8Assert.Throws<ValidationException>(
+                () => this.RecurringTransactionManager.CreateRecurringTransaction(input),
+                "The amount split can not exceed the total amount of the transaction.");
+
+            input.Amount = -100;
+
+            // Split without amount
+            input.SplitwiseSplits = new InputSplitwiseSplit { Amount = 0, UserId = 1 }.Singleton();
+            Wv8Assert.Throws<ValidationException>(
+                () => this.RecurringTransactionManager.CreateRecurringTransaction(input),
+                "Splits must have an amount greater than 0.");
+
+            // 2 splits for same user
+            input.SplitwiseSplits = new List<InputSplitwiseSplit>
+            {
+                new InputSplitwiseSplit { Amount = 10, UserId = 1 },
+                new InputSplitwiseSplit { Amount = 20, UserId = 1 },
+            };
+            Wv8Assert.Throws<ValidationException>(
+                () => this.RecurringTransactionManager.CreateRecurringTransaction(input),
+                "A user can only be linked to a single split.");
+
+            // Unknown Splitwise user
+            input.SplitwiseSplits = new InputSplitwiseSplit { Amount = 10, UserId = 2 }.Singleton();
+            Wv8Assert.Throws<ValidationException>(
+                () => this.RecurringTransactionManager.CreateRecurringTransaction(input),
+                "Unknown Splitwise user(s) specified.");
         }
 
         #endregion CreateRecurringTransaction

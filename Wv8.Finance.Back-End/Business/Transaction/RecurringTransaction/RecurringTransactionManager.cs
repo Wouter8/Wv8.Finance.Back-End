@@ -84,6 +84,7 @@
                 this.validator.Period(startPeriod, endPeriod);
             this.validator.Interval(input.Interval);
             var type = this.GetTransactionType(input.CategoryId, input.ReceivingAccountId, input.Amount);
+            this.validator.Splits(this.splitwiseContext, input.PaymentRequests, input.SplitwiseSplits, type, input.Amount);
 
             return this.ConcurrentInvoke(() =>
             {
@@ -155,6 +156,7 @@
                 this.validator.Period(startPeriod, endPeriod);
             this.validator.Interval(input.Interval);
             var type = this.GetTransactionType(input.CategoryId, input.ReceivingAccountId, input.Amount);
+            this.validator.Splits(this.splitwiseContext, input.PaymentRequests, input.SplitwiseSplits, type, input.Amount);
 
             return this.ConcurrentInvoke(() =>
             {

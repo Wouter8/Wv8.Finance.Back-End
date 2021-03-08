@@ -32,6 +32,30 @@ namespace Business.UnitTest.Helpers
         }
 
         /// <summary>
+        /// Converts a <see cref="RecurringTransactionEntity"/> to a <see cref="InputRecurringTransaction"/>.
+        /// </summary>
+        /// <param name="transaction">The entity.</param>
+        /// <returns>The converted object.</returns>
+        public static InputRecurringTransaction ToInput(this RecurringTransactionEntity transaction)
+        {
+            return new InputRecurringTransaction
+            {
+                Amount = transaction.Amount,
+                Description = transaction.Description,
+                StartDateString = transaction.StartDate.ToDateString(),
+                EndDateString = transaction.EndDate.ToDateString(),
+                AccountId = transaction.AccountId,
+                CategoryId = transaction.CategoryId.ToMaybe(),
+                ReceivingAccountId = transaction.ReceivingAccountId.ToMaybe(),
+                PaymentRequests = transaction.PaymentRequests.Select(pr => pr.ToInput()).ToList(),
+                SplitwiseSplits = transaction.SplitDetails.Select(pr => pr.ToInput()).ToList(),
+                Interval = transaction.Interval,
+                IntervalUnit = transaction.IntervalUnit,
+                NeedsConfirmation = transaction.NeedsConfirmation,
+            };
+        }
+
+        /// <summary>
         /// Converts a <see cref="SplitDetailEntity"/> to a <see cref="InputSplitwiseSplit"/>.
         /// </summary>
         /// <param name="splitDetail">The entity.</param>
