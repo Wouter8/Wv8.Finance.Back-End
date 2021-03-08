@@ -49,6 +49,8 @@
                 Finished = entity.Finished,
                 NeedsConfirmation = entity.NeedsConfirmation,
                 SplitDetails = entity.SplitDetails.Select(sd => sd.AsSplitDetail()).ToList(),
+                PaymentRequests = entity.PaymentRequests.Select(pr => pr.AsPaymentRequest()).ToList(),
+                PersonalAmount = entity.PersonalAmount,
             };
         }
     }

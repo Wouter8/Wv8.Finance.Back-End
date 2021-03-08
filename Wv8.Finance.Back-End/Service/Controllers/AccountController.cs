@@ -40,12 +40,12 @@
         /// Retrieves accounts from the database.
         /// </summary>
         /// <param name="includeObsolete">Value indicating if obsolete accounts should also be retrieved.</param>
-        /// <param name="type">If <c>Some</c>, then only accounts are returned of the provided type.</param>
+        /// <param name="accountType">If <c>Some</c>, then only accounts are returned of the provided type.</param>
         /// <returns>The list of accounts.</returns>
         [HttpGet]
-        public List<Account> GetAccounts(bool includeObsolete, Maybe<AccountType> type)
+        public List<Account> GetAccounts(bool includeObsolete, Maybe<AccountType> accountType)
         {
-            return this.manager.GetAccounts(includeObsolete, type);
+            return this.manager.GetAccounts(includeObsolete, accountType);
         }
 
         /// <summary>

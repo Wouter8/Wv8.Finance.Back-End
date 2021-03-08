@@ -73,5 +73,15 @@ namespace PersonalFinance.Common.DataTransfer.Output
         /// The collection of split details which are linked to this transaction.
         /// </summary>
         public List<SplitDetail> SplitDetails { get; set; }
+
+        /// <summary>
+        /// The collection of payment requests which are linked to this transaction.
+        /// </summary>
+        public List<PaymentRequest> PaymentRequests { get; set; }
+
+        /// <summary>
+        /// The personal amount (amount - payment requests - splits) of the transaction.
+        /// </summary>
+        public decimal PersonalAmount { get; set; }
     }
 }

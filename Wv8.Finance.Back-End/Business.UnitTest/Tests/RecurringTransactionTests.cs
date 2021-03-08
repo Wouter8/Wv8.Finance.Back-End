@@ -643,6 +643,7 @@
             Assert.Equal(50, transaction.SplitwiseTransaction.PersonalAmount);
             Assert.Equal(300, transaction.SplitwiseTransaction.PaidAmount);
             Assert.Equal(-50, transaction.PersonalAmount);
+            Assert.Equal(-50, recurringTransaction.PersonalAmount);
 
             Assert.Equal(transaction.SplitwiseTransactionId.Value, expense.Id);
             Assert.Equal(transaction.SplitwiseTransaction.PaidAmount, expense.PaidAmount);

@@ -37,16 +37,6 @@
         public Maybe<bool> IsConfirmed { get; set; }
 
         /// <summary>
-        /// The collection of payment requests which are linked to this transaction.
-        /// </summary>
-        public List<PaymentRequest> PaymentRequests { get; set; }
-
-        /// <summary>
-        /// The personal amount (amount - payment requests) of the transaction.
-        /// </summary>
-        public decimal PersonalAmount { get; set; }
-
-        /// <summary>
         /// Optionally, the identifier of the Splitwise transaction this transaction is linked to.
         /// </summary>
         public Maybe<int> SplitwiseTransactionId { get; set; }
