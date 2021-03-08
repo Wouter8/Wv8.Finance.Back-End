@@ -108,6 +108,8 @@ namespace PersonalFinance.Data.External.Splitwise
 
             return this.Execute<GetExpensesResult>(request)
                 .Expenses
+                // Only import expenses that are relevant for the user
+                .Where(e => e.Users.Any(u => u.UserId == this.userId))
                 .Select(e => e.ToDomainObject(this.userId))
                 .ToList();
         }
