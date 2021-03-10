@@ -53,12 +53,17 @@
             // Add temporary column to table to know what old (recurring) transaction id was
             migrationBuilder.AddColumn<int>(
                 name: "PreviousTransactionId",
-                table: "BaseTransactions");
+                table: "BaseTransactions",
+                nullable: true);
+            migrationBuilder.AddColumn<int>(
+                name: "PreviousRecurringTransactionId",
+                table: "BaseTransactions",
+                nullable: true);
 
             // Copy data to BaseTransactions
             migrationBuilder.Sql(@"
                 INSERT INTO [dbo].[BaseTransactions] 
-                    (Description, Type, Amount, CategoryId, AccountId, ReceivingAccountId, NeedsConfirmation, PreviousTransactionId)
+                    (Description, Type, Amount, CategoryId, AccountId, ReceivingAccountId, NeedsConfirmation, PreviousRecurringTransactionId)
                 (SELECT Description, Type, Amount, CategoryId, AccountId, ReceivingAccountId, NeedsConfirmation, Id
                  FROM [dbo].[RecurringTransactions])");
             migrationBuilder.Sql(@"
@@ -95,7 +100,7 @@
                     SET t.RecurringTransactionId = bt.Id 
                 FROM [dbo].[Transactions] t 
                     INNER JOIN [dbo].[BaseTransactions] bt
-                        ON bt.PreviousTransactionId = t.RecurringTransactionId");
+                        ON bt.PreviousRecurringTransactionId = t.RecurringTransactionId");
 
             // Drop the moved columns.
             migrationBuilder.DropForeignKey(
@@ -192,7 +197,7 @@
                     SET rt.Id2 = bt.Id 
                 FROM [dbo].[RecurringTransactions] rt 
                     INNER JOIN [dbo].[BaseTransactions] bt
-                        ON bt.PreviousTransactionId = rt.Id");
+                        ON bt.PreviousRecurringTransactionId = rt.Id");
             migrationBuilder.Sql(@"
                 UPDATE t
                     SET t.Id2 = bt.Id 
@@ -203,6 +208,9 @@
             // Drop the temporary column
             migrationBuilder.DropColumn(
                 name: "PreviousTransactionId",
+                table: "BaseTransactions");
+            migrationBuilder.DropColumn(
+                name: "PreviousRecurringTransactionId",
                 table: "BaseTransactions");
 
             // Drop the old id columns that are no longer IDENTITY columns
