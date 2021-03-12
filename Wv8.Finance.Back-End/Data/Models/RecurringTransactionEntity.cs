@@ -1,5 +1,6 @@
 namespace PersonalFinance.Data.Models
 {
+    using System.Linq;
     using NodaTime;
     using PersonalFinance.Common.Enums;
 
@@ -44,5 +45,16 @@ namespace PersonalFinance.Data.Models
         /// The x in: 'x <see cref="IntervalUnit"/>.
         /// </summary>
         public int Interval { get; set; }
+
+        /// <summary>
+        /// Get the amount of the transaction that is personally due. This can be different from the amount on the
+        /// transaction when that amount contains an amount paid for others or paid by others. These differences are
+        /// stored in the linked split details or payment request.
+        /// </summary>
+        /// <returns>The personal amount of the transaction.</returns>
+        public decimal PersonalAmount =>
+            this.Amount
+            + this.PaymentRequests.Sum(pr => pr.Count * pr.Amount)
+            + this.SplitDetails.Sum(sd => sd.Amount);
     }
 }

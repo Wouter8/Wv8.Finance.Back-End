@@ -108,6 +108,14 @@ namespace PersonalFinance.Business.Transaction
 
                 var entity = this.Context.Transactions.GetEntity(id);
 
+                if (!entity.EditableAmount &&
+                    (input.Amount != entity.Amount ||
+                     !entity.SplitDetails.Select(sd => (sd.SplitwiseUserId, sd.Amount)).ToSet()
+                         .SetEquals(input.SplitwiseSplits.Select(s => (s.UserId, s.Amount)))))
+                {
+                    throw new ValidationException("The amount or splits of this transaction can not be changed.");
+                }
+
                 this.validator.AccountType(entity.Account.Type);
                 if (entity.ReceivingAccount != null)
                     this.validator.AccountType(entity.ReceivingAccount.Type);
@@ -129,6 +137,10 @@ namespace PersonalFinance.Business.Transaction
                     if (receivingAccount.Value.Id == account.Id)
                         throw new ValidationException("Sender account can not be the same as receiver account.");
                 }
+
+                // Verify a Splitwise account exists when adding providing splits.
+                if (input.SplitwiseSplits.Any())
+                    this.Context.Accounts.GetSplitwiseEntity();
 
                 processor.RevertIfProcessed(entity);
 
@@ -209,6 +221,10 @@ namespace PersonalFinance.Business.Transaction
                     if (receivingAccount.Value.Id == account.Id)
                         throw new ValidationException("Sender account can not be the same as receiver account.");
                 }
+
+                // Verify a Splitwise account exists when adding providing splits.
+                if (input.SplitwiseSplits.Any())
+                    this.Context.Accounts.GetSplitwiseEntity();
 
                 var entity = new TransactionEntity
                 {

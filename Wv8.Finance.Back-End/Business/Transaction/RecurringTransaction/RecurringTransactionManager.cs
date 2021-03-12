@@ -119,6 +119,10 @@
                     this.validator.AccountType(receivingAccount.Type);
                 }
 
+                // Verify a Splitwise account exists when adding providing splits.
+                if (input.SplitwiseSplits.Any())
+                    this.Context.Accounts.GetSplitwiseEntity();
+
                 entity.AccountId = input.AccountId;
                 entity.Account = account;
                 entity.Description = input.Description;
@@ -188,6 +192,10 @@
 
                     this.validator.AccountType(receivingAccount.Type);
                 }
+
+                // Verify a Splitwise account exists when adding providing splits.
+                if (input.SplitwiseSplits.Any())
+                    this.Context.Accounts.GetSplitwiseEntity();
 
                 var entity = new RecurringTransactionEntity
                 {

@@ -2,6 +2,7 @@ namespace PersonalFinance.Data.Models
 {
     using System.Linq;
     using NodaTime;
+    using Wv8.Core;
 
     /// <summary>
     /// An entity representing a transaction. This can be an income, expense or transfer.
@@ -45,5 +46,26 @@ namespace PersonalFinance.Data.Models
         /// Optionally, the Splitwise transaction this transaction is linked to.
         /// </summary>
         public SplitwiseTransactionEntity SplitwiseTransaction { get; set; }
+
+        /// <summary>
+        /// Get the amount of the transaction that is personally due. This can be different from the amount on the
+        /// transaction when that amount contains an amount paid for others or paid by others. These differences are
+        /// stored in the linked split details or payment request.
+        /// </summary>
+        /// <returns>The personal amount of the transaction.</returns>
+        public decimal PersonalAmount =>
+            this.Amount
+            + this.PaymentRequests.Sum(pr => pr.Count * pr.Amount)
+            // When I paid for others, then subtract the amount paid for others.
+            // When someone else paid for me, then add that share to the personal amount.
+            + (this.SplitwiseTransaction.ToMaybe().Select(st =>
+                st.OwedToOthers - st.OwedByOthers).ValueOrElse(0) * -1);
+
+        /// <summary>
+        /// Indicates whether or not the transaction amount can be edited within this application.
+        /// This can be false if the transaction is imported from Splitwise and someone else paid for it.
+        /// </summary>
+        public bool EditableAmount =>
+            this.SplitwiseTransaction.ToMaybe().Select(t => t.PaidAmount > 0).ValueOrElse(false);
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Business.UnitTest.Tests
+namespace Business.UnitTest.Tests
 {
     using System.Collections.Generic;
     using System.Linq;

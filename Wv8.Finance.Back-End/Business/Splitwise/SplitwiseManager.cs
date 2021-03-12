@@ -60,7 +60,10 @@ namespace PersonalFinance.Business.Splitwise
         /// <inheritdoc />
         public List<SplitwiseUser> GetSplitwiseUsers()
         {
-            return this.splitwiseContext.GetUsers().Select(u => u.AsSplitwiseUser()).ToList();
+            return this.splitwiseContext.GetUsers()
+                .Select(u => u.AsSplitwiseUser())
+                .OrderBy(u => u.Name)
+                .ToList();
         }
 
         /// <inheritdoc />

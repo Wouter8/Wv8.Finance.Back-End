@@ -1,4 +1,4 @@
-﻿namespace PersonalFinance.Business.Transaction.Processor
+namespace PersonalFinance.Business.Transaction.Processor
 {
     using System;
     using System.Collections.Generic;
@@ -217,6 +217,9 @@
                         {
                             this.splitwiseContext.DeleteExpense(transaction.SplitwiseTransactionId.Value);
                             transaction.SplitwiseTransaction.IsDeleted = true;
+
+                            transaction.SplitwiseTransaction = null;
+                            transaction.SplitwiseTransactionId = null;
                         }
                     }
 

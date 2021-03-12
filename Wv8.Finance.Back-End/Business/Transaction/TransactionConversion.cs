@@ -93,6 +93,7 @@
                 SplitwiseTransactionId = entity.SplitwiseTransactionId.ToMaybe(),
                 SplitwiseTransaction = entity.SplitwiseTransaction.ToMaybe().Select(st => st.AsSplitwiseTransaction()),
                 SplitDetails = entity.SplitDetails.Select(sd => sd.AsSplitDetail()).ToList(),
+                EditableAmount = entity.EditableAmount,
             };
         }
 
