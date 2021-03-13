@@ -1,7 +1,5 @@
 ﻿namespace PersonalFinance.Common.DataTransfer.Output
 {
-    using System.Collections.Generic;
-    using System.Linq;
     using Wv8.Core;
 
     /// <summary>
@@ -46,7 +44,6 @@
         /// Optionally, the Splitwise transaction this transaction is linked to.
         /// </summary>
         public Maybe<SplitwiseTransaction> SplitwiseTransaction { get; set; }
-
 
         /// <summary>
         /// Indicates whether or not the transaction can be edited within this application.

@@ -1,6 +1,5 @@
 namespace PersonalFinance.Common.DataTransfer.Output
 {
-    using System;
     using PersonalFinance.Common.Enums;
 
     /// <summary>

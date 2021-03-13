@@ -15,7 +15,6 @@ namespace PersonalFinance.Service
     using PersonalFinance.Business.Report;
     using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Business.Transaction;
-    using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common;
     using PersonalFinance.Data;
