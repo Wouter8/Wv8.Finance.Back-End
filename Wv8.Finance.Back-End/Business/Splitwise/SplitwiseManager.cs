@@ -5,6 +5,7 @@ namespace PersonalFinance.Business.Splitwise
     using System.Linq;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Business.Transaction.Processor;
+    using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
@@ -50,7 +51,7 @@ namespace PersonalFinance.Business.Splitwise
         {
             return this.Context.SplitwiseTransactions
                 // Only transactions where nothing has been paid are importable.
-                .WhereIf(onlyImportable, t => !t.Imported && t.PaidAmount == 0)
+                .WhereIf(onlyImportable, t => !t.Imported && !t.IsDeleted && t.PaidAmount == 0)
                 .OrderBy(t => t.Date)
                 .AsEnumerable()
                 .Select(t => t.AsSplitwiseTransaction())
@@ -211,7 +212,7 @@ namespace PersonalFinance.Business.Splitwise
 
             return new ImporterInformation
             {
-                LastRunTimestamp = lastRunTimestamp,
+                LastRunTimestamp = lastRunTimestamp.ToDateTimeString(),
                 CurrentState = SplitwiseManager.importStatus,
             };
         }

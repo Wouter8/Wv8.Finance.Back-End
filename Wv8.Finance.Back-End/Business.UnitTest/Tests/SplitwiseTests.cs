@@ -516,7 +516,7 @@
 
             var information = this.SplitwiseManager.GetImporterInformation();
 
-            Assert.Equal(timestamp, information.LastRunTimestamp);
+            Assert.Equal(timestamp.ToDateTimeString(), information.LastRunTimestamp);
             Assert.Equal(ImportState.NotRunning, information.CurrentState);
         }
 

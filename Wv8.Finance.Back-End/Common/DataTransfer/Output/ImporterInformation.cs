@@ -11,7 +11,7 @@ namespace PersonalFinance.Common.DataTransfer.Output
         /// <summary>
         /// The timestamp at which the importer ran successfully last.
         /// </summary>
-        public DateTime LastRunTimestamp { get; set; }
+        public string LastRunTimestamp { get; set; }
 
         /// <summary>
         /// The current state of the importer.

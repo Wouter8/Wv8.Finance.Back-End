@@ -51,6 +51,17 @@
         }
 
         /// <summary>
+        /// Converts a date time to a string in a normal format.
+        /// </summary>
+        /// <param name="date">The date time to be converted.</param>
+        /// <returns>The string.</returns>
+        public static string ToDateTimeString(this DateTime date)
+        {
+            date = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+            return date.ToString("O");
+        }
+
+        /// <summary>
         /// Converts a date time object to a local date object.
         /// </summary>
         /// <param name="dateTime">The date time object.</param>
