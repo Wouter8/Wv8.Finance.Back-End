@@ -66,6 +66,6 @@ namespace PersonalFinance.Data.Models
         /// This can be false if the transaction is imported from Splitwise and someone else paid for it.
         /// </summary>
         public bool EditableAmount =>
-            this.SplitwiseTransaction.ToMaybe().Select(t => t.PaidAmount > 0).ValueOrElse(false);
+            this.SplitwiseTransaction.ToMaybe().Select(t => t.PaidAmount > 0).ValueOrElse(true);
     }
 }
