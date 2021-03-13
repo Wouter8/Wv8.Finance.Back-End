@@ -108,13 +108,8 @@ namespace PersonalFinance.Business.Transaction
 
                 var entity = this.Context.Transactions.GetEntity(id);
 
-                if (!entity.EditableAmount &&
-                    (input.Amount != entity.Amount ||
-                     !entity.SplitDetails.Select(sd => (sd.SplitwiseUserId, sd.Amount)).ToSet()
-                         .SetEquals(input.SplitwiseSplits.Select(s => (s.UserId, s.Amount)))))
-                {
+                if (!entity.Editable)
                     throw new ValidationException("The amount or splits of this transaction can not be changed.");
-                }
 
                 this.validator.AccountType(entity.Account.Type);
                 if (entity.ReceivingAccount != null)

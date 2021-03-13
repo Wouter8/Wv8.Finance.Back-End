@@ -47,10 +47,12 @@
         /// </summary>
         public Maybe<SplitwiseTransaction> SplitwiseTransaction { get; set; }
 
+
         /// <summary>
-        /// Indicates whether or not the transaction amount can be edited within this application.
-        /// This can be false if the transaction is imported from Splitwise and someone else paid for it.
+        /// Indicates whether or not the transaction can be edited within this application.
+        /// This can be false if the transaction is imported from Splitwise and someone else paid for it, the
+        /// transaction should then be updated in Splitwise.
         /// </summary>
-        public bool EditableAmount { get; set; }
+        public bool Editable { get; set; }
     }
 }
