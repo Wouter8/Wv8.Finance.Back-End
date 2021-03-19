@@ -231,6 +231,7 @@ namespace Business.UnitTest.Helpers
         /// <param name="paidAmount">The paid amount.</param>
         /// <param name="personalAmount">The personal amount.</param>
         /// <param name="imported">The imported value.</param>
+        /// <param name="splits">The splits.</param>
         /// <returns>The created expense.</returns>
         public static SplitwiseTransactionEntity GenerateSplitwiseTransaction(
             this Context context,
@@ -241,7 +242,8 @@ namespace Business.UnitTest.Helpers
             DateTime? updatedAt = null,
             decimal paidAmount = 10,
             decimal personalAmount = 5,
-            bool imported = false)
+            bool imported = false,
+            List<SplitDetailEntity> splits = null)
         {
             var expense = new SplitwiseTransactionEntity
             {
@@ -253,11 +255,37 @@ namespace Business.UnitTest.Helpers
                 PaidAmount = paidAmount,
                 PersonalAmount = personalAmount,
                 Imported = imported,
+                SplitDetails = splits ?? new List<SplitDetailEntity>(),
             };
 
             context.SplitwiseTransactions.Add(expense);
 
             return expense;
+        }
+
+        /// <summary>
+        /// Creates a split detail with specified or random values.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="splitwiseUserId">The Splitwise user id.</param>
+        /// <param name="amount">The amount.</param>
+        /// <param name="transactionId">The transaction id.</param>
+        /// <param name="splitwiseTransactionId">The Splitwise transaction id.</param>
+        /// <returns>The created entity.</returns>
+        public static SplitDetailEntity GenerateSplitDetail(
+            this Context context,
+            int splitwiseUserId,
+            decimal amount = 10m,
+            int? transactionId = null,
+            int? splitwiseTransactionId = null)
+        {
+            return context.SplitDetails.Add(new SplitDetailEntity
+            {
+                SplitwiseUserId = splitwiseUserId,
+                Amount = amount,
+                TransactionId = transactionId,
+                SplitwiseTransactionId = splitwiseTransactionId,
+            }).Entity;
         }
 
         /// <summary>
@@ -271,6 +299,7 @@ namespace Business.UnitTest.Helpers
         /// <param name="updatedAt">The updated at timestamp.</param>
         /// <param name="paidAmount">The paid amount.</param>
         /// <param name="personalAmount">The personal amount.</param>
+        /// <param name="splits">The splits.</param>
         /// <returns>The created expense.</returns>
         public static Expense GenerateExpense(
             this SplitwiseContextMock splitwiseContext,
@@ -280,7 +309,8 @@ namespace Business.UnitTest.Helpers
             bool isDeleted = false,
             DateTime? updatedAt = null,
             decimal paidAmount = 10,
-            decimal personalAmount = 5)
+            decimal personalAmount = 5,
+            List<Split> splits = null)
         {
             var expense = new Expense
             {
@@ -291,6 +321,7 @@ namespace Business.UnitTest.Helpers
                 UpdatedAt = updatedAt ?? DateTime.Now,
                 PaidAmount = paidAmount,
                 PersonalAmount = personalAmount,
+                Splits = splits ?? new List<Split>(),
             };
 
             splitwiseContext.Expenses.Add(expense);

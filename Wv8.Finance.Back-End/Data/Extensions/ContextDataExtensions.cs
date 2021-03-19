@@ -94,6 +94,17 @@ namespace PersonalFinance.Data.Extensions
         /// </summary>
         /// <param name="set">The database set.</param>
         /// <returns>The base query.</returns>
+        public static IQueryable<SplitwiseTransactionEntity> IncludeAll(this IQueryable<SplitwiseTransactionEntity> set)
+        {
+            return set
+                .Include(t => t.SplitDetails);
+        }
+
+        /// <summary>
+        /// Generates a query with all includes.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <returns>The base query.</returns>
         public static IQueryable<RecurringTransactionEntity> IncludeAll(this DbSet<RecurringTransactionEntity> set)
         {
             return set

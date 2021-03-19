@@ -1,6 +1,7 @@
 namespace PersonalFinance.Data.External.Splitwise.Models
 {
     using System;
+    using System.Collections.Generic;
     using NodaTime;
 
     /// <summary>
@@ -42,5 +43,16 @@ namespace PersonalFinance.Data.External.Splitwise.Models
         /// The personal share of the expense.
         /// </summary>
         public decimal PersonalAmount { get; set; }
+
+        /// <summary>
+        /// The collection of splits. Only contains values if the user paid for this expense.
+        /// </summary>
+        public List<Split> Splits { get; set; }
+
+        /// <summary>
+        /// A value indicating if the user had anything to do with the expense. <c>true</c> if the user either paid or
+        /// had a personal amount.
+        /// </summary>
+        public bool HasShare => this.PersonalAmount != 0 || this.PaidAmount != 0;
     }
 }

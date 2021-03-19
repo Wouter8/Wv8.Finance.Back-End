@@ -184,13 +184,18 @@ namespace PersonalFinance.Data.Extensions
 
             entity.ToTable("SplitDetails");
 
-            entity.HasKey(sd => new { sd.TransactionId, sd.SplitwiseUserId });
+            entity.HasKey(sd => new { sd.SplitwiseTransactionId, sd.TransactionId, sd.SplitwiseUserId });
             entity.Property(sd => sd.Amount).HasPrecision(12, 2);
 
             builder.Entity<BaseTransactionEntity>()
                 .HasMany(t => t.SplitDetails)
                 .WithOne()
                 .HasForeignKey(sd => sd.TransactionId);
+
+            builder.Entity<SplitwiseTransactionEntity>()
+                .HasMany(t => t.SplitDetails)
+                .WithOne()
+                .HasForeignKey(sd => sd.SplitwiseTransactionId);
         }
 
         /// <summary>

@@ -1,7 +1,6 @@
 namespace PersonalFinance.Data.Models
 {
     using System.Collections.Generic;
-    using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
 
     /// <summary>
@@ -71,7 +70,6 @@ namespace PersonalFinance.Data.Models
 
         /// <summary>
         /// The splits, containing all specifications of amounts in this transaction paid for others.
-        /// This can only have entries when a <see cref="SplitwiseTransaction"/> is linked.
         /// </summary>
         public List<SplitDetailEntity> SplitDetails { get; set; }
 

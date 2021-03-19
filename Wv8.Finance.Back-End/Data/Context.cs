@@ -71,6 +71,11 @@
         /// </summary>
         public DbSet<SynchronizationTimesEntity> SynchronizationTimes { get; set; }
 
+        /// <summary>
+        /// The set of split details.
+        /// </summary>
+        public DbSet<SplitDetailEntity> SplitDetails { get; set; }
+
         /// <inheritdoc/>
         public DateTime CreationTime { get; set; }
 

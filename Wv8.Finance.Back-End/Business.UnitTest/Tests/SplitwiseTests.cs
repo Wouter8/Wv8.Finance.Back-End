@@ -1,6 +1,7 @@
 ﻿namespace Business.UnitTest.Tests
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -10,6 +11,8 @@
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Extensions;
+    using PersonalFinance.Data.External.Splitwise.Models;
+    using PersonalFinance.Data.Models;
     using Wv8.Core.Collections;
     using Wv8.Core.Exceptions;
     using Xunit;
@@ -86,7 +89,7 @@
             var category = this.context.GenerateCategory();
 
             var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
-                    1, date: DateTime.Today.ToLocalDate(), paidAmount: 10, personalAmount: 2.5M);
+                1, date: DateTime.Today.ToLocalDate(), paidAmount: 10, personalAmount: 2.5M);
 
             this.context.SaveChanges();
 
@@ -145,7 +148,8 @@
         public void Test_ImportFromSplitwise_NoInitialDate()
         {
             // No transactions in database.
-            this.SplitwiseContextMock.GenerateExpense(1, updatedAt: DateTime.MinValue.AddMilliseconds(1), paidAmount: 0);
+            this.SplitwiseContextMock.GenerateExpense(
+                1, updatedAt: DateTime.MinValue.AddMilliseconds(1), paidAmount: 0);
             this.SplitwiseContextMock.GenerateExpense(2, updatedAt: DateTime.MaxValue, paidAmount: 0);
             this.SplitwiseContextMock.GenerateExpense(3, updatedAt: DateTime.Now, paidAmount: 0);
 
@@ -189,20 +193,104 @@
 
         /// <summary>
         /// Tests method <see cref="SplitwiseManager.ImportFromSplitwise"/>.
-        /// Verifies that transactions for which the user paid an amount are not imported.
+        /// Verifies that transactions for which the user paid an amount are imported if the transaction is not known.
         /// </summary>
         [Fact]
-        public void Test_ImportFromSplitwise_PaidNotImported()
+        public void Test_ImportFromSplitwise_Paid_NotKnown()
         {
-            // No transactions in database.
-            this.SplitwiseContextMock.GenerateExpense(1, paidAmount: 10);
+            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            this.SplitwiseContextMock.GenerateUser(2, "USER2");
+            this.SplitwiseContextMock.GenerateUser(3, "USER3");
+
+            var expense = this.SplitwiseContextMock.GenerateExpense(
+                1, paidAmount: 50, personalAmount: 10, splits: new List<Split>
+                {
+                    new Split { UserId = 2, Amount = 15 },
+                    new Split { UserId = 3, Amount = 25 },
+                });
 
             this.SplitwiseManager.ImportFromSplitwise();
 
-            var transactions = this.SplitwiseManager.GetSplitwiseTransactions(false);
+            var splitwiseTransaction = this.context.SplitwiseTransactions.IncludeAll().Single();
 
-            // Verify that transaction is not imported.
-            Assert.Empty(transactions);
+            Assert.Equal(expense.Id, splitwiseTransaction.Id);
+            Assert.Equal(expense.Description, splitwiseTransaction.Description);
+            Assert.Equal(expense.Date, splitwiseTransaction.Date);
+            Assert.Equal(expense.PaidAmount, splitwiseTransaction.PaidAmount);
+            Assert.Equal(expense.PersonalAmount, splitwiseTransaction.PersonalAmount);
+            Assert.Equal(expense.UpdatedAt, splitwiseTransaction.UpdatedAt);
+            Assert.False(splitwiseTransaction.Imported);
+
+            var splitDetail1 = splitwiseTransaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 2);
+            var splitDetail2 = splitwiseTransaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 3);
+
+            Assert.Equal(15, splitDetail1.Amount);
+            Assert.Equal(25, splitDetail2.Amount);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.ImportFromSplitwise"/>.
+        /// Verifies that transactions for which the user paid an amount are not imported if the transaction is known.
+        /// </summary>
+        [Fact]
+        public void Test_ImportFromSplitwise_Paid_Known()
+        {
+            var updatedAt = DateTime.UtcNow;
+
+            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            var user2 = this.SplitwiseContextMock.GenerateUser(2, "USER2");
+            var user3 = this.SplitwiseContextMock.GenerateUser(3, "USER3");
+
+            var (account, _) = this.context.GenerateAccount();
+            var category = this.context.GenerateCategory();
+            var split1 = this.context.GenerateSplitDetail(user2.Id, 15);
+            var split2 = this.context.GenerateSplitDetail(user3.Id, 25);
+            var splits = new List<SplitDetailEntity> { split1, split2 };
+            var transaction = this.context.GenerateTransaction(
+                account,
+                date: DateTime.Today.ToLocalDate(),
+                description: "Description",
+                category: category,
+                amount: 50,
+                splitDetails: splits);
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                false,
+                updatedAt,
+                50,
+                10,
+                false,
+                splits);
+
+            var expense = this.SplitwiseContextMock.GenerateExpense(
+                1,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                false,
+                updatedAt,
+                50,
+                10,
+                splits.Select(s => s.AsSplit()).ToList());
+
+            this.SplitwiseManager.ImportFromSplitwise();
+
+            splitwiseTransaction = this.context.SplitwiseTransactions.IncludeAll().Single();
+
+            Assert.Equal(expense.Id, splitwiseTransaction.Id);
+            Assert.Equal(expense.Description, splitwiseTransaction.Description);
+            Assert.Equal(expense.Date, splitwiseTransaction.Date);
+            Assert.Equal(expense.PaidAmount, splitwiseTransaction.PaidAmount);
+            Assert.Equal(expense.PersonalAmount, splitwiseTransaction.PersonalAmount);
+            Assert.Equal(expense.UpdatedAt, splitwiseTransaction.UpdatedAt);
+            Assert.False(splitwiseTransaction.Imported);
+
+            var splitDetail1 = splitwiseTransaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 2);
+            var splitDetail2 = splitwiseTransaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 3);
+
+            Assert.Equal(15, splitDetail1.Amount);
+            Assert.Equal(25, splitDetail2.Amount);
         }
 
         /// <summary>
@@ -210,7 +298,7 @@
         /// Verifies that transactions for which only other people paid are imported.
         /// </summary>
         [Fact]
-        public void Test_ImportFromSplitwise_OthersPaidImported()
+        public void Test_ImportFromSplitwise_NotPaid_NotKnown()
         {
             // No transactions in database.
             var expense = this.SplitwiseContextMock.GenerateExpense(
@@ -237,10 +325,46 @@
 
         /// <summary>
         /// Tests method <see cref="SplitwiseManager.ImportFromSplitwise"/>.
-        /// Verifies that transactions that are already known are properly updated.
+        /// Verifies that a transaction for which the user no longer has a share is correctly removed.
         /// </summary>
         [Fact]
-        public void Test_ImportFromSplitwise_Updated()
+        public void Test_ImportFromSplitwise_Update_NotPaid_NoShare()
+        {
+            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                false,
+                DateTime.UtcNow.AddHours(-1),
+                0,
+                10);
+
+            // Add update to expense where user is no longer part of it.
+            var expense = this.SplitwiseContextMock.GenerateExpense(
+                1,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                false,
+                DateTime.UtcNow,
+                0,
+                0);
+
+            this.SplitwiseManager.ImportFromSplitwise();
+
+            this.RefreshContext();
+
+            Wv8Assert.IsNone(
+                this.context.SplitwiseTransactions.SingleOrNone(st => st.Id == splitwiseTransaction.Id));
+        }
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.ImportFromSplitwise"/>.
+        /// Verifies that transactions for which the user did not pay that are already known are properly updated.
+        /// </summary>
+        [Fact]
+        public void Test_ImportFromSplitwise_Update_NotPaid()
         {
             // Add Splitwise transaction to database.
             this.context.GenerateSplitwiseTransaction(
@@ -274,11 +398,224 @@
 
         /// <summary>
         /// Tests method <see cref="SplitwiseManager.ImportFromSplitwise"/>.
+        /// Verifies that transactions for which the user paid that are already known are properly updated.
+        /// </summary>
+        [Fact]
+        public void Test_ImportFromSplitwise_Update_Paid()
+        {
+            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            var user2 = this.SplitwiseContextMock.GenerateUser(2, "USER2");
+            var user3 = this.SplitwiseContextMock.GenerateUser(3, "USER3");
+
+            var (account, _) = this.context.GenerateAccount();
+            var category = this.context.GenerateCategory();
+            var split1 = this.context.GenerateSplitDetail(user2.Id, 15);
+            var split2 = this.context.GenerateSplitDetail(user3.Id, 25);
+            var splits = new List<SplitDetailEntity> { split1, split2 };
+            var transaction = this.context.GenerateTransaction(
+                account,
+                date: DateTime.Today.ToLocalDate(),
+                description: "Description",
+                category: category,
+                amount: 50,
+                splitDetails: splits);
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                false,
+                DateTime.UtcNow.AddHours(-1),
+                50,
+                10,
+                false,
+                splits);
+
+            // Add an update to the transaction, with updated split details.
+            var newSplits = new List<Split>
+            {
+                new Split { UserId = user2.Id, Amount = 25 },
+                new Split { UserId = user3.Id, Amount = 15 },
+            };
+            var expense = this.SplitwiseContextMock.GenerateExpense(
+                1,
+                "Description123",
+                DateTime.Today.ToLocalDate(),
+                false,
+                DateTime.UtcNow,
+                50,
+                10,
+                newSplits);
+
+            this.SplitwiseManager.ImportFromSplitwise();
+
+            splitwiseTransaction = this.context.SplitwiseTransactions.IncludeAll().Single();
+
+            Assert.Equal(expense.Id, splitwiseTransaction.Id);
+            Assert.Equal(expense.Description, splitwiseTransaction.Description);
+            Assert.Equal(expense.Date, splitwiseTransaction.Date);
+            Assert.Equal(expense.PaidAmount, splitwiseTransaction.PaidAmount);
+            Assert.Equal(expense.PersonalAmount, splitwiseTransaction.PersonalAmount);
+            Assert.Equal(expense.UpdatedAt, splitwiseTransaction.UpdatedAt);
+            Assert.False(splitwiseTransaction.Imported);
+
+            var splitDetail1 = splitwiseTransaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 2);
+            var splitDetail2 = splitwiseTransaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 3);
+
+            Assert.Equal(25, splitDetail1.Amount);
+            Assert.Equal(15, splitDetail2.Amount);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.ImportFromSplitwise"/>.
+        /// Verifies that updates to a transaction are not processed if the last updated at timestamp is equal to the
+        /// one known.
+        /// </summary>
+        [Fact]
+        public void Test_ImportFromSplitwise_Update_Paid_EqualLastUpdatedAt()
+        {
+            var updatedAt = DateTime.UtcNow;
+
+            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            var user2 = this.SplitwiseContextMock.GenerateUser(2, "USER2");
+            var user3 = this.SplitwiseContextMock.GenerateUser(3, "USER3");
+
+            var (account, _) = this.context.GenerateAccount();
+            var category = this.context.GenerateCategory();
+            var split1 = this.context.GenerateSplitDetail(user2.Id, 15);
+            var split2 = this.context.GenerateSplitDetail(user3.Id, 25);
+            var splits = new List<SplitDetailEntity> { split1, split2 };
+            var transaction = this.context.GenerateTransaction(
+                account,
+                date: DateTime.Today.ToLocalDate(),
+                description: "Description",
+                category: category,
+                amount: 50,
+                splitDetails: splits);
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                false,
+                DateTime.UtcNow.AddHours(-1),
+                50,
+                10,
+                false,
+                splits);
+
+            // Add an update to the transaction, with updated split details.
+            var expense = this.SplitwiseContextMock.GenerateExpense(
+                splitwiseTransaction.Id,
+                splitwiseTransaction.Description,
+                splitwiseTransaction.Date,
+                false,
+                updatedAt,
+                splitwiseTransaction.PaidAmount,
+                splitwiseTransaction.PersonalAmount,
+                splitwiseTransaction.SplitDetails.Select(sd => sd.AsSplit()).ToList());
+
+            this.SplitwiseManager.ImportFromSplitwise();
+
+            splitwiseTransaction = this.context.SplitwiseTransactions.IncludeAll().Single();
+
+            Assert.Equal(expense.Id, splitwiseTransaction.Id);
+            Assert.Equal(expense.Description, splitwiseTransaction.Description);
+            Assert.Equal(expense.Date, splitwiseTransaction.Date);
+            Assert.Equal(expense.PaidAmount, splitwiseTransaction.PaidAmount);
+            Assert.Equal(expense.PersonalAmount, splitwiseTransaction.PersonalAmount);
+            Assert.Equal(expense.UpdatedAt, splitwiseTransaction.UpdatedAt);
+            Assert.False(splitwiseTransaction.Imported);
+
+            var splitDetail1 = splitwiseTransaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 2);
+            var splitDetail2 = splitwiseTransaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 3);
+
+            Assert.Equal(15, splitDetail1.Amount);
+            Assert.Equal(25, splitDetail2.Amount);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.ImportFromSplitwise"/>.
         /// Verifies that transactions that are already known are properly updated, even if they are already completely
         /// imported and processed.
         /// </summary>
         [Fact]
-        public void Test_ImportFromSplitwise_UpdatedAlreadyProcessed()
+        public void Test_ImportFromSplitwise_Update_Paid_AlreadyProcessed()
+        {
+            // Add processed Splitwise transaction to database.
+            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            var user2 = this.SplitwiseContextMock.GenerateUser(2, "USER2");
+            var user3 = this.SplitwiseContextMock.GenerateUser(3, "USER3");
+
+            var (account, _) = this.context.GenerateAccount();
+            var split1 = this.context.GenerateSplitDetail(user2.Id, 15);
+            var split2 = this.context.GenerateSplitDetail(user3.Id, 25);
+            var splits = new List<SplitDetailEntity> { split1, split2 };
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                updatedAt: DateTime.Now.AddDays(-7),
+                paidAmount: 50,
+                personalAmount: 10,
+                date: DateTime.Today.ToLocalDate(),
+                description: "Description",
+                imported: true,
+                splits: splits);
+            this.context.GenerateTransaction(
+                splitwiseAccount,
+                TransactionType.Expense,
+                splitwiseTransaction.Description,
+                splitwiseTransaction.Date,
+                splitwiseTransaction.PaidAmount,
+                category,
+                splitwiseTransaction: splitwiseTransaction,
+                splitDetails: splits);
+            this.SaveAndProcess();
+
+            // Add new version to mock. In future so should not be processed.
+            var newSplits = new List<Split>
+            {
+                new Split { UserId = user2.Id, Amount = 10 },
+                new Split { UserId = user3.Id, Amount = 25 },
+            };
+            var expense = this.SplitwiseContextMock.GenerateExpense(
+                1,
+                updatedAt: DateTime.Now,
+                paidAmount: 50,
+                personalAmount: 15,
+                date: DateTime.Today.AddDays(1).ToLocalDate(),
+                description: "Description",
+                splits: newSplits);
+            this.SplitwiseManager.ImportFromSplitwise();
+
+            // Verify revert
+            this.RefreshContext();
+            var accountBalance = this.context.Accounts.Single(a => a.Id == splitwiseAccount.Id).CurrentBalance;
+            Assert.Equal(0, accountBalance);
+
+            splitwiseTransaction = this.context.SplitwiseTransactions.GetEntity(splitwiseTransaction.Id);
+
+            Assert.Equal(expense.Id, splitwiseTransaction.Id);
+            Assert.Equal(expense.Description, splitwiseTransaction.Description);
+            Assert.Equal(expense.Date, splitwiseTransaction.Date);
+            Assert.Equal(expense.PaidAmount, splitwiseTransaction.PaidAmount);
+            Assert.Equal(expense.PersonalAmount, splitwiseTransaction.PersonalAmount);
+            Assert.Equal(expense.UpdatedAt, splitwiseTransaction.UpdatedAt);
+            Assert.False(splitwiseTransaction.Imported);
+
+            var splitDetail1 = splitwiseTransaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 2);
+            var splitDetail2 = splitwiseTransaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 3);
+
+            Assert.Equal(10, splitDetail1.Amount);
+            Assert.Equal(25, splitDetail2.Amount);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.ImportFromSplitwise"/>.
+        /// Verifies that transactions that are already known are properly updated, even if they are already completely
+        /// imported and processed.
+        /// </summary>
+        [Fact]
+        public void Test_ImportFromSplitwise_Update_NotPaid_AlreadyProcessed()
         {
             // Add processed Splitwise transaction to database.
             var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
@@ -337,7 +674,117 @@
         /// Verifies that a known transaction is removed properly.
         /// </summary>
         [Fact]
-        public void Test_ImportFromSplitwise_Removed()
+        public void Test_ImportFromSplitwise_Removed_Paid()
+        {
+            // Add processed Splitwise transaction to database.
+            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            var user2 = this.SplitwiseContextMock.GenerateUser(2, "USER2");
+            var user3 = this.SplitwiseContextMock.GenerateUser(3, "USER3");
+
+            var (account, _) = this.context.GenerateAccount();
+            var split1 = this.context.GenerateSplitDetail(user2.Id, 15);
+            var split2 = this.context.GenerateSplitDetail(user3.Id, 25);
+            var splits = new List<SplitDetailEntity> { split1, split2 };
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                updatedAt: DateTime.Now.AddDays(-7),
+                paidAmount: 50,
+                personalAmount: 10,
+                date: DateTime.Today.ToLocalDate(),
+                description: "Description",
+                imported: true,
+                splits: splits);
+            this.context.GenerateTransaction(
+                splitwiseAccount,
+                TransactionType.Expense,
+                splitwiseTransaction.Description,
+                splitwiseTransaction.Date,
+                splitwiseTransaction.PaidAmount,
+                category,
+                splitwiseTransaction: splitwiseTransaction,
+                splitDetails: splits);
+            this.SaveAndProcess();
+
+            // Add new version to mock. Deleted.
+            var expense = this.SplitwiseContextMock.GenerateExpense(
+                1,
+                updatedAt: DateTime.UtcNow,
+                paidAmount: splitwiseTransaction.PaidAmount,
+                personalAmount: splitwiseTransaction.PersonalAmount,
+                date: splitwiseTransaction.Date,
+                description: splitwiseTransaction.Description,
+                splits: splitwiseTransaction.SplitDetails.Select(sd => sd.AsSplit()).ToList(),
+                isDeleted: true);
+            this.SplitwiseManager.ImportFromSplitwise();
+
+            // Verify revert
+            this.RefreshContext();
+            var accountBalance = this.context.Accounts.Single(a => a.Id == splitwiseAccount.Id).CurrentBalance;
+            Assert.Equal(0, accountBalance);
+
+            Wv8Assert.IsNone(this.context.SplitwiseTransactions.SingleOrNone(st => st.Id == splitwiseTransaction.Id));
+        }
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.ImportFromSplitwise"/>.
+        /// Verifies that an import of a removed transaction is not processed when the last updated at is equal to the
+        /// one known.
+        /// </summary>
+        [Fact]
+        public void Test_ImportFromSplitwise_Removed_Paid_EqualLastUpdatedAt()
+        {
+            var updatedAt = DateTime.UtcNow;
+
+            // Add processed Splitwise transaction to database.
+            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            var user2 = this.SplitwiseContextMock.GenerateUser(2, "USER2");
+            var user3 = this.SplitwiseContextMock.GenerateUser(3, "USER3");
+
+            var (account, _) = this.context.GenerateAccount();
+            var split1 = this.context.GenerateSplitDetail(user2.Id, 15);
+            var split2 = this.context.GenerateSplitDetail(user3.Id, 25);
+            var splits = new List<SplitDetailEntity> { split1, split2 };
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                updatedAt: updatedAt,
+                paidAmount: 50,
+                personalAmount: 10,
+                date: DateTime.Today.ToLocalDate(),
+                description: "Description",
+                isDeleted: true,
+                splits: splits);
+            this.context.SaveChanges();
+
+            // Add expense which is deleted. Equal updated at.
+            var expense = this.SplitwiseContextMock.GenerateExpense(
+                1,
+                updatedAt: updatedAt,
+                paidAmount: splitwiseTransaction.PaidAmount,
+                personalAmount: splitwiseTransaction.PersonalAmount,
+                date: splitwiseTransaction.Date,
+                description: splitwiseTransaction.Description,
+                splits: splitwiseTransaction.SplitDetails.Select(sd => sd.AsSplit()).ToList(),
+                isDeleted: true);
+            this.SplitwiseManager.ImportFromSplitwise();
+
+            // Verify revert
+            this.RefreshContext();
+
+            splitwiseTransaction = this.context.SplitwiseTransactions.GetEntity(splitwiseTransaction.Id);
+
+            Assert.True(splitwiseTransaction.IsDeleted);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.ImportFromSplitwise"/>.
+        /// Verifies that a known transaction is removed properly.
+        /// </summary>
+        [Fact]
+        public void Test_ImportFromSplitwise_Removed_NotPaid()
         {
             var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
                 1,
@@ -371,7 +818,7 @@
         /// Verifies that a known transaction is removed properly.
         /// </summary>
         [Fact]
-        public void Test_ImportFromSplitwise_RemovedAlreadyProcessed()
+        public void Test_ImportFromSplitwise_Removed_NotPaid_AlreadyProcessed()
         {
             var category = this.context.GenerateCategory();
             var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
@@ -420,7 +867,7 @@
         /// Verifies that no transaction is imported if the transaction is not known but is already removed in Splitwise.
         /// </summary>
         [Fact]
-        public void Test_ImportFromSplitwise_RemovedNotKnown()
+        public void Test_ImportFromSplitwise_Removed_NotKnown()
         {
             // Add new transaction to mock. Transaction is already removed.
             var expense = this.SplitwiseContextMock.GenerateExpense(

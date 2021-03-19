@@ -1,6 +1,7 @@
 namespace PersonalFinance.Data.Models
 {
     using System;
+    using System.Collections.Generic;
     using NodaTime;
 
     /// <summary>
@@ -50,6 +51,11 @@ namespace PersonalFinance.Data.Models
         /// The timestamp at which this transaction was last modified in Splitwise.
         /// </summary>
         public DateTime UpdatedAt { get; set; }
+
+        /// <summary>
+        /// The splits, containing all specifications of amounts in this transaction paid for others.
+        /// </summary>
+        public List<SplitDetailEntity> SplitDetails { get; set; }
 
         /// <summary>
         /// The amount that is owed by others.
