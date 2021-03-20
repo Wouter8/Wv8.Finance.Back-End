@@ -65,6 +65,7 @@ namespace PersonalFinance.Data.Models
         /// Indicates whether or not the transaction can be edited within this application.
         /// This can be false if the transaction is imported from Splitwise and someone else paid for it, the
         /// transaction should then be updated in Splitwise.
+        /// Note that the category of a transaction can always be changed, since this is only used internally.
         /// </summary>
         public bool Editable =>
             this.SplitwiseTransaction.ToMaybe().Select(t => t.PaidAmount > 0).ValueOrElse(true);

@@ -109,7 +109,7 @@ namespace PersonalFinance.Business.Transaction
                 var entity = this.Context.Transactions.GetEntity(id);
 
                 if (!entity.Editable)
-                    throw new ValidationException("The amount or splits of this transaction can not be changed.");
+                    throw new ValidationException("This transaction should be updated in Splitwise.");
 
                 this.validator.AccountType(entity.Account.Type);
                 if (entity.ReceivingAccount != null)
@@ -247,6 +247,21 @@ namespace PersonalFinance.Business.Transaction
                 this.Context.SaveChanges();
 
                 return entity.AsTransaction();
+            });
+        }
+
+        /// <inheritdoc />
+        public void UpdateTransactionCategory(int id, int categoryId)
+        {
+            this.ConcurrentInvoke(() =>
+            {
+                var transaction = this.Context.Transactions.GetEntity(id);
+                this.Context.Categories.GetEntity(categoryId);
+
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
+                processor.ChangeCategory(transaction, categoryId);
+
+                this.Context.SaveChanges();
             });
         }
 

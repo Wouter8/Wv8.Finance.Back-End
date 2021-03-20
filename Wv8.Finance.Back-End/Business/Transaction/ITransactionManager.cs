@@ -49,6 +49,13 @@
         Transaction CreateTransaction(InputTransaction input);
 
         /// <summary>
+        /// Updates the category of a transaction.
+        /// </summary>
+        /// <param name="id">The identifier of the transaction.</param>
+        /// <param name="categoryId">The category identifier.</param>
+        void UpdateTransactionCategory(int id, int categoryId);
+
+        /// <summary>
         /// Confirms a transaction so that it can be processed.
         /// </summary>
         /// <param name="id">The identifier of the unconfirmed transaction.</param>

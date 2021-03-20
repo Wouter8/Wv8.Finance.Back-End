@@ -1513,6 +1513,34 @@
 
         #endregion DeleteTransaction
 
+        #region UpdateTransactionCategory
+
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.UpdateTransactionCategory"/> method.
+        /// Verifies the category is properly updated.
+        /// </summary>
+        [Fact]
+        public void Test_UpdateTransactionCategory()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var category1 = this.context.GenerateCategory();
+            var category2 = this.context.GenerateCategory();
+
+            var transaction = this.context.GenerateTransaction(account, category: category1);
+
+            this.context.SaveChanges();
+
+            this.TransactionManager.UpdateTransactionCategory(transaction.Id, category2.Id);
+
+            this.RefreshContext();
+
+            transaction = this.context.Transactions.GetEntity(transaction.Id);
+
+            Assert.Equal(category2.Id, transaction.CategoryId.Value);
+        }
+
+        #endregion UpdateTransactionCategory
+
         #region FulfillPaymentRequest
 
         /// <summary>

@@ -89,6 +89,24 @@ namespace PersonalFinance.Business.Transaction.Processor
         #region Single
 
         /// <summary>
+        /// Processes a category change for a transaction.
+        /// This does not alter account balances and does not send an update to Splitwise.
+        /// </summary>
+        /// <param name="transaction">The transaction.</param>
+        /// <param name="newCategoryId">The old category identifier.</param>
+        public void ChangeCategory(TransactionEntity transaction, int newCategoryId)
+        {
+            var personalAmount = transaction.PersonalAmount;
+            if (transaction.Processed)
+                this.RevertBudgets(transaction.CategoryId.Value, transaction.Date, personalAmount);
+
+            if (transaction.NeedsProcessing())
+                this.ProcessBudgets(newCategoryId, transaction.Date, personalAmount);
+
+            transaction.CategoryId = newCategoryId;
+        }
+
+        /// <summary>
         /// Processes a transaction. Meaning the value is added to the account, budgets and savings.
         /// </summary>
         /// <param name="transaction">The transaction.</param>
@@ -147,9 +165,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                         entry.Balance += transaction.Amount;
 
                     // Update budgets.
-                    var budgets = this.Context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
-                    foreach (var budget in budgets)
-                        budget.Spent += Math.Abs(personalAmount);
+                    this.ProcessBudgets(transaction.CategoryId.Value, transaction.Date, personalAmount);
 
                     // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
                     if (transaction.SplitwiseTransactionId.HasValue)
@@ -202,9 +218,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                         historicalBalance.Balance -= transaction.Amount;
 
                     // Update budgets.
-                    var budgets = this.Context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
-                    foreach (var budget in budgets)
-                        budget.Spent -= Math.Abs(personalAmount);
+                    this.RevertBudgets(transaction.CategoryId.Value, transaction.Date, personalAmount);
 
                     // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
                     if (transaction.SplitwiseTransactionId.HasValue)
@@ -320,6 +334,32 @@ namespace PersonalFinance.Business.Transaction.Processor
 
             foreach (var entry in historicalEntriesToEdit)
                 entry.Balance -= mutationAmount;
+        }
+
+        /// <summary>
+        /// Processes the budget changes for a transaction.
+        /// </summary>
+        /// <param name="categoryId">The category identifier.</param>
+        /// <param name="date">The date of the transaction.</param>
+        /// <param name="personalAmount">The personal amount.</param>
+        private void ProcessBudgets(int categoryId, LocalDate date, decimal personalAmount)
+        {
+            var budgets = this.Context.Budgets.GetBudgets(categoryId, date);
+            foreach (var budget in budgets)
+                budget.Spent += Math.Abs(personalAmount);
+        }
+
+        /// <summary>
+        /// Reverts the budget changes for a transaction.
+        /// </summary>
+        /// <param name="categoryId">The category identifier.</param>
+        /// <param name="date">The date of the transaction.</param>
+        /// <param name="personalAmount">The personal amount.</param>
+        private void RevertBudgets(int categoryId, LocalDate date, decimal personalAmount)
+        {
+            var budgets = this.Context.Budgets.GetBudgets(categoryId, date);
+            foreach (var budget in budgets)
+                budget.Spent -= Math.Abs(personalAmount);
         }
 
         #endregion Single
