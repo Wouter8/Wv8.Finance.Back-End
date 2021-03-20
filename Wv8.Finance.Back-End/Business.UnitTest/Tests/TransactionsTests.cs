@@ -5,6 +5,7 @@
     using System.Linq;
     using Business.UnitTest.Helpers;
     using NodaTime;
+    using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer.Input;
@@ -1414,34 +1415,100 @@
         }
 
         /// <summary>
-        /// Tests the <see cref="ITransactionManager.DeleteTransaction"/> method. Verifies that an exception is thrown
-        /// when the account of the transaction is a Splitwise account.
+        /// Tests the <see cref="ITransactionManager.DeleteTransaction"/> method. Verifies that the Splitwise
+        /// transaction is removed when deleting a transaction.
         /// </summary>
         [Fact]
-        public void DeleteTransaction_SplitwiseAccount()
+        public void DeleteTransaction_Splitwise()
         {
+            this.SplitwiseContextMock.GenerateUser(1, "User1");
             var category = this.context.GenerateCategory();
-            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
-            var transaction = this.context.GenerateTransaction(account, category: category);
-            this.context.SaveChanges();
+            var (account, _) = this.context.GenerateAccount();
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var splits = this.context.GenerateSplitDetail(1, 7.5M).Singleton();
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                "Description",
+                DateTime.UtcNow.ToLocalDate(),
+                false,
+                DateTime.UtcNow.AddHours(-1),
+                10,
+                2.5M,
+                true,
+                splits);
+            var transaction = this.context.Transactions
+                .Add(splitwiseTransaction.ToTransaction(account, category))
+                .Entity;
+            this.SplitwiseContextMock.GenerateExpense(
+                1,
+                "Description",
+                DateTime.UtcNow.ToLocalDate(),
+                false,
+                DateTime.UtcNow.AddHours(-1),
+                10,
+                2.5M,
+                splits.Select(s => s.AsSplit()).ToList());
 
-            Assert.Throws<ValidationException>(() => this.TransactionManager.DeleteTransaction(transaction.Id));
+            this.SaveAndProcess();
+
+            // Delete the transaction.
+            this.TransactionManager.DeleteTransaction(transaction.Id);
+
+            // Verify revert and removal
+            this.RefreshContext();
+            var accountBalance = this.context.Accounts.Single(a => a.Id == account.Id).CurrentBalance;
+            var splitwiseBalance = this.context.Accounts.Single(a => a.Id == splitwiseAccount.Id).CurrentBalance;
+            Assert.Equal(0, accountBalance);
+            Assert.Equal(0, splitwiseBalance);
+            splitwiseTransaction = this.context.SplitwiseTransactions.Single();
+            Assert.True(splitwiseTransaction.IsDeleted);
+            Wv8Assert.IsNone(this.context.Transactions.SingleOrNone());
+            Wv8Assert.IsNone(this.SplitwiseContextMock.Expenses.SingleOrNone());
         }
 
         /// <summary>
-        /// Tests the <see cref="ITransactionManager.DeleteTransaction"/> method. Verifies that an exception is thrown
-        /// when the receiving account of the transaction is a Splitwise account.
+        /// Tests the <see cref="ITransactionManager.DeleteTransaction"/> method. Verifies that the Splitwise
+        /// transaction is removed when deleting a transaction.
         /// </summary>
         [Fact]
-        public void DeleteTransaction_Transfer_SplitwiseAccount()
+        public void DeleteTransaction_Splitwise_NotPaid()
         {
+            var category = this.context.GenerateCategory();
             var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
-            var (normalAccount, _) = this.context.GenerateAccount();
-            var transaction = this.context.GenerateTransaction(
-                normalAccount, TransactionType.Transfer, receivingAccount: account);
-            this.context.SaveChanges();
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                "Description",
+                DateTime.UtcNow.ToLocalDate(),
+                false,
+                DateTime.UtcNow.AddHours(-1),
+                0,
+                10,
+                true);
+            var transaction = this.context.Transactions
+                .Add(splitwiseTransaction.ToTransaction(account, category))
+                .Entity;
+            this.SplitwiseContextMock.GenerateExpense(
+                1,
+                "Description",
+                DateTime.UtcNow.ToLocalDate(),
+                false,
+                DateTime.UtcNow.AddHours(-1),
+                0,
+                10);
 
-            Assert.Throws<ValidationException>(() => this.TransactionManager.DeleteTransaction(transaction.Id));
+            this.SaveAndProcess();
+
+            // Delete the transaction.
+            this.TransactionManager.DeleteTransaction(transaction.Id);
+
+            // Verify revert and removal
+            this.RefreshContext();
+            var accountBalance = this.context.Accounts.Single().CurrentBalance;
+            Assert.Equal(0, accountBalance);
+            splitwiseTransaction = this.context.SplitwiseTransactions.Single();
+            Assert.True(splitwiseTransaction.IsDeleted);
+            Wv8Assert.IsNone(this.context.Transactions.SingleOrNone());
+            Wv8Assert.IsNone(this.SplitwiseContextMock.Expenses.SingleOrNone());
         }
 
         #endregion DeleteTransaction

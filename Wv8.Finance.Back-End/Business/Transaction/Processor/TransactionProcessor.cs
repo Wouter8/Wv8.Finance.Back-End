@@ -211,16 +211,11 @@ namespace PersonalFinance.Business.Transaction.Processor
                     {
                         this.Revert(transaction.SplitwiseTransaction);
 
-                        // If the transaction has splits, then it is defined in this application and the expense should
-                        // be removed.
-                        if (transaction.SplitDetails.Any())
-                        {
-                            this.splitwiseContext.DeleteExpense(transaction.SplitwiseTransactionId.Value);
-                            transaction.SplitwiseTransaction.IsDeleted = true;
+                        this.splitwiseContext.DeleteExpense(transaction.SplitwiseTransactionId.Value);
+                        transaction.SplitwiseTransaction.IsDeleted = true;
 
-                            transaction.SplitwiseTransaction = null;
-                            transaction.SplitwiseTransactionId = null;
-                        }
+                        transaction.SplitwiseTransaction = null;
+                        transaction.SplitwiseTransactionId = null;
                     }
 
                     break;

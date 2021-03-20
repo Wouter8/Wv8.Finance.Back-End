@@ -293,10 +293,6 @@ namespace PersonalFinance.Business.Transaction
 
                 var entity = this.Context.Transactions.GetEntity(id);
 
-                this.validator.AccountType(entity.Account.Type);
-                if (entity.ReceivingAccount != null)
-                    this.validator.AccountType(entity.ReceivingAccount.Type);
-
                 processor.RevertIfProcessed(entity);
 
                 this.Context.Remove(entity);
