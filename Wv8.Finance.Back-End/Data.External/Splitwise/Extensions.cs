@@ -1,6 +1,7 @@
 namespace PersonalFinance.Data.External.Splitwise
 {
     using System;
+    using System.Linq;
     using NodaTime;
     using PersonalFinance.Data.External.Splitwise.Models;
     using Wv8.Core;
@@ -31,6 +32,14 @@ namespace PersonalFinance.Data.External.Splitwise
                 IsDeleted = expense.DeletedAtString != null,
                 PaidAmount = user.Select(u => u.PaidShare).ValueOrElse(0),
                 PersonalAmount = user.Select(u => u.OwedShare).ValueOrElse(0),
+                Splits = expense.Users
+                    .Where(u => u.UserId != userId)
+                    .Where(u => u.PaidShare == 0 && u.OwedShare > 0)
+                    .Select(u => new Split
+                    {
+                        UserId = u.UserId,
+                        Amount = u.OwedShare,
+                    }).ToList(),
             };
         }
 
