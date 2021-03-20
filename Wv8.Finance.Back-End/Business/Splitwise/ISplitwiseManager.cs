@@ -3,6 +3,7 @@ namespace PersonalFinance.Business.Splitwise
     using System.Collections.Generic;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
+    using Wv8.Core;
 
     /// <summary>
     /// An interface for a manager with functionality related to Splitwise.
@@ -30,8 +31,10 @@ namespace PersonalFinance.Business.Splitwise
         /// </summary>
         /// <param name="splitwiseId">The identifier of the Splitwise transaction.</param>
         /// <param name="categoryId">The identifier of the category.</param>
+        /// <param name="accountId">The account identifier for which the transaction must be imported. This is only
+        /// relevant if the expense of <paramref name="splitwiseId"/> has been paid for by the user.</param>
         /// <returns>The imported transaction.</returns>
-        public Transaction CompleteTransactionImport(int splitwiseId, int categoryId);
+        public Transaction CompleteTransactionImport(int splitwiseId, int categoryId, Maybe<int> accountId);
 
         /// <summary>
         /// Imports new/updated transactions from Splitwise.

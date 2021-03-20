@@ -5,6 +5,7 @@ namespace PersonalFinance.Service.Controllers
     using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
+    using Wv8.Core;
 
     /// <summary>
     /// Service endpoint for actions related to Splitwise.
@@ -53,11 +54,13 @@ namespace PersonalFinance.Service.Controllers
         /// </summary>
         /// <param name="splitwiseId">The identifier of the Splitwise transaction.</param>
         /// <param name="categoryId">The identifier of the category.</param>
+        /// <param name="accountId">The account identifier for which the transaction must be imported. This is only
+        /// relevant if the expense of <paramref name="splitwiseId"/> has been paid for by the user.</param>
         /// <returns>The imported transaction.</returns>
         [HttpPost("complete-import/{splitwiseId}")]
-        public Transaction CompleteTransactionImport(int splitwiseId, int categoryId)
+        public Transaction CompleteTransactionImport(int splitwiseId, int categoryId, Maybe<int> accountId)
         {
-            return this.manager.CompleteTransactionImport(splitwiseId, categoryId);
+            return this.manager.CompleteTransactionImport(splitwiseId, categoryId, accountId);
         }
 
         /// <summary>

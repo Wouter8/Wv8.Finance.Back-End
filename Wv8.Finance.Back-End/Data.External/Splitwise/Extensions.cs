@@ -1,10 +1,10 @@
 namespace PersonalFinance.Data.External.Splitwise
 {
     using System;
-    using System.Linq;
     using NodaTime;
     using PersonalFinance.Data.External.Splitwise.Models;
     using Wv8.Core;
+    using Wv8.Core.Collections;
     using DT = PersonalFinance.Data.External.Splitwise.DataTransfer;
 
     /// <summary>
@@ -20,7 +20,7 @@ namespace PersonalFinance.Data.External.Splitwise
         /// <returns>The domain expense object.</returns>
         public static Expense ToDomainObject(this DT.Expense expense, int userId)
         {
-            var user = expense.Users.Single(u => u.UserId == userId);
+            var user = expense.Users.SingleOrNone(u => u.UserId == userId);
 
             return new Expense
             {
@@ -29,8 +29,8 @@ namespace PersonalFinance.Data.External.Splitwise
                 Description = expense.Description,
                 UpdatedAt = DateTime.Parse(expense.UpdatedAtString),
                 IsDeleted = expense.DeletedAtString != null,
-                PaidAmount = user.PaidShare,
-                PersonalAmount = user.OwedShare,
+                PaidAmount = user.Select(u => u.PaidShare).ValueOrElse(0),
+                PersonalAmount = user.Select(u => u.OwedShare).ValueOrElse(0),
             };
         }
 

@@ -7,7 +7,9 @@ namespace Business.UnitTest
     using Business.UnitTest.Mocks;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.SqlServer.NodaTime.Extensions;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Options;
     using NodaTime;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Budget;
@@ -50,12 +52,17 @@ namespace Business.UnitTest
         {
             var services = new ServiceCollection();
 
+            // Settings
+            services.AddTransient(_ => this.GetApplicationSettings());
+
+            // Database context
             services.AddDbContext<Context>(
                 options => options.UseSqlServer(
                     this.GetDatabaseConnectionString(),
                     sqlOptions => sqlOptions.UseNodaTime()),
                 ServiceLifetime.Transient);
 
+            // Managers
             services.AddTransient<IAccountManager, AccountManager>();
             services.AddTransient<ICategoryManager, CategoryManager>();
             services.AddTransient<IBudgetManager, BudgetManager>();
@@ -556,6 +563,19 @@ namespace Business.UnitTest
 
             // This should not happen.
             return string.Empty;
+        }
+
+        private IOptions<ApplicationSettings> GetApplicationSettings()
+        {
+            var config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.test.json")
+                .Build()
+                .GetSection("ApplicationSettings");
+            var appSettings = new ApplicationSettings();
+
+            config.Bind(appSettings);
+
+            return Options.Create(appSettings);
         }
 
         /// <summary>

@@ -13,6 +13,7 @@
     using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.External.Splitwise.Models;
     using PersonalFinance.Data.Models;
+    using Wv8.Core;
     using Wv8.Core.Collections;
     using Wv8.Core.Exceptions;
     using Xunit;
@@ -22,6 +23,8 @@
     /// </summary>
     public class SplitwiseTests : BaseTest
     {
+        private int splitwiseUserId = 1;
+
         #region GetSplitwiseTransactions
 
         /// <summary>
@@ -43,16 +46,19 @@
         public void Test_GetSplitwiseTransactions_ImportableFilter()
         {
             this.context.GenerateSplitwiseTransaction(1, imported: false, paidAmount: 0);
-            this.context.GenerateSplitwiseTransaction(2, imported: true, paidAmount: 0); // Not importable
-            this.context.GenerateSplitwiseTransaction(3, imported: false, paidAmount: 10m); // Not importable
+            this.context.GenerateSplitwiseTransaction(2, imported: false, paidAmount: 10m);
+            this.context.GenerateSplitwiseTransaction(3, imported: true, paidAmount: 0); // Not importable
+            this.context.GenerateSplitwiseTransaction(4, imported: false, paidAmount: 10m, isDeleted: true); // Not importable
             this.context.SaveChanges();
 
             var transactions = this.SplitwiseManager.GetSplitwiseTransactions(false);
-            Assert.Equal(3, transactions.Count);
+            Assert.Equal(4, transactions.Count);
 
             transactions = this.SplitwiseManager.GetSplitwiseTransactions(true);
-            Assert.Single(transactions);
-            Assert.Equal(1, transactions.Single().Id);
+            Assert.Equal(2, transactions.Count);
+
+            Assert.Contains(transactions, t => t.Id == 1);
+            Assert.Contains(transactions, t => t.Id == 2);
         }
 
         /// <summary>
@@ -83,7 +89,7 @@
         /// Verifies that an exception is thrown if the Splitwise transaction contains a paid amount.
         /// </summary>
         [Fact]
-        public void Test_CompleteTransactionImport_PaidByMe()
+        public void Test_CompleteTransactionImport_PaidByMe_NoAccountId()
         {
             var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
             var category = this.context.GenerateCategory();
@@ -93,8 +99,54 @@
 
             this.context.SaveChanges();
 
-            Assert.Throws<ValidationException>(() =>
-                this.SplitwiseManager.CompleteTransactionImport(splitwiseTransaction.Id, category.Id));
+            Wv8Assert.Throws<ValidationException>(
+                () => this.SplitwiseManager.CompleteTransactionImport(
+                    splitwiseTransaction.Id, category.Id, Maybe<int>.None),
+                "An account should be specified for a Splitwise transaction that has a paid share.");
+        }
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.CompleteTransactionImport"/>.
+        /// Verifies that a transaction is correctly imported when someone I paid.
+        /// </summary>
+        [Fact]
+        public void Test_CompleteTransactionImport_PaidByMe()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var splitwiseUser = this.SplitwiseContextMock.GenerateUser(2, "User2");
+
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                date: DateTime.Today.ToLocalDate(),
+                paidAmount: 10,
+                personalAmount: 2.5M,
+                splits: new SplitDetailEntity { Amount = 7.5M, SplitwiseUserId = splitwiseUser.Id }.Singleton());
+
+            this.context.SaveChanges();
+
+            var transaction = this.SplitwiseManager.CompleteTransactionImport(splitwiseTransaction.Id, category.Id, account.Id);
+
+            Assert.Equal(-splitwiseTransaction.PersonalAmount, transaction.PersonalAmount);
+            Assert.Equal(-splitwiseTransaction.PaidAmount, transaction.Amount);
+            Assert.Equal(category.Id, transaction.CategoryId);
+            Assert.Equal(account.Id, transaction.AccountId);
+            Assert.Equal(splitwiseTransaction.Description, transaction.Description);
+            Assert.Equal(splitwiseTransaction.Date.ToDateString(), transaction.Date);
+            Assert.Equal(splitwiseTransaction.Id, transaction.SplitwiseTransactionId);
+            Assert.True(transaction.SplitwiseTransaction.IsSome);
+            Assert.True(transaction.SplitwiseTransaction.Value.Imported);
+            Assert.Equal(TransactionType.Expense, transaction.Type);
+
+            this.RefreshContext();
+
+            var accountBalance = this.context.Accounts.GetEntity(account.Id).CurrentBalance;
+            var splitwiseBalance = this.context.Accounts.GetEntity(splitwiseAccount.Id).CurrentBalance;
+
+            Assert.Equal(-10, accountBalance);
+            Assert.Equal(7.5M, splitwiseBalance);
         }
 
         /// <summary>
@@ -113,7 +165,7 @@
 
             this.context.SaveChanges();
 
-            var transaction = this.SplitwiseManager.CompleteTransactionImport(splitwiseTransaction.Id, category.Id);
+            var transaction = this.SplitwiseManager.CompleteTransactionImport(splitwiseTransaction.Id, category.Id, Maybe<int>.None);
 
             Assert.Equal(-splitwiseTransaction.PersonalAmount, transaction.PersonalAmount);
             Assert.Equal(-splitwiseTransaction.PaidAmount, transaction.Amount);
@@ -198,7 +250,7 @@
         [Fact]
         public void Test_ImportFromSplitwise_Paid_NotKnown()
         {
-            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            this.GenerateSplitwiseUser();
             this.SplitwiseContextMock.GenerateUser(2, "USER2");
             this.SplitwiseContextMock.GenerateUser(3, "USER3");
 
@@ -237,7 +289,7 @@
         {
             var updatedAt = DateTime.UtcNow;
 
-            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            this.GenerateSplitwiseUser();
             var user2 = this.SplitwiseContextMock.GenerateUser(2, "USER2");
             var user3 = this.SplitwiseContextMock.GenerateUser(3, "USER3");
 
@@ -275,6 +327,8 @@
                 splits.Select(s => s.AsSplit()).ToList());
 
             this.SplitwiseManager.ImportFromSplitwise();
+
+            this.RefreshContext();
 
             splitwiseTransaction = this.context.SplitwiseTransactions.IncludeAll().Single();
 
@@ -330,7 +384,7 @@
         [Fact]
         public void Test_ImportFromSplitwise_Update_NotPaid_NoShare()
         {
-            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            this.GenerateSplitwiseUser();
 
             var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
                 1,
@@ -403,7 +457,7 @@
         [Fact]
         public void Test_ImportFromSplitwise_Update_Paid()
         {
-            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            this.GenerateSplitwiseUser();
             var user2 = this.SplitwiseContextMock.GenerateUser(2, "USER2");
             var user3 = this.SplitwiseContextMock.GenerateUser(3, "USER3");
 
@@ -448,6 +502,7 @@
 
             this.SplitwiseManager.ImportFromSplitwise();
 
+            this.RefreshContext();
             splitwiseTransaction = this.context.SplitwiseTransactions.IncludeAll().Single();
 
             Assert.Equal(expense.Id, splitwiseTransaction.Id);
@@ -475,7 +530,7 @@
         {
             var updatedAt = DateTime.UtcNow;
 
-            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            this.GenerateSplitwiseUser();
             var user2 = this.SplitwiseContextMock.GenerateUser(2, "USER2");
             var user3 = this.SplitwiseContextMock.GenerateUser(3, "USER3");
 
@@ -496,7 +551,7 @@
                 "Description",
                 DateTime.Today.ToLocalDate(),
                 false,
-                DateTime.UtcNow.AddHours(-1),
+                updatedAt,
                 50,
                 10,
                 false,
@@ -515,6 +570,7 @@
 
             this.SplitwiseManager.ImportFromSplitwise();
 
+            this.RefreshContext();
             splitwiseTransaction = this.context.SplitwiseTransactions.IncludeAll().Single();
 
             Assert.Equal(expense.Id, splitwiseTransaction.Id);
@@ -541,7 +597,7 @@
         public void Test_ImportFromSplitwise_Update_Paid_AlreadyProcessed()
         {
             // Add processed Splitwise transaction to database.
-            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            this.GenerateSplitwiseUser();
             var user2 = this.SplitwiseContextMock.GenerateUser(2, "USER2");
             var user3 = this.SplitwiseContextMock.GenerateUser(3, "USER3");
 
@@ -553,7 +609,7 @@
             var category = this.context.GenerateCategory();
             var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
                 1,
-                updatedAt: DateTime.Now.AddDays(-7),
+                updatedAt: DateTime.UtcNow.AddDays(-7),
                 paidAmount: 50,
                 personalAmount: 10,
                 date: DateTime.Today.ToLocalDate(),
@@ -579,11 +635,11 @@
             };
             var expense = this.SplitwiseContextMock.GenerateExpense(
                 1,
-                updatedAt: DateTime.Now,
+                updatedAt: DateTime.UtcNow,
                 paidAmount: 50,
                 personalAmount: 15,
                 date: DateTime.Today.AddDays(1).ToLocalDate(),
-                description: "Description",
+                description: "Description2",
                 splits: newSplits);
             this.SplitwiseManager.ImportFromSplitwise();
 
@@ -600,10 +656,24 @@
             Assert.Equal(expense.PaidAmount, splitwiseTransaction.PaidAmount);
             Assert.Equal(expense.PersonalAmount, splitwiseTransaction.PersonalAmount);
             Assert.Equal(expense.UpdatedAt, splitwiseTransaction.UpdatedAt);
-            Assert.False(splitwiseTransaction.Imported);
+            Assert.True(splitwiseTransaction.Imported);
 
             var splitDetail1 = splitwiseTransaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 2);
             var splitDetail2 = splitwiseTransaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 3);
+
+            Assert.Equal(10, splitDetail1.Amount);
+            Assert.Equal(25, splitDetail2.Amount);
+
+            var transaction = this.context.Transactions.IncludeAll().Single();
+
+            Assert.Equal(transaction.Description, splitwiseTransaction.Description);
+            Assert.Equal(transaction.Date, splitwiseTransaction.Date);
+            Assert.Equal(transaction.Amount, -splitwiseTransaction.PaidAmount);
+            Assert.Equal(transaction.PersonalAmount, -splitwiseTransaction.PersonalAmount);
+            Assert.False(transaction.Processed);
+
+            splitDetail1 = transaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 2);
+            splitDetail2 = transaction.SplitDetails.Single(sd => sd.SplitwiseUserId == 3);
 
             Assert.Equal(10, splitDetail1.Amount);
             Assert.Equal(25, splitDetail2.Amount);
@@ -677,7 +747,7 @@
         public void Test_ImportFromSplitwise_Removed_Paid()
         {
             // Add processed Splitwise transaction to database.
-            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            this.GenerateSplitwiseUser();
             var user2 = this.SplitwiseContextMock.GenerateUser(2, "USER2");
             var user3 = this.SplitwiseContextMock.GenerateUser(3, "USER3");
 
@@ -724,7 +794,11 @@
             var accountBalance = this.context.Accounts.Single(a => a.Id == splitwiseAccount.Id).CurrentBalance;
             Assert.Equal(0, accountBalance);
 
-            Wv8Assert.IsNone(this.context.SplitwiseTransactions.SingleOrNone(st => st.Id == splitwiseTransaction.Id));
+            splitwiseTransaction = this.context.SplitwiseTransactions.Single(st => st.Id == splitwiseTransaction.Id);
+            Assert.True(splitwiseTransaction.IsDeleted);
+            Assert.False(splitwiseTransaction.Imported);
+
+            Wv8Assert.IsNone(this.context.Transactions.SingleOrNone(t => t.SplitwiseTransactionId == splitwiseTransaction.Id));
         }
 
         /// <summary>
@@ -738,7 +812,7 @@
             var updatedAt = DateTime.UtcNow;
 
             // Add processed Splitwise transaction to database.
-            this.SplitwiseContextMock.GenerateUser(1, "USER1");
+            this.GenerateSplitwiseUser();
             var user2 = this.SplitwiseContextMock.GenerateUser(2, "USER2");
             var user3 = this.SplitwiseContextMock.GenerateUser(3, "USER3");
 
@@ -992,6 +1066,11 @@
         private void SetSplitwiseLastRunTime(DateTime timestamp)
         {
             this.context.SynchronizationTimes.Single().SplitwiseLastRun = timestamp;
+        }
+
+        private User GenerateSplitwiseUser()
+        {
+            return this.SplitwiseContextMock.GenerateUser(this.splitwiseUserId, "User");
         }
     }
 }

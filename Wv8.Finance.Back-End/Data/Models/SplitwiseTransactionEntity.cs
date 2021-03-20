@@ -58,6 +58,11 @@ namespace PersonalFinance.Data.Models
         public List<SplitDetailEntity> SplitDetails { get; set; }
 
         /// <summary>
+        /// <c>true</c> if the transaction is importable, <c>false</c> otherwise.
+        /// </summary>
+        public bool Importable => !this.IsDeleted && !this.Imported;
+
+        /// <summary>
         /// The amount that is owed by others.
         /// This is equal to <see cref="PaidAmount"/> minus <see cref="PersonalAmount"/> and can never be less than 0.
         /// </summary>

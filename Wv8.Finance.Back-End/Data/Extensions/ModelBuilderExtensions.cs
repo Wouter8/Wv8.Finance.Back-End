@@ -184,7 +184,12 @@ namespace PersonalFinance.Data.Extensions
 
             entity.ToTable("SplitDetails");
 
-            entity.HasKey(sd => new { sd.SplitwiseTransactionId, sd.TransactionId, sd.SplitwiseUserId });
+            entity
+                .HasIndex(sd => new { sd.SplitwiseTransactionId, sd.SplitwiseUserId })
+                .IsUnique();
+            entity
+                .HasIndex(sd => new { sd.TransactionId, sd.SplitwiseUserId })
+                .IsUnique();
             entity.Property(sd => sd.Amount).HasPrecision(12, 2);
 
             builder.Entity<BaseTransactionEntity>()

@@ -1,9 +1,11 @@
 namespace PersonalFinance.Business.Splitwise
 {
     using System.Collections.Generic;
+    using System.Linq;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Models;
+    using Wv8.Core;
     using SW = PersonalFinance.Data.External.Splitwise.Models;
 
     /// <summary>
@@ -16,8 +18,7 @@ namespace PersonalFinance.Business.Splitwise
         /// </summary>
         /// <param name="entity">The Splitwise transaction entity to be updated.</param>
         /// <param name="expense">The expense.</param>
-        /// <returns>The updated entity.</returns>
-        public static SplitwiseTransactionEntity UpdateValues(this SplitwiseTransactionEntity entity, SW.Expense expense)
+        public static void UpdateValues(this SplitwiseTransactionEntity entity, SW.Expense expense)
         {
             entity.Id = expense.Id;
             entity.Date = expense.Date;
@@ -26,8 +27,7 @@ namespace PersonalFinance.Business.Splitwise
             entity.UpdatedAt = expense.UpdatedAt;
             entity.PaidAmount = expense.PaidAmount;
             entity.PersonalAmount = expense.PersonalAmount;
-
-            return entity;
+            entity.Imported = false;
         }
 
         /// <summary>
@@ -47,6 +47,7 @@ namespace PersonalFinance.Business.Splitwise
                 PaidAmount = expense.PaidAmount,
                 PersonalAmount = expense.PersonalAmount,
                 UpdatedAt = expense.UpdatedAt,
+                SplitDetails = expense.Splits.Select(s => s.ToSplitDetailEntity()).ToList(),
             };
         }
 
@@ -74,11 +75,26 @@ namespace PersonalFinance.Business.Splitwise
         /// </summary>
         /// <param name="entity">The entity.</param>
         /// <returns>The data transfer object.</returns>
+        public static SplitDetailEntity ToSplitDetailEntity(this SW.Split split)
+        {
+            return new SplitDetailEntity
+            {
+                SplitwiseUserId = split.UserId,
+                Amount = split.Amount,
+            };
+        }
+
+        /// <summary>
+        /// Converts the entity to a data transfer object.
+        /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <returns>The data transfer object.</returns>
         public static SplitDetail AsSplitDetail(this SplitDetailEntity entity)
         {
             return new SplitDetail
             {
-                TransactionId = entity.TransactionId,
+                TransactionId = entity.TransactionId.ToMaybe(),
+                SplitwiseTransactionId = entity.SplitwiseTransactionId.ToMaybe(),
                 SplitwiseUserId = entity.SplitwiseUserId,
                 Amount = entity.Amount,
             };
@@ -125,7 +141,7 @@ namespace PersonalFinance.Business.Splitwise
                 SplitwiseTransactionId = entity.Id,
                 SplitwiseTransaction = entity,
                 PaymentRequests = new List<PaymentRequestEntity>(),
-                SplitDetails = new List<SplitDetailEntity>(),
+                SplitDetails = entity.SplitDetails,
             };
 
             // If the transaction is (partly) mine, then create an expense transaction.

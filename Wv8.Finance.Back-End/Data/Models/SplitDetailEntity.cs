@@ -6,6 +6,11 @@ namespace PersonalFinance.Data.Models
     public class SplitDetailEntity
     {
         /// <summary>
+        /// The identifier of this split detail.
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
         /// The identifier of the Splitwise transaction this split belongs to.
         /// This might not have a value when the transaction is not yet processed and therefore no Splitwise
         /// transaction is created.

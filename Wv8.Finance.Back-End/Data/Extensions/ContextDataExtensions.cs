@@ -269,6 +269,7 @@ namespace PersonalFinance.Data.Extensions
         public static SplitwiseTransactionEntity GetEntity(this DbSet<SplitwiseTransactionEntity> set, int id)
         {
             return set
+                .IncludeAll()
                 .SingleOrNone(t => t.Id == id)
                 .ValueOrThrow(() => new DoesNotExistException($"Splitwise transaction with identifier {id} does not exist."));
         }
