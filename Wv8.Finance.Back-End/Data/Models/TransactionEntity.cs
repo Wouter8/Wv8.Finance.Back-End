@@ -67,7 +67,7 @@ namespace PersonalFinance.Data.Models
         /// transaction should then be updated in Splitwise.
         /// Note that the category of a transaction can always be changed, since this is only used internally.
         /// </summary>
-        public bool Editable =>
+        public bool FullyEditable =>
             this.SplitwiseTransaction.ToMaybe().Select(t => t.PaidAmount > 0).ValueOrElse(true);
     }
 }

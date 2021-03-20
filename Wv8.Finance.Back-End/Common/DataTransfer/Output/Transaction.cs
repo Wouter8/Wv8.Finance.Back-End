@@ -49,7 +49,8 @@
         /// Indicates whether or not the transaction can be edited within this application.
         /// This can be false if the transaction is imported from Splitwise and someone else paid for it, the
         /// transaction should then be updated in Splitwise.
+        /// The category is always editable, since this is only used internally.
         /// </summary>
-        public bool Editable { get; set; }
+        public bool FullyEditable { get; set; }
     }
 }

@@ -108,7 +108,7 @@ namespace PersonalFinance.Business.Transaction
 
                 var entity = this.Context.Transactions.GetEntity(id);
 
-                if (!entity.Editable)
+                if (!entity.FullyEditable)
                     throw new ValidationException("This transaction should be updated in Splitwise.");
 
                 this.validator.AccountType(entity.Account.Type);
