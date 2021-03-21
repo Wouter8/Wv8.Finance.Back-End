@@ -130,7 +130,7 @@ namespace PersonalFinance.Business.Splitwise
         {
             entity.Imported = true;
 
-            var transaction = new TransactionEntity
+            return new TransactionEntity
             {
                 Description = entity.Description,
                 Date = entity.Date,
@@ -142,23 +142,9 @@ namespace PersonalFinance.Business.Splitwise
                 SplitwiseTransaction = entity,
                 PaymentRequests = new List<PaymentRequestEntity>(),
                 SplitDetails = entity.SplitDetails,
+                Type = TransactionType.Expense,
+                Amount = -entity.PaidAmount,
             };
-
-            // If the transaction is (partly) mine, then create an expense transaction.
-            if (entity.PersonalAmount > 0)
-            {
-                transaction.Type = TransactionType.Expense;
-                // The amount is equal to what is actually paid. The personal amount will be calculated.
-                transaction.Amount = -entity.PaidAmount;
-            }
-            // Otherwise create an income transaction.
-            else
-            {
-                transaction.Type = TransactionType.Income;
-                transaction.Amount = entity.OwedByOthers;
-            }
-
-            return transaction;
         }
     }
 }

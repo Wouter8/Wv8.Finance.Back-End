@@ -735,35 +735,10 @@
 
         /// <summary>
         /// Tests method <see cref="ITransactionManager.UpdateTransaction"/>.
-        /// Verifies that an exception is thrown if the transaction amount is not editable.
+        /// Verifies that an exception is thrown if the transaction is not editable.
         /// </summary>
         [Fact]
-        public void Test_UpdateTransaction_NotEditable_Amount()
-        {
-            var (account, _) = this.context.GenerateAccount();
-            var splitwiseAccount = this.context.GenerateAccount(AccountType.Splitwise);
-            var category = this.context.GenerateCategory();
-
-            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(paidAmount: 0, personalAmount: 10);
-            var transaction = this.context.GenerateTransaction(
-                account, category: category, amount: -10, splitwiseTransaction: splitwiseTransaction);
-
-            this.context.SaveChanges();
-
-            var input = transaction.ToInput();
-            input.Amount = -20;
-
-            Wv8Assert.Throws<ValidationException>(
-                () => this.TransactionManager.UpdateTransaction(transaction.Id, input),
-                "The amount or splits of this transaction can not be changed.");
-        }
-
-        /// <summary>
-        /// Tests method <see cref="ITransactionManager.UpdateTransaction"/>.
-        /// Verifies that an exception is thrown if the transaction splits are not editable.
-        /// </summary>
-        [Fact]
-        public void Test_UpdateTransaction_NotEditable_Splits()
+        public void Test_UpdateTransaction_NotEditable()
         {
             var (account, _) = this.context.GenerateAccount();
             var splitwiseAccount = this.context.GenerateAccount(AccountType.Splitwise);
@@ -778,11 +753,10 @@
             this.context.SaveChanges();
 
             var input = transaction.ToInput();
-            input.SplitwiseSplits = new InputSplitwiseSplit { Amount = 5, UserId = 1 }.Singleton();
 
             Wv8Assert.Throws<ValidationException>(
                 () => this.TransactionManager.UpdateTransaction(transaction.Id, input),
-                "The amount or splits of this transaction can not be changed.");
+                "This transaction should be updated in Splitwise.");
         }
 
         #endregion UpdateTransaction

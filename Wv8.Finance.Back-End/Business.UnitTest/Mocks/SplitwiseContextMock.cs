@@ -48,6 +48,7 @@ namespace Business.UnitTest.Mocks
                 PersonalAmount = personalAmount,
                 UpdatedAt = DateTime.Now,
                 IsDeleted = false,
+                Splits = splits,
             };
 
             this.Expenses.Add(expense);
