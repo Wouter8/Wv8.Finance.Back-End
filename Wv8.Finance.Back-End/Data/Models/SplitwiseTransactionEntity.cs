@@ -58,9 +58,15 @@ namespace PersonalFinance.Data.Models
         public List<SplitDetailEntity> SplitDetails { get; set; }
 
         /// <summary>
+        /// A value indicating if the user had anything to do with the transaction. <c>true</c> if the user either paid
+        /// or had a personal amount.
+        /// </summary>
+        public bool HasShare => this.PersonalAmount != 0 || this.PaidAmount != 0;
+
+        /// <summary>
         /// <c>true</c> if the transaction is importable, <c>false</c> otherwise.
         /// </summary>
-        public bool Importable => !this.IsDeleted && !this.Imported;
+        public bool Importable => !this.IsDeleted && !this.Imported && this.HasShare;
 
         /// <summary>
         /// The amount that is owed by others.

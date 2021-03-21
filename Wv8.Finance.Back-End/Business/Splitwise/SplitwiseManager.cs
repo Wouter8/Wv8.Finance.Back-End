@@ -192,9 +192,12 @@ namespace PersonalFinance.Business.Splitwise
                             return st;
                         });
 
-                    // If the new Splitwise transaction has been deleted, then no need to add a transaction for it.
-                    if (splitwiseTransaction.IsDeleted)
+                    // Remove the Splitwise transaction if it is irrelevant
+                    if (!splitwiseTransaction.HasShare)
+                    {
+                        this.Context.SplitwiseTransactions.Remove(splitwiseTransaction);
                         continue;
+                    }
 
                     // If the Splitwise transaction was already completely imported and is importable after the update,
                     // then try to update the transaction.

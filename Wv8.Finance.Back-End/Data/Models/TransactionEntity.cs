@@ -58,8 +58,9 @@ namespace PersonalFinance.Data.Models
             + this.PaymentRequests.Sum(pr => pr.Count * pr.Amount)
             // When I paid for others, then subtract the amount paid for others.
             // When someone else paid for me, then add that share to the personal amount.
-            + (this.SplitwiseTransaction.ToMaybe().Select(st =>
-                st.OwedToOthers - st.OwedByOthers).ValueOrElse(0) * -1);
+            + (this.SplitwiseTransaction.ToMaybe()
+                .Select(st => st.OwedToOthers - st.OwedByOthers)
+                .ValueOrElse(this.SplitDetails.Sum(sd => -sd.Amount)) * -1);
 
         /// <summary>
         /// Indicates whether or not the transaction can be edited within this application.
