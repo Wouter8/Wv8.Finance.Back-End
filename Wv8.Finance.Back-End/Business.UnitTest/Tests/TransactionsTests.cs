@@ -3,15 +3,19 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Business.UnitTest.Helpers;
     using NodaTime;
+    using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Common.Exceptions;
+    using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
+    using Wv8.Core.Collections;
     using Wv8.Core.Exceptions;
     using Xunit;
 
@@ -55,8 +59,8 @@
         public void GetTransactionsByFilter()
         {
             // Generate objects.
-            var account1 = this.GenerateAccount("AAA");
-            var account2 = this.GenerateAccount("BBB");
+            var account1 = this.GenerateAccount(description: "AAA");
+            var account2 = this.GenerateAccount(description: "BBB");
 
             var category = this.GenerateCategory(description: "CCC");
             var categoryChild = this.GenerateCategory(
@@ -344,6 +348,8 @@
             Assert.True(updated.Processed);
         }
 
+        // TODO: Exception tests should validate that the correct exception is being tested. Either by message or derived exception types.
+
         /// <summary>
         /// Tests the exceptional flow of the <see cref="ITransactionManager.UpdateTransaction"/> method.
         /// </summary>
@@ -468,6 +474,289 @@
                 -amount,
                 expenseCategory.Id,
                 Maybe<int>.None));
+        }
+
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.UpdateTransaction"/> method. Verifies that an exception is thrown
+        /// when the account of the transaction that is updated is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void UpdateTransaction_SplitwiseAccount()
+        {
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var transaction = this.context.GenerateTransaction(account, category: category, amount: -50);
+            var (normalAccount, _) = this.context.GenerateAccount();
+            this.context.SaveChanges();
+
+            var edit = transaction.ToInput();
+            edit.AccountId = normalAccount.Id;
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(transaction.Id, edit));
+        }
+
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.UpdateTransaction"/> method. Verifies that an exception is thrown
+        /// when the new account of the transaction that is updated is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void UpdateTransaction_SplitwiseAccount2()
+        {
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var (normalAccount, _) = this.context.GenerateAccount();
+            var transaction = this.context.GenerateTransaction(normalAccount, category: category, amount: -50);
+            this.context.SaveChanges();
+
+            var edit = transaction.ToInput();
+            edit.AccountId = account.Id;
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(transaction.Id, edit));
+        }
+
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.UpdateTransaction"/> method. Verifies that an exception is thrown
+        /// when the account of the transaction that is updated is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void UpdateTransaction_Transfer_SplitwiseAccount()
+        {
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var (normalAccount, _) = this.context.GenerateAccount();
+            var (normalAccount2, _) = this.context.GenerateAccount();
+            var transaction = this.context.GenerateTransaction(
+                normalAccount, TransactionType.Transfer, receivingAccount: account, amount: 50);
+            this.context.SaveChanges();
+
+            var edit = transaction.ToInput();
+            edit.ReceivingAccountId = normalAccount2.Id;
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.UpdateTransaction(transaction.Id, edit));
+        }
+
+        /// <summary>
+        /// Tests method <see cref="ITransactionManager.UpdateTransaction"/>.
+        /// Verifies that payment requests are correctly updated.
+        /// </summary>
+        [Fact]
+        public void Test_UpdateTransaction_PaymentRequests()
+        {
+            var account = this.GenerateAccount();
+            var category = this.GenerateCategory();
+
+            var input = new InputTransaction
+            {
+                AccountId = account.Id,
+                Description = "Transaction",
+                DateString = DateTime.Today.ToDateString(),
+                Amount = -500,
+                CategoryId = category.Id,
+                ReceivingAccountId = Maybe<int>.None,
+                NeedsConfirmation = false,
+                PaymentRequests = new List<InputPaymentRequest>
+                {
+                    new InputPaymentRequest
+                    {
+                        Amount = 50,
+                        Count = 4,
+                        Name = "Group",
+                    },
+                    new InputPaymentRequest
+                    {
+                        Amount = 200,
+                        Count = 1,
+                        Name = "Person",
+                    },
+                },
+                SplitwiseSplits = new List<InputSplitwiseSplit>(),
+            };
+
+            var transaction = this.TransactionManager.CreateTransaction(input);
+            var prGroup = transaction.PaymentRequests.Single(pr => pr.Count == 4);
+            var prPerson = transaction.PaymentRequests.Single(pr => pr.Count == 1);
+
+            var edit = new InputTransaction
+            {
+                Amount = transaction.Amount,
+                Description = transaction.Description,
+                AccountId = transaction.AccountId,
+                CategoryId = transaction.CategoryId,
+                DateString = transaction.Date,
+                ReceivingAccountId = Maybe<int>.None,
+                PaymentRequests = new List<InputPaymentRequest>
+                {
+                    new InputPaymentRequest
+                    {
+                        Id = prGroup.Id,
+                        Amount = 50,
+                        Count = 6,
+                        Name = "Group",
+                    },
+                    new InputPaymentRequest
+                    {
+                        Id = Maybe<int>.None,
+                        Amount = 100,
+                        Count = 1,
+                        Name = "Person",
+                    },
+                },
+                SplitwiseSplits = new List<InputSplitwiseSplit>(),
+            };
+            transaction = this.TransactionManager.UpdateTransaction(transaction.Id, edit);
+            var prIds = transaction.PaymentRequests.Select(pr => pr.Id).ToList();
+
+            Assert.DoesNotContain(prPerson.Id, prIds);
+            Assert.Contains(prGroup.Id, prIds);
+
+            account = this.AccountManager.GetAccount(account.Id);
+
+            Assert.Equal(2, transaction.PaymentRequests.Count);
+            Assert.Equal(400, transaction.PaymentRequests.Sum(pr => pr.AmountDue));
+            Assert.Equal(-100, transaction.PersonalAmount);
+
+            Assert.Equal(-500, account.CurrentBalance);
+
+            // TODO: Add exception tests for payment requests
+        }
+
+        /// <summary>
+        /// Tests method <see cref="ITransactionManager.UpdateTransaction"/>.
+        /// Verifies that an exception is thrown in all cases where the input is incorrect.
+        /// </summary>
+        [Fact]
+        public void Test_UpdateTransaction_SplitwiseValidation()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var splitwiseAccount = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var transaction = this.context.GenerateTransaction(account, category: category);
+
+            var splitwiseUser = this.SplitwiseContextMock.GenerateUser(1, "User1");
+
+            this.context.SaveChanges();
+
+            var input = transaction.ToInput();
+            input.SplitwiseSplits = new InputSplitwiseSplit { Amount = 25, UserId = 1 }.Singleton();
+
+            // Wrong transaction type
+            input.Amount = 100;
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.UpdateTransaction(transaction.Id, input),
+                "Payment requests and Splitwise splits can only be specified on expenses.");
+
+            // Splits greater than amount
+            input.Amount = -10;
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.UpdateTransaction(transaction.Id, input),
+                "The amount split can not exceed the total amount of the transaction.");
+
+            input.Amount = -100;
+
+            // Split without amount
+            input.SplitwiseSplits = new InputSplitwiseSplit { Amount = 0, UserId = 1 }.Singleton();
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.UpdateTransaction(transaction.Id, input),
+                "Splits must have an amount greater than 0.");
+
+            // 2 splits for same user
+            input.SplitwiseSplits = new List<InputSplitwiseSplit>
+            {
+                new InputSplitwiseSplit { Amount = 10, UserId = 1 },
+                new InputSplitwiseSplit { Amount = 20, UserId = 1 },
+            };
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.UpdateTransaction(transaction.Id, input),
+                "A user can only be linked to a single split.");
+
+            // Unknown Splitwise user
+            input.SplitwiseSplits = new InputSplitwiseSplit { Amount = 10, UserId = 2 }.Singleton();
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.UpdateTransaction(transaction.Id, input),
+                "Unknown Splitwise user(s) specified.");
+        }
+
+        /// <summary>
+        /// Tests method <see cref="ITransactionManager.UpdateTransaction"/>.
+        /// Verifies that payment requests are correctly updated.
+        /// </summary>
+        [Fact]
+        public void Test_UpdateTransaction_SplitwiseSplits()
+        {
+            this.SplitwiseContextMock.GenerateUser(1, "Wouter", "van Acht");
+            this.SplitwiseContextMock.GenerateUser(2, "Jeroen");
+
+            var (account, _) = this.context.GenerateAccount();
+            var splitwiseAccount = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var transactionEntity = this.context.GenerateTransaction(account, amount: -300, category: category);
+
+            this.context.SaveChanges();
+
+            var input = transactionEntity.ToInput();
+            input.SplitwiseSplits = new List<InputSplitwiseSplit>
+            {
+                new InputSplitwiseSplit
+                {
+                    Amount = 100,
+                    UserId = 1,
+                },
+                new InputSplitwiseSplit
+                {
+                    Amount = 150,
+                    UserId = 2,
+                },
+            };
+
+            var transaction = this.TransactionManager.UpdateTransaction(transactionEntity.Id, input);
+
+            this.RefreshContext();
+
+            var expense =
+                this.SplitwiseContextMock.Expenses.Single(e => e.Id == transaction.SplitwiseTransaction.Value.Id);
+            account = this.context.Accounts.GetEntity(account.Id);
+
+            Assert.True(transaction.SplitwiseTransaction.IsSome);
+            Assert.True(transaction.SplitwiseTransaction.Value.Imported);
+            Assert.Equal(250, transaction.SplitwiseTransaction.Value.OwedByOthers);
+            Assert.Equal(50, transaction.SplitwiseTransaction.Value.PersonalAmount);
+            Assert.Equal(300, transaction.SplitwiseTransaction.Value.PaidAmount);
+            Assert.Equal(-50, transaction.PersonalAmount);
+
+            Assert.Equal(transaction.SplitwiseTransactionId.Value, expense.Id);
+            Assert.Equal(transaction.SplitwiseTransaction.Value.PaidAmount, expense.PaidAmount);
+            Assert.Equal(transaction.SplitwiseTransaction.Value.PersonalAmount, expense.PersonalAmount);
+            Assert.Equal(transaction.Date, expense.Date.ToDateString());
+            Assert.False(expense.IsDeleted);
+
+            Assert.Equal(-300, account.CurrentBalance);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="ITransactionManager.UpdateTransaction"/>.
+        /// Verifies that an exception is thrown if the transaction is not editable.
+        /// </summary>
+        [Fact]
+        public void Test_UpdateTransaction_NotEditable()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var splitwiseAccount = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(paidAmount: 0, personalAmount: 10);
+            var transaction = this.context.GenerateTransaction(
+                account, category: category, amount: -10, splitwiseTransaction: splitwiseTransaction);
+
+            this.SplitwiseContextMock.GenerateUser(1, "User1");
+
+            this.context.SaveChanges();
+
+            var input = transaction.ToInput();
+
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.UpdateTransaction(transaction.Id, input),
+                "This transaction should be updated in Splitwise.");
         }
 
         #endregion UpdateTransaction
@@ -666,6 +955,287 @@
                 false));
         }
 
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.CreateTransaction"/> method. Verifies that an exception is thrown
+        /// when the account of the transaction is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void CreateTransaction_SplitwiseAccount()
+        {
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            this.context.SaveChanges();
+
+            var input = this.GetInputTransaction(account.Id, categoryId: category.Id);
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(input));
+        }
+
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.CreateTransaction"/> method. Verifies that an exception is thrown
+        /// when the receiving account of the transaction is a Splitwise account.
+        /// </summary>
+        [Fact]
+        public void CreateTransaction_Transfer_SplitwiseAccount()
+        {
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var (normalAccount, _) = this.context.GenerateAccount();
+            this.context.SaveChanges();
+
+            var input = this.GetInputTransaction(normalAccount.Id, TransactionType.Transfer, receivingAccountId: account.Id);
+
+            Assert.Throws<ValidationException>(() => this.TransactionManager.CreateTransaction(input));
+        }
+
+        /// <summary>
+        /// Tests method <see cref="ITransactionManager.CreateTransaction"/>.
+        /// Verifies that payment requests are correctly created.
+        /// </summary>
+        [Fact]
+        public void Test_CreateTransaction_PaymentRequests()
+        {
+            var account = this.GenerateAccount();
+            var category = this.GenerateCategory();
+
+            var input = new InputTransaction
+            {
+                AccountId = account.Id,
+                Description = "Transaction",
+                DateString = DateTime.Today.ToDateString(),
+                Amount = -500,
+                CategoryId = category.Id,
+                ReceivingAccountId = Maybe<int>.None,
+                NeedsConfirmation = false,
+                PaymentRequests = new List<InputPaymentRequest>
+                {
+                    new InputPaymentRequest
+                    {
+                        Amount = 50,
+                        Count = 4,
+                        Name = "Group",
+                    },
+                    new InputPaymentRequest
+                    {
+                        Amount = 200,
+                        Count = 1,
+                        Name = "Person",
+                    },
+                },
+                SplitwiseSplits = new List<InputSplitwiseSplit>(),
+            };
+
+            var transaction = this.TransactionManager.CreateTransaction(input);
+            account = this.AccountManager.GetAccount(account.Id);
+
+            Assert.Equal(2, transaction.PaymentRequests.Count);
+            Assert.Equal(400, transaction.PaymentRequests.Sum(pr => pr.AmountDue));
+            Assert.Equal(-100, transaction.PersonalAmount);
+
+            Assert.Equal(-500, account.CurrentBalance);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="ITransactionManager.CreateTransaction"/>.
+        /// Verifies that an exception is thrown in all cases where the input is incorrect.
+        /// </summary>
+        [Fact]
+        public void Test_CreateTransaction_SplitwiseValidation()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var splitwiseAccount = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var splitwiseUser = this.SplitwiseContextMock.GenerateUser(1, "User1");
+
+            this.context.SaveChanges();
+
+            // Wrong transaction type
+            var input = this.GetInputTransaction(
+                account.Id,
+                TransactionType.Income,
+                categoryId: category.Id,
+                amount: 50,
+                splitwiseSplits: new InputSplitwiseSplit { Amount = 25, UserId = 1 }.Singleton());
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.CreateTransaction(input),
+                "Payment requests and Splitwise splits can only be specified on expenses.");
+
+            // Splits greater than amount
+            input.Amount = -10;
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.CreateTransaction(input),
+                "The amount split can not exceed the total amount of the transaction.");
+
+            input.Amount = -100;
+
+            // Split without amount
+            input.SplitwiseSplits = new InputSplitwiseSplit { Amount = 0, UserId = 1 }.Singleton();
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.CreateTransaction(input),
+                "Splits must have an amount greater than 0.");
+
+            // 2 splits for same user
+            input.SplitwiseSplits = new List<InputSplitwiseSplit>
+            {
+                new InputSplitwiseSplit { Amount = 10, UserId = 1 },
+                new InputSplitwiseSplit { Amount = 20, UserId = 1 },
+            };
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.CreateTransaction(input),
+                "A user can only be linked to a single split.");
+
+            // Unknown Splitwise user
+            input.SplitwiseSplits = new InputSplitwiseSplit { Amount = 10, UserId = 2 }.Singleton();
+            Wv8Assert.Throws<ValidationException>(
+                () => this.TransactionManager.CreateTransaction(input),
+                "Unknown Splitwise user(s) specified.");
+        }
+
+        /// <summary>
+        /// Tests method <see cref="ITransactionManager.CreateTransaction"/>.
+        /// Verifies that a transaction with specified Splitwise splits is correctly created.
+        /// </summary>
+        [Fact]
+        public void Test_CreateTransaction_SplitwiseSplits()
+        {
+            this.SplitwiseContextMock.GenerateUser(1, "Wouter", "van Acht");
+            this.SplitwiseContextMock.GenerateUser(2, "Jeroen");
+
+            var (account, _) = this.context.GenerateAccount();
+            var splitwiseAccount = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            this.context.SaveChanges();
+
+            var input = new InputTransaction
+            {
+                AccountId = account.Id,
+                Description = "Transaction",
+                DateString = DateTime.Today.ToDateString(),
+                Amount = -300,
+                CategoryId = category.Id,
+                ReceivingAccountId = Maybe<int>.None,
+                NeedsConfirmation = false,
+                PaymentRequests = new List<InputPaymentRequest>(),
+                SplitwiseSplits = new List<InputSplitwiseSplit>
+                {
+                    new InputSplitwiseSplit
+                    {
+                        Amount = 100,
+                        UserId = 1,
+                    },
+                    new InputSplitwiseSplit
+                    {
+                        Amount = 150,
+                        UserId = 2,
+                    },
+                },
+            };
+
+            var transaction = this.TransactionManager.CreateTransaction(input);
+
+            this.RefreshContext();
+
+            var expense =
+                this.SplitwiseContextMock.Expenses.Single(e => e.Id == transaction.SplitwiseTransaction.Value.Id);
+            account = this.context.Accounts.GetEntity(account.Id);
+
+            Assert.True(transaction.SplitwiseTransaction.IsSome);
+            Assert.True(transaction.SplitwiseTransaction.Value.Imported);
+            Assert.Equal(250, transaction.SplitwiseTransaction.Value.OwedByOthers);
+            Assert.Equal(50, transaction.SplitwiseTransaction.Value.PersonalAmount);
+            Assert.Equal(300, transaction.SplitwiseTransaction.Value.PaidAmount);
+            Assert.Equal(-50, transaction.PersonalAmount);
+
+            Assert.Equal(transaction.SplitwiseTransactionId.Value, expense.Id);
+            Assert.Equal(transaction.SplitwiseTransaction.Value.PaidAmount, expense.PaidAmount);
+            Assert.Equal(transaction.SplitwiseTransaction.Value.PersonalAmount, expense.PersonalAmount);
+            Assert.Equal(transaction.Date, expense.Date.ToDateString());
+            Assert.False(expense.IsDeleted);
+
+            Assert.Equal(2, transaction.SplitDetails.Count);
+            Assert.Contains(transaction.SplitDetails, sd => sd.SplitwiseUserId == 1 && sd.Amount == 100);
+            Assert.Contains(transaction.SplitDetails, sd => sd.SplitwiseUserId == 2 && sd.Amount == 150);
+
+            Assert.Equal(-300, account.CurrentBalance);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="ITransactionManager.CreateTransaction"/>.
+        /// Verifies that a transaction with specified Splitwise splits is correctly created.
+        /// </summary>
+        [Fact]
+        public void Test_CreateTransaction_SplitwiseSplitsAndPaymentRequests()
+        {
+            this.SplitwiseContextMock.GenerateUser(1, "Wouter", "van Acht");
+            this.SplitwiseContextMock.GenerateUser(2, "Jeroen");
+
+            var account = this.GenerateAccount();
+            var splitwiseAccount = this.GenerateAccount(AccountType.Splitwise);
+            var category = this.GenerateCategory();
+
+            var input = new InputTransaction
+            {
+                AccountId = account.Id,
+                Description = "Transaction",
+                DateString = DateTime.Today.ToDateString(),
+                Amount = -500,
+                CategoryId = category.Id,
+                ReceivingAccountId = Maybe<int>.None,
+                NeedsConfirmation = false,
+                PaymentRequests = new List<InputPaymentRequest>
+                {
+                    new InputPaymentRequest
+                    {
+                        Id = Maybe<int>.None,
+                        Amount = 50,
+                        Count = 2,
+                        Name = "Group 1",
+                    },
+                    new InputPaymentRequest
+                    {
+                        Id = Maybe<int>.None,
+                        Amount = 50,
+                        Count = 1,
+                        Name = "Person",
+                    },
+                },
+                SplitwiseSplits = new List<InputSplitwiseSplit>
+                {
+                    new InputSplitwiseSplit
+                    {
+                        Amount = 100,
+                        UserId = 1,
+                    },
+                    new InputSplitwiseSplit
+                    {
+                        Amount = 150,
+                        UserId = 2,
+                    },
+                },
+            };
+
+            var transaction = this.TransactionManager.CreateTransaction(input);
+            var expense =
+                this.SplitwiseContextMock.Expenses.Single(e => e.Id == transaction.SplitwiseTransaction.Value.Id);
+            account = this.AccountManager.GetAccount(account.Id);
+
+            Assert.True(transaction.SplitwiseTransaction.IsSome);
+            Assert.True(transaction.SplitwiseTransaction.Value.Imported);
+            Assert.Equal(250, transaction.SplitwiseTransaction.Value.OwedByOthers);
+            Assert.Equal(250, transaction.SplitwiseTransaction.Value.PersonalAmount);
+            Assert.Equal(500, transaction.SplitwiseTransaction.Value.PaidAmount);
+            Assert.Equal(-100, transaction.PersonalAmount);
+
+            Assert.Equal(transaction.SplitwiseTransactionId.Value, expense.Id);
+            Assert.Equal(transaction.SplitwiseTransaction.Value.PaidAmount, expense.PaidAmount);
+            Assert.Equal(transaction.SplitwiseTransaction.Value.PersonalAmount, expense.PersonalAmount);
+            Assert.Equal(transaction.Date, expense.Date.ToDateString());
+            Assert.False(expense.IsDeleted);
+
+            Assert.Equal(-500, account.CurrentBalance);
+        }
+
         #endregion CreateTransaction
 
         #region ConfirmTransaction
@@ -818,139 +1388,134 @@
             Assert.Throws<DoesNotExistException>(() => this.TransactionManager.DeleteTransaction(100));
         }
 
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.DeleteTransaction"/> method. Verifies that the Splitwise
+        /// transaction is removed when deleting a transaction.
+        /// </summary>
+        [Fact]
+        public void DeleteTransaction_Splitwise()
+        {
+            this.SplitwiseContextMock.GenerateUser(1, "User1");
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount();
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var splits = this.context.GenerateSplitDetail(1, 7.5M).Singleton();
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                "Description",
+                DateTime.UtcNow.ToLocalDate(),
+                false,
+                DateTime.UtcNow.AddHours(-1),
+                10,
+                2.5M,
+                true,
+                splits);
+            var transaction = this.context.Transactions
+                .Add(splitwiseTransaction.ToTransaction(account, category))
+                .Entity;
+            this.SplitwiseContextMock.GenerateExpense(
+                1,
+                "Description",
+                DateTime.UtcNow.ToLocalDate(),
+                false,
+                DateTime.UtcNow.AddHours(-1),
+                10,
+                2.5M,
+                splits.Select(s => s.AsSplit()).ToList());
+
+            this.SaveAndProcess();
+
+            // Delete the transaction.
+            this.TransactionManager.DeleteTransaction(transaction.Id);
+
+            // Verify revert and removal
+            this.RefreshContext();
+            var accountBalance = this.context.Accounts.Single(a => a.Id == account.Id).CurrentBalance;
+            var splitwiseBalance = this.context.Accounts.Single(a => a.Id == splitwiseAccount.Id).CurrentBalance;
+            Assert.Equal(0, accountBalance);
+            Assert.Equal(0, splitwiseBalance);
+            splitwiseTransaction = this.context.SplitwiseTransactions.Single();
+            Assert.True(splitwiseTransaction.IsDeleted);
+            Wv8Assert.IsNone(this.context.Transactions.SingleOrNone());
+            Wv8Assert.IsNone(this.SplitwiseContextMock.Expenses.SingleOrNone());
+        }
+
+        /// <summary>
+        /// Tests the <see cref="ITransactionManager.DeleteTransaction"/> method. Verifies that the Splitwise
+        /// transaction is removed when deleting a transaction.
+        /// </summary>
+        [Fact]
+        public void DeleteTransaction_Splitwise_NotPaid()
+        {
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                "Description",
+                DateTime.UtcNow.ToLocalDate(),
+                false,
+                DateTime.UtcNow.AddHours(-1),
+                0,
+                10,
+                true);
+            var transaction = this.context.Transactions
+                .Add(splitwiseTransaction.ToTransaction(account, category))
+                .Entity;
+            this.SplitwiseContextMock.GenerateExpense(
+                1,
+                "Description",
+                DateTime.UtcNow.ToLocalDate(),
+                false,
+                DateTime.UtcNow.AddHours(-1),
+                0,
+                10);
+
+            this.SaveAndProcess();
+
+            // Delete the transaction.
+            this.TransactionManager.DeleteTransaction(transaction.Id);
+
+            // Verify revert and removal
+            this.RefreshContext();
+            var accountBalance = this.context.Accounts.Single().CurrentBalance;
+            Assert.Equal(0, accountBalance);
+            splitwiseTransaction = this.context.SplitwiseTransactions.Single();
+            Assert.True(splitwiseTransaction.IsDeleted);
+            Wv8Assert.IsNone(this.context.Transactions.SingleOrNone());
+            Wv8Assert.IsNone(this.SplitwiseContextMock.Expenses.SingleOrNone());
+        }
+
         #endregion DeleteTransaction
 
-        #region PaymentRequests
+        #region UpdateTransactionCategory
 
         /// <summary>
-        /// Tests method <see cref="ITransactionManager.CreateTransaction"/>.
-        /// Verifies that payment requests are correctly created.
+        /// Tests the <see cref="ITransactionManager.UpdateTransactionCategory"/> method.
+        /// Verifies the category is properly updated.
         /// </summary>
         [Fact]
-        public void Test_CreateTransaction_PaymentRequests()
+        public void Test_UpdateTransactionCategory()
         {
-            var account = this.GenerateAccount();
-            var category = this.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount();
+            var category1 = this.context.GenerateCategory();
+            var category2 = this.context.GenerateCategory();
 
-            var input = new InputTransaction
-            {
-                AccountId = account.Id,
-                Description = "Transaction",
-                DateString = DateTime.Today.ToDateString(),
-                Amount = -500,
-                CategoryId = category.Id,
-                ReceivingAccountId = Maybe<int>.None,
-                NeedsConfirmation = false,
-                PaymentRequests = new List<InputPaymentRequest>
-                {
-                    new InputPaymentRequest
-                    {
-                        Amount = 50,
-                        Count = 4,
-                        Name = "Group",
-                    },
-                    new InputPaymentRequest
-                    {
-                        Amount = 200,
-                        Count = 1,
-                        Name = "Person",
-                    },
-                },
-            };
+            var transaction = this.context.GenerateTransaction(account, category: category1);
 
-            var transaction = this.TransactionManager.CreateTransaction(input);
-            account = this.AccountManager.GetAccount(account.Id);
+            this.context.SaveChanges();
 
-            Assert.Equal(2, transaction.PaymentRequests.Count);
-            Assert.Equal(400, transaction.PaymentRequests.Sum(pr => pr.AmountDue));
-            Assert.Equal(-100, transaction.PersonalAmount);
+            this.TransactionManager.UpdateTransactionCategory(transaction.Id, category2.Id);
 
-            Assert.Equal(-100, account.CurrentBalance);
+            this.RefreshContext();
+
+            transaction = this.context.Transactions.GetEntity(transaction.Id);
+
+            Assert.Equal(category2.Id, transaction.CategoryId.Value);
         }
 
-        /// <summary>
-        /// Tests method <see cref="ITransactionManager.UpdateTransaction"/>.
-        /// Verifies that payment requests are correctly updated.
-        /// </summary>
-        [Fact]
-        public void Test_UpdateTransaction_PaymentRequests()
-        {
-            var account = this.GenerateAccount();
-            var category = this.GenerateCategory();
+        #endregion UpdateTransactionCategory
 
-            var input = new InputTransaction
-            {
-                AccountId = account.Id,
-                Description = "Transaction",
-                DateString = DateTime.Today.ToDateString(),
-                Amount = -500,
-                CategoryId = category.Id,
-                ReceivingAccountId = Maybe<int>.None,
-                NeedsConfirmation = false,
-                PaymentRequests = new List<InputPaymentRequest>
-                {
-                    new InputPaymentRequest
-                    {
-                        Amount = 50,
-                        Count = 4,
-                        Name = "Group",
-                    },
-                    new InputPaymentRequest
-                    {
-                        Amount = 200,
-                        Count = 1,
-                        Name = "Person",
-                    },
-                },
-            };
-
-            var transaction = this.TransactionManager.CreateTransaction(input);
-            var prGroup = transaction.PaymentRequests.Single(pr => pr.Count == 4);
-            var prPerson = transaction.PaymentRequests.Single(pr => pr.Count == 1);
-
-            var edit = new EditTransaction
-            {
-                Id = transaction.Id,
-                Amount = transaction.Amount,
-                Description = transaction.Description,
-                AccountId = transaction.AccountId,
-                CategoryId = transaction.CategoryId,
-                DateString = transaction.Date,
-                ReceivingAccountId = Maybe<int>.None,
-                PaymentRequests = new List<InputPaymentRequest>
-                {
-                    new InputPaymentRequest
-                    {
-                        Id = prGroup.Id,
-                        Amount = 50,
-                        Count = 6,
-                        Name = "Group",
-                    },
-                    new InputPaymentRequest
-                    {
-                        Id = Maybe<int>.None,
-                        Amount = 100,
-                        Count = 1,
-                        Name = "Person",
-                    },
-                },
-            };
-            transaction = this.TransactionManager.UpdateTransaction(edit);
-            var prIds = transaction.PaymentRequests.Select(pr => pr.Id).ToList();
-
-            Assert.DoesNotContain(prPerson.Id, prIds);
-            Assert.Contains(prGroup.Id, prIds);
-
-            account = this.AccountManager.GetAccount(account.Id);
-
-            Assert.Equal(2, transaction.PaymentRequests.Count);
-            Assert.Equal(400, transaction.PaymentRequests.Sum(pr => pr.AmountDue));
-            Assert.Equal(-100, transaction.PersonalAmount);
-
-            Assert.Equal(-100, account.CurrentBalance);
-
-            // TODO: Add exception tests for payment requests
-        }
+        #region FulfillPaymentRequest
 
         /// <summary>
         /// Test method for the <see cref="ITransactionManager.FulfillPaymentRequest"/> method.
@@ -1016,7 +1581,7 @@
                 this.TransactionManager.FulfillPaymentRequest(paymentRequestGroup.Id));
         }
 
-        #endregion PaymentRequests
+        #endregion FulfillPaymentRequest
 
         #region Helpers
 
@@ -1029,9 +1594,8 @@
             Maybe<int> categoryId,
             Maybe<int> receivingAccountId)
         {
-            var input = new EditTransaction
+            var input = new InputTransaction
             {
-                Id = id,
                 AccountId = accountId,
                 Description = description,
                 DateString = date,
@@ -1039,9 +1603,10 @@
                 CategoryId = categoryId,
                 ReceivingAccountId = receivingAccountId,
                 PaymentRequests = new List<InputPaymentRequest>(),
+                SplitwiseSplits = new List<InputSplitwiseSplit>(),
             };
 
-            return this.TransactionManager.UpdateTransaction(input);
+            return this.TransactionManager.UpdateTransaction(id, input);
         }
 
         private Transaction CreateTransaction(
@@ -1063,6 +1628,7 @@
                 ReceivingAccountId = receivingAccountId,
                 NeedsConfirmation = needsConfirmation,
                 PaymentRequests = new List<InputPaymentRequest>(),
+                SplitwiseSplits = new List<InputSplitwiseSplit>(),
             };
 
             return this.TransactionManager.CreateTransaction(input);

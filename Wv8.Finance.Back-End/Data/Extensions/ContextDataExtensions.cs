@@ -1,9 +1,11 @@
 namespace PersonalFinance.Data.Extensions
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
     using NodaTime;
+    using PersonalFinance.Common.Enums;
     using PersonalFinance.Common.Exceptions;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
@@ -82,7 +84,20 @@ namespace PersonalFinance.Data.Extensions
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Children)
                 .ThenInclude(c => c.Icon)
-                .Include(t => t.PaymentRequests);
+                .Include(t => t.PaymentRequests)
+                .Include(t => t.SplitwiseTransaction)
+                .Include(t => t.SplitDetails);
+        }
+
+        /// <summary>
+        /// Generates a query with all includes.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <returns>The base query.</returns>
+        public static IQueryable<SplitwiseTransactionEntity> IncludeAll(this IQueryable<SplitwiseTransactionEntity> set)
+        {
+            return set
+                .Include(t => t.SplitDetails);
         }
 
         /// <summary>
@@ -104,7 +119,9 @@ namespace PersonalFinance.Data.Extensions
                 .ThenInclude(c => c.Icon)
                 .Include(t => t.Category)
                 .ThenInclude(c => c.Children)
-                .ThenInclude(c => c.Icon);
+                .ThenInclude(c => c.Icon)
+                .Include(t => t.SplitDetails)
+                .Include(t => t.PaymentRequests);
         }
 
         /// <summary>
@@ -114,8 +131,7 @@ namespace PersonalFinance.Data.Extensions
         /// <returns>The base query.</returns>
         public static IQueryable<PaymentRequestEntity> IncludeAll(this DbSet<PaymentRequestEntity> set)
         {
-            return set
-                .Include(pr => pr.Transaction);
+            return set;
         }
 
         #endregion Query Extensions
@@ -140,6 +156,32 @@ namespace PersonalFinance.Data.Extensions
                 throw new IsObsoleteException($"Account \"{entity.Description}\" is obsolete.");
 
             return entity;
+        }
+
+        /// <summary>
+        /// Retrieves the default account entity.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <returns>The account.</returns>
+        public static AccountEntity GetDefaultEntity(this DbSet<AccountEntity> set)
+        {
+            return set
+                .IncludeAll()
+                .SingleOrNone(a => a.IsDefault)
+                .ValueOrThrow(() => new DoesNotExistException($"A default account does not exist."));
+        }
+
+        /// <summary>
+        /// Retrieves the single active Splitwise account entity.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <returns>The account.</returns>
+        public static AccountEntity GetSplitwiseEntity(this DbSet<AccountEntity> set)
+        {
+            return set
+                .IncludeAll()
+                .SingleOrNone(a => !a.IsObsolete && a.Type == AccountType.Splitwise)
+                .ValueOrThrow(() => new DoesNotExistException($"An active Splitwise account does not exist."));
         }
 
         /// <summary>
@@ -209,13 +251,27 @@ namespace PersonalFinance.Data.Extensions
         /// </summary>
         /// <param name="set">The database set.</param>
         /// <param name="id">The identifier of the payment request to be retrieved.</param>
-        /// <returns>The transaction.</returns>
+        /// <returns>The payment request.</returns>
         public static PaymentRequestEntity GetEntity(this DbSet<PaymentRequestEntity> set, int id)
         {
             return set
                 .IncludeAll()
                 .SingleOrNone(c => c.Id == id)
                 .ValueOrThrow(() => new DoesNotExistException($"Payment request with identifier {id} does not exist."));
+        }
+
+        /// <summary>
+        /// Retrieves a Splitwise transaction entity.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <param name="id">The identifier of the Splitwise transaction to be retrieved.</param>
+        /// <returns>The transaction.</returns>
+        public static SplitwiseTransactionEntity GetEntity(this DbSet<SplitwiseTransactionEntity> set, int id)
+        {
+            return set
+                .IncludeAll()
+                .SingleOrNone(t => t.Id == id)
+                .ValueOrThrow(() => new DoesNotExistException($"Splitwise transaction with identifier {id} does not exist."));
         }
 
         /// <summary>
@@ -270,5 +326,19 @@ namespace PersonalFinance.Data.Extensions
         }
 
         #endregion Retrieve Extensions
+
+        #region Data Extensions
+
+        /// <summary>
+        /// Sets the synchronization time for Splitwise synchronization to the provided timestamp.
+        /// </summary>
+        /// <param name="context">The database context.</param>
+        /// <param name="timestamp">The timestamp.</param>
+        public static void SetSplitwiseSynchronizationTime(this Context context, DateTime timestamp)
+        {
+            context.SynchronizationTimes.Single().SplitwiseLastRun = timestamp;
+        }
+
+        #endregion Data Extensions
     }
 }

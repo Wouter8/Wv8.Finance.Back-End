@@ -61,6 +61,21 @@
         /// </summary>
         public DbSet<PaymentRequestEntity> PaymentRequests { get; set; }
 
+        /// <summary>
+        /// The set of imported Splitwise transactions.
+        /// </summary>
+        public DbSet<SplitwiseTransactionEntity> SplitwiseTransactions { get; set; }
+
+        /// <summary>
+        /// The set of synchronization times. This should only contain a single entry.
+        /// </summary>
+        public DbSet<SynchronizationTimesEntity> SynchronizationTimes { get; set; }
+
+        /// <summary>
+        /// The set of split details.
+        /// </summary>
+        public DbSet<SplitDetailEntity> SplitDetails { get; set; }
+
         /// <inheritdoc/>
         public DateTime CreationTime { get; set; }
 

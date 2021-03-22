@@ -2,6 +2,8 @@
 {
     using System.Collections.Generic;
     using PersonalFinance.Common.DataTransfer.Output;
+    using PersonalFinance.Common.Enums;
+    using Wv8.Core;
 
     /// <summary>
     /// Interface for the manager providing functionality related to accounts.
@@ -19,8 +21,9 @@
         /// Retrieves accounts from the database.
         /// </summary>
         /// <param name="includeObsolete">Value indicating if obsolete accounts should also be retrieved.</param>
+        /// <param name="type">If <c>Some</c>, then only accounts are returned of the provided type.</param>
         /// <returns>The list of accounts.</returns>
-        List<Account> GetAccounts(bool includeObsolete);
+        List<Account> GetAccounts(bool includeObsolete, Maybe<AccountType> type);
 
         /// <summary>
         /// Updates an account.
@@ -37,12 +40,13 @@
         /// <summary>
         /// Creates a new account.
         /// </summary>
+        /// <param name="type">The type of the account.</param>
         /// <param name="description">The description of the account.</param>
         /// <param name="iconPack">The icon pack of the icon for the account.</param>
         /// <param name="iconName">The name of the icon for the account.</param>
         /// <param name="iconColor">The background color of the icon for the account.</param>
         /// <returns>The created account.</returns>
-        Account CreateAccount(string description, string iconPack, string iconName, string iconColor);
+        Account CreateAccount(AccountType type, string description, string iconPack, string iconName, string iconColor);
 
         /// <summary>
         /// Sets the obsolete value of an account.

@@ -13,10 +13,12 @@ namespace PersonalFinance.Service
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Business.Category;
     using PersonalFinance.Business.Report;
+    using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Business.Transaction;
-    using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
+    using PersonalFinance.Common;
     using PersonalFinance.Data;
+    using PersonalFinance.Data.External.Splitwise;
     using PersonalFinance.Service.Middleware;
     using PersonalFinance.Service.Services;
     using Wv8.Core.ModelBinding;
@@ -69,6 +71,9 @@ namespace PersonalFinance.Service
                 });
             });
 
+            // Settings
+            services.Configure<ApplicationSettings>(this.Configuration.GetSection("ApplicationSettings"));
+
             // DbContext
             services.AddDbContext<Context>(options =>
                     options.UseSqlServer(
@@ -86,9 +91,14 @@ namespace PersonalFinance.Service
             services.AddTransient<ITransactionManager, TransactionManager>();
             services.AddTransient<IRecurringTransactionManager, RecurringTransactionManager>();
             services.AddTransient<IReportManager, ReportManager>();
+            services.AddTransient<ISplitwiseManager, SplitwiseManager>();
+
+            // External contexts
+            services.AddTransient<ISplitwiseContext, SplitwiseContext>();
 
             // Services
-            services.AddHostedService<PeriodicService>();
+            services.AddHostedService<PeriodicProcessorService>();
+            services.AddHostedService<PeriodicSplitwiseImporter>();
         }
 
         /// <summary>
@@ -98,6 +108,8 @@ namespace PersonalFinance.Service
         /// <param name="env">The web hosting environment.</param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            this.UpdateDatabase(app);
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -115,12 +127,6 @@ namespace PersonalFinance.Service
             {
                 endpoints.MapControllers();
             });
-
-            if (env.IsProduction())
-                this.UpdateDatabase(app);
-
-            // Process everything on startup
-            this.ProcessAll(app);
         }
 
         /// <summary>
@@ -135,21 +141,6 @@ namespace PersonalFinance.Service
             using var context = serviceScope.ServiceProvider.GetService<Context>();
 
             context.Database.Migrate();
-        }
-
-        /// <summary>
-        /// Processes all unprocessed transactions in the past.
-        /// </summary>
-        /// <param name="app">The application builder.</param>
-        private void ProcessAll(IApplicationBuilder app)
-        {
-            using var serviceScope = app.ApplicationServices
-                .GetRequiredService<IServiceScopeFactory>()
-                .CreateScope();
-            using var context = serviceScope.ServiceProvider.GetService<Context>();
-
-            var processor = new TransactionProcessor(context);
-            processor.ProcessAll();
         }
     }
 }

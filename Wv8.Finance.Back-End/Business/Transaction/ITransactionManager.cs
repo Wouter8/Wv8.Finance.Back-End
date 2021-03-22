@@ -36,9 +36,10 @@
         /// <summary>
         /// Updates an transaction.
         /// </summary>
+        /// <param name="id">The identifier of the to be updated transaction.</param>
         /// <param name="input">The input with the values for the to be updated transaction.</param>
         /// <returns>The updated transaction.</returns>
-        Transaction UpdateTransaction(EditTransaction input);
+        Transaction UpdateTransaction(int id, InputTransaction input);
 
         /// <summary>
         /// Creates a new transaction.
@@ -46,6 +47,13 @@
         /// <param name="input">The input with the values for the to be created transaction.</param>
         /// <returns>The created transaction.</returns>
         Transaction CreateTransaction(InputTransaction input);
+
+        /// <summary>
+        /// Updates the category of a transaction.
+        /// </summary>
+        /// <param name="id">The identifier of the transaction.</param>
+        /// <param name="categoryId">The category identifier.</param>
+        void UpdateTransactionCategory(int id, int categoryId);
 
         /// <summary>
         /// Confirms a transaction so that it can be processed.

@@ -11,6 +11,7 @@ namespace PersonalFinance.Business.Transaction
     using PersonalFinance.Common.Exceptions;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
+    using PersonalFinance.Data.External.Splitwise;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
@@ -25,13 +26,20 @@ namespace PersonalFinance.Business.Transaction
         private readonly TransactionValidator validator;
 
         /// <summary>
+        /// The Splitwise context.
+        /// </summary>
+        private readonly ISplitwiseContext splitwiseContext;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="TransactionManager"/> class.
         /// </summary>
         /// <param name="context">The database context.</param>
-        public TransactionManager(Context context)
+        /// <param name="splitwiseContext">The Splitwise context.</param>
+        public TransactionManager(Context context, ISplitwiseContext splitwiseContext)
             : base(context)
         {
             this.validator = new TransactionValidator();
+            this.splitwiseContext = splitwiseContext;
         }
 
         /// <inheritdoc />
@@ -87,30 +95,49 @@ namespace PersonalFinance.Business.Transaction
         }
 
         /// <inheritdoc />
-        public Transaction UpdateTransaction(EditTransaction input)
+        public Transaction UpdateTransaction(int id, InputTransaction input)
         {
             this.validator.Description(input.Description);
             var date = this.validator.DateString(input.DateString, "date");
             var type = this.GetTransactionType(input.CategoryId, input.ReceivingAccountId, input.Amount);
-            this.validator.PaymentRequests(input.PaymentRequests, type, input.Amount);
+            this.validator.Splits(this.splitwiseContext, input.PaymentRequests, input.SplitwiseSplits, type, input.Amount);
 
             return this.ConcurrentInvoke(() =>
             {
-                var processor = new TransactionProcessor(this.Context);
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
-                var entity = this.Context.Transactions.GetEntity(input.Id);
+                var entity = this.Context.Transactions.GetEntity(id);
+
+                if (!entity.FullyEditable)
+                    throw new ValidationException("This transaction should be updated in Splitwise.");
+
+                this.validator.AccountType(entity.Account.Type);
+                if (entity.ReceivingAccount != null)
+                    this.validator.AccountType(entity.ReceivingAccount.Type);
+
                 if (type != entity.Type)
                     throw new ValidationException("Changing the type of transaction is not possible.");
 
                 var account = this.Context.Accounts.GetEntity(input.AccountId, false);
 
-                processor.RevertIfProcessed(entity);
+                this.validator.AccountType(account.Type);
 
                 var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
                 var receivingAccount = input.ReceivingAccountId.Select(aId => this.Context.Accounts.GetEntity(aId, false));
-                if (receivingAccount.IsSome && receivingAccount.Value.Id == account.Id)
-                    throw new ValidationException("Sender account can not be the same as receiver account.");
+                if (receivingAccount.IsSome)
+                {
+                    this.validator.AccountType(receivingAccount.Value.Type);
+
+                    if (receivingAccount.Value.Id == account.Id)
+                        throw new ValidationException("Sender account can not be the same as receiver account.");
+                }
+
+                // Verify a Splitwise account exists when adding providing splits.
+                if (input.SplitwiseSplits.Any())
+                    this.Context.Accounts.GetSplitwiseEntity();
+
+                processor.RevertIfProcessed(entity);
 
                 entity.AccountId = input.AccountId;
                 entity.Account = account;
@@ -121,6 +148,7 @@ namespace PersonalFinance.Business.Transaction
                 entity.Category = category.ToNullIfNone();
                 entity.ReceivingAccountId = input.ReceivingAccountId.ToNullable();
                 entity.ReceivingAccount = receivingAccount.ToNullIfNone();
+                entity.SplitDetails = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity()).ToList();
 
                 var existingPaymentRequestIds = input.PaymentRequests
                     .SelectSome(pr => pr.Id)
@@ -134,7 +162,7 @@ namespace PersonalFinance.Business.Transaction
                 foreach (var inputPr in input.PaymentRequests)
                 {
                     var updatedPr = inputPr.Id
-                        .Select(id => existingPaymentRequests[id])
+                        .Select(prId => existingPaymentRequests[prId])
                         .ValueOrElse(new PaymentRequestEntity());
 
                     if (updatedPr.PaidCount > inputPr.Count)
@@ -168,19 +196,30 @@ namespace PersonalFinance.Business.Transaction
             this.validator.Description(input.Description);
             var date = this.validator.DateString(input.DateString, "date");
             var type = this.GetTransactionType(input.CategoryId, input.ReceivingAccountId, input.Amount);
-            this.validator.PaymentRequests(input.PaymentRequests, type, input.Amount);
+            this.validator.Splits(this.splitwiseContext, input.PaymentRequests, input.SplitwiseSplits, type, input.Amount);
 
             return this.ConcurrentInvoke(() =>
             {
-                var processor = new TransactionProcessor(this.Context);
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
                 var account = this.Context.Accounts.GetEntity(input.AccountId, false);
+
+                this.validator.AccountType(account.Type);
 
                 var category = input.CategoryId.Select(cId => this.Context.Categories.GetEntity(cId, false));
 
                 var receivingAccount = input.ReceivingAccountId.Select(aId => this.Context.Accounts.GetEntity(aId, false));
-                if (receivingAccount.IsSome && receivingAccount.Value.Id == account.Id)
-                    throw new ValidationException("Sender account can not be the same as receiver account.");
+                if (receivingAccount.IsSome)
+                {
+                    this.validator.AccountType(receivingAccount.Value.Type);
+
+                    if (receivingAccount.Value.Id == account.Id)
+                        throw new ValidationException("Sender account can not be the same as receiver account.");
+                }
+
+                // Verify a Splitwise account exists when adding providing splits.
+                if (input.SplitwiseSplits.Any())
+                    this.Context.Accounts.GetSplitwiseEntity();
 
                 var entity = new TransactionEntity
                 {
@@ -197,12 +236,8 @@ namespace PersonalFinance.Business.Transaction
                     ReceivingAccount = receivingAccount.ToNullIfNone(),
                     NeedsConfirmation = input.NeedsConfirmation,
                     IsConfirmed = input.NeedsConfirmation ? false : (bool?)null,
-                    PaymentRequests = input.PaymentRequests.Select(pr => new PaymentRequestEntity
-                    {
-                        Amount = pr.Amount,
-                        Name = pr.Name,
-                        Count = pr.Count,
-                    }).ToList(),
+                    PaymentRequests = input.PaymentRequests.Select(pr => pr.ToPaymentRequestEntity()).ToList(),
+                    SplitDetails = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity()).ToList(),
                 };
 
                 processor.ProcessIfNeeded(entity);
@@ -216,13 +251,28 @@ namespace PersonalFinance.Business.Transaction
         }
 
         /// <inheritdoc />
+        public void UpdateTransactionCategory(int id, int categoryId)
+        {
+            this.ConcurrentInvoke(() =>
+            {
+                var transaction = this.Context.Transactions.GetEntity(id);
+                this.Context.Categories.GetEntity(categoryId);
+
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
+                processor.ChangeCategory(transaction, categoryId);
+
+                this.Context.SaveChanges();
+            });
+        }
+
+        /// <inheritdoc />
         public Transaction ConfirmTransaction(int id, string dateString, decimal amount)
         {
             var date = this.validator.DateString(dateString, "date");
 
             return this.ConcurrentInvoke(() =>
             {
-                var processor = new TransactionProcessor(this.Context);
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
                 var entity = this.Context.Transactions.GetEntity(id);
                 this.validator.Amount(amount, entity.Type);
@@ -254,7 +304,7 @@ namespace PersonalFinance.Business.Transaction
         {
             this.ConcurrentInvoke(() =>
             {
-                var processor = new TransactionProcessor(this.Context);
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
                 var entity = this.Context.Transactions.GetEntity(id);
 
@@ -276,6 +326,7 @@ namespace PersonalFinance.Business.Transaction
                 if (entity.Completed)
                     throw new ValidationException("This payment request is already completed.");
 
+                // TODO: This should alter the account balance.
                 entity.PaidCount++;
 
                 this.Context.SaveChanges();

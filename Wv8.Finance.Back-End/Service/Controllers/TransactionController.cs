@@ -67,12 +67,13 @@
         /// <summary>
         /// Updates an transaction.
         /// </summary>
+        /// <param name="id">The identifier of the to be updated transaction.</param>
         /// <param name="input">The input with the values for the to be updated transaction.</param>
         /// <returns>The updated transaction.</returns>
         [HttpPut("{id}")]
-        public Transaction UpdateTransaction(EditTransaction input)
+        public Transaction UpdateTransaction(int id, InputTransaction input)
         {
-            return this.manager.UpdateTransaction(input);
+            return this.manager.UpdateTransaction(id, input);
         }
 
         /// <summary>
@@ -84,6 +85,17 @@
         public Transaction CreateTransaction(InputTransaction input)
         {
             return this.manager.CreateTransaction(input);
+        }
+
+        /// <summary>
+        /// Updates the category of a transaction.
+        /// </summary>
+        /// <param name="id">The identifier of the transaction.</param>
+        /// <param name="categoryId">The category identifier.</param>
+        [HttpPut("{id}/update-category")]
+        public void UpdateTransactionCategory(int id, int categoryId)
+        {
+            this.manager.UpdateTransactionCategory(id, categoryId);
         }
 
         /// <summary>

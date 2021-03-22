@@ -3,6 +3,7 @@
     using System.Collections.Generic;
     using Microsoft.AspNetCore.Mvc;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
+    using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using Wv8.Core;
@@ -63,86 +64,30 @@
         /// Updates an recurring transaction.
         /// </summary>
         /// <param name="id">The identifier of the recurring transaction to be updated.</param>
-        /// <param name="accountId">The new identifier of the account this recurring transaction belongs to.</param>
-        /// <param name="description">The new description of the recurring transaction.</param>
-        /// <param name="startDate">The new start date of the recurring transaction.</param>
-        /// <param name="endDate">The new end date of the recurring transaction, or <c>None</c> if there is no end date.</param>
-        /// <param name="amount">The new amount of the recurring transaction.</param>
-        /// <param name="categoryId">The new identifier of the category the recurring transaction belongs to.</param>
-        /// <param name="receivingAccountId">The new identifier of the receiving account.</param>
-        /// <param name="interval">The new interval of the recurring transaction.</param>
-        /// <param name="intervalUnit">The new unit of the interval of the recurring transaction.</param>
-        /// <param name="needsConfirmation">A value indicating if created transactions need to be manually confirmed.</param>
+        /// <param name="input">The input for the recurring transaction.</param>
         /// <param name="updateInstances">A value indicating if already created instances should be updated as well.</param>
         /// <returns>The updated recurring transaction.</returns>
         [HttpPut("{id}")]
         public RecurringTransaction UpdateRecurringTransaction(
             int id,
-            int accountId,
-            string description,
-            string startDate,
-            [FromQuery] Maybe<string> endDate,
-            decimal amount,
-            [FromQuery] Maybe<int> categoryId,
-            [FromQuery] Maybe<int> receivingAccountId,
-            int interval,
-            IntervalUnit intervalUnit,
-            bool needsConfirmation,
-            bool updateInstances)
+            [FromBody] InputRecurringTransaction input,
+            [FromQuery] bool updateInstances)
         {
             return this.manager.UpdateRecurringTransaction(
                 id,
-                accountId,
-                description,
-                startDate,
-                endDate,
-                amount,
-                categoryId,
-                receivingAccountId,
-                interval,
-                intervalUnit,
-                needsConfirmation,
+                input,
                 updateInstances);
         }
 
         /// <summary>
         /// Creates a new recurring transaction.
         /// </summary>
-        /// <param name="accountId">The identifier of the account this recurring transaction belongs to.</param>
-        /// <param name="description">The description of the recurring transaction.</param>
-        /// <param name="startDate">The start date of the recurring transaction.</param>
-        /// <param name="endDate">The end date of the recurring transaction, or <c>None</c> if there is no end date.</param>
-        /// <param name="amount">The amount of the recurring transaction.</param>
-        /// <param name="categoryId">The identifier of the category the recurring transaction belongs to.</param>
-        /// <param name="receivingAccountId">The identifier of the receiving account.</param>
-        /// <param name="interval">The interval of the recurring transaction.</param>
-        /// <param name="intervalUnit">The unit of the interval of the recurring transaction.</param>
-        /// <param name="needsConfirmation">A value indicating if created transactions need to be manually confirmed.</param>
+        /// <param name="input">The input for the recurring transaction.</param>
         /// <returns>The created recurring transaction.</returns>
         [HttpPost]
-        public RecurringTransaction CreateRecurringTransaction(
-            int accountId,
-            string description,
-            string startDate,
-            [FromQuery] Maybe<string> endDate,
-            decimal amount,
-            [FromQuery] Maybe<int> categoryId,
-            [FromQuery] Maybe<int> receivingAccountId,
-            int interval,
-            IntervalUnit intervalUnit,
-            bool needsConfirmation)
+        public RecurringTransaction CreateRecurringTransaction(InputRecurringTransaction input)
         {
-            return this.manager.CreateRecurringTransaction(
-                accountId,
-                description,
-                startDate,
-                endDate,
-                amount,
-                categoryId,
-                receivingAccountId,
-                interval,
-                intervalUnit,
-                needsConfirmation);
+            return this.manager.CreateRecurringTransaction(input);
         }
 
         /// <summary>

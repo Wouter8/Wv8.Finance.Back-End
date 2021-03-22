@@ -1,5 +1,7 @@
 ﻿namespace PersonalFinance.Data.Models
 {
+    using PersonalFinance.Common.Enums;
+
     /// <summary>
     /// An entity representing an account. Used for different bank accounts, etc.
     /// </summary>
@@ -9,6 +11,11 @@
         /// The identifier of this account.
         /// </summary>
         public int Id { get; set; }
+
+        /// <summary>
+        /// The type of this account.
+        /// </summary>
+        public AccountType Type { get; set; }
 
         /// <summary>
         /// The description of this account.

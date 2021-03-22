@@ -5,9 +5,11 @@
     using System.Linq;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Category;
+    using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Comparers;
+    using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
@@ -17,6 +19,35 @@
     /// </summary>
     public static class TransactionConversion
     {
+        /// <summary>
+        /// Converts a payment request input to a payment request entity.
+        /// </summary>
+        /// <param name="paymentRequest">The payment request input.</param>
+        /// <returns>The created entity.</returns>
+        public static PaymentRequestEntity ToPaymentRequestEntity(this InputPaymentRequest paymentRequest)
+        {
+            return new PaymentRequestEntity
+            {
+                Amount = paymentRequest.Amount,
+                Name = paymentRequest.Name,
+                Count = paymentRequest.Count,
+            };
+        }
+
+        /// <summary>
+        /// Converts a split input to a split detail entity.
+        /// </summary>
+        /// <param name="split">The inputted split.</param>
+        /// <returns>The created entity.</returns>
+        public static SplitDetailEntity ToSplitDetailEntity(this InputSplitwiseSplit split)
+        {
+            return new SplitDetailEntity
+            {
+                SplitwiseUserId = split.UserId,
+                Amount = split.Amount,
+            };
+        }
+
         /// <summary>
         /// Converts the entity to a data transfer object.
         /// </summary>
@@ -34,6 +65,8 @@
                 throw new ArgumentNullException(nameof(entity.ReceivingAccount));
             if (entity.PaymentRequests == null)
                 throw new ArgumentNullException(nameof(entity.PaymentRequests));
+            if (entity.SplitwiseTransactionId.HasValue && entity.SplitwiseTransaction == null)
+                throw new ArgumentNullException(nameof(entity.SplitwiseTransaction));
 
             return new Transaction
             {
@@ -56,7 +89,11 @@
                 PaymentRequests = includePaymentRequests
                     ? entity.PaymentRequests.Select(pr => pr.AsPaymentRequest()).ToList()
                     : new List<PaymentRequest>(),
-                PersonalAmount = entity.GetPersonalAmount(),
+                PersonalAmount = entity.PersonalAmount,
+                SplitwiseTransactionId = entity.SplitwiseTransactionId.ToMaybe(),
+                SplitwiseTransaction = entity.SplitwiseTransaction.ToMaybe().Select(st => st.AsSplitwiseTransaction()),
+                SplitDetails = entity.SplitDetails.Select(sd => sd.AsSplitDetail()).ToList(),
+                FullyEditable = entity.FullyEditable,
             };
         }
 

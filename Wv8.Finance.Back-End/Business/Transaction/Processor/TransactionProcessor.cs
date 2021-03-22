@@ -1,13 +1,16 @@
-﻿namespace PersonalFinance.Business.Transaction.Processor
+namespace PersonalFinance.Business.Transaction.Processor
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using NodaTime;
+    using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
+    using PersonalFinance.Data.External.Splitwise;
+    using PersonalFinance.Data.External.Splitwise.Models;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
@@ -18,12 +21,19 @@
     public class TransactionProcessor : BaseManager
     {
         /// <summary>
+        /// The splitwise context.
+        /// </summary>
+        private readonly ISplitwiseContext splitwiseContext;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="TransactionProcessor"/> class.
         /// </summary>
         /// <param name="context">The database context.</param>
-        public TransactionProcessor(Context context)
+        /// <param name="splitwiseContext">The Splitwise context.</param>
+        public TransactionProcessor(Context context, ISplitwiseContext splitwiseContext)
             : base(context)
         {
+            this.splitwiseContext = splitwiseContext;
         }
 
         /// <summary>
@@ -79,6 +89,24 @@
         #region Single
 
         /// <summary>
+        /// Processes a category change for a transaction.
+        /// This does not alter account balances and does not send an update to Splitwise.
+        /// </summary>
+        /// <param name="transaction">The transaction.</param>
+        /// <param name="newCategoryId">The old category identifier.</param>
+        public void ChangeCategory(TransactionEntity transaction, int newCategoryId)
+        {
+            var personalAmount = transaction.PersonalAmount;
+            if (transaction.Processed)
+                this.RevertBudgets(transaction.CategoryId.Value, transaction.Date, personalAmount);
+
+            if (transaction.NeedsProcessing())
+                this.ProcessBudgets(newCategoryId, transaction.Date, personalAmount);
+
+            transaction.CategoryId = newCategoryId;
+        }
+
+        /// <summary>
         /// Processes a transaction. Meaning the value is added to the account, budgets and savings.
         /// </summary>
         /// <param name="transaction">The transaction.</param>
@@ -99,30 +127,54 @@
         private void Process(
             TransactionEntity transaction, List<DailyBalanceEntity> addedDailyBalances)
         {
-            transaction.VerifyEntitiesNotObsolete();
+            transaction.VerifyEntitiesNotObsolete(this.splitwiseContext);
 
             var (historicalEntriesToEdit, newHistoricalEntry) =
                 this.GetBalanceEntriesToEdit(transaction.AccountId, transaction.Date, addedDailyBalances);
             if (newHistoricalEntry.IsSome)
                 addedDailyBalances.Add(newHistoricalEntry.Value);
 
-            var amount = transaction.GetPersonalAmount();
+            // If Splitwise splits are defined, but there is no linked Splitwise transaction yet, then create
+            // the transaction in Splitwise.
+            if (transaction.SplitDetails.Any() && !transaction.SplitwiseTransactionId.HasValue)
+            {
+                var splits = transaction.SplitDetails
+                    .Select(sd => new Split
+                        {
+                            UserId = sd.SplitwiseUserId,
+                            Amount = sd.Amount,
+                        })
+                    .ToList();
+
+                var expense = this.splitwiseContext.CreateExpense(
+                    transaction.Amount, transaction.Description, transaction.Date, splits);
+
+                transaction.SplitwiseTransactionId = expense.Id;
+                transaction.SplitwiseTransaction = expense.ToSplitwiseTransactionEntity();
+
+                // The category is known at this point, so set imported to true.
+                transaction.SplitwiseTransaction.Imported = true;
+            }
+
+            var personalAmount = transaction.PersonalAmount;
 
             switch (transaction.Type)
             {
                 case TransactionType.Expense:
                     foreach (var entry in historicalEntriesToEdit)
-                        entry.Balance += amount;
+                        entry.Balance += transaction.Amount;
 
                     // Update budgets.
-                    var budgets = this.Context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
-                    foreach (var budget in budgets)
-                        budget.Spent += Math.Abs(amount);
+                    this.ProcessBudgets(transaction.CategoryId.Value, transaction.Date, personalAmount);
+
+                    // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
+                    if (transaction.SplitwiseTransactionId.HasValue)
+                        this.Process(transaction.SplitwiseTransaction, addedDailyBalances, TransactionType.Expense);
 
                     break;
                 case TransactionType.Income:
                     foreach (var entry in historicalEntriesToEdit)
-                        entry.Balance += amount;
+                        entry.Balance += transaction.Amount;
 
                     break;
                 case TransactionType.Transfer:
@@ -133,9 +185,9 @@
                         addedDailyBalances.Add(newReceiverEntry.Value);
 
                     foreach (var entry in historicalEntriesToEdit)
-                        entry.Balance -= amount;
+                        entry.Balance -= transaction.Amount;
                     foreach (var entry in receiverEntriesToEdit)
-                        entry.Balance += amount;
+                        entry.Balance += transaction.Amount;
 
                     break;
                 default:
@@ -157,35 +209,53 @@
                 throw new NotSupportedException("Transaction has not been processed.");
 
             var (historicalBalances, _) = this.GetBalanceEntriesToEdit(transaction.AccountId, transaction.Date);
-            var amount = transaction.GetPersonalAmount();
+            var personalAmount = transaction.PersonalAmount;
 
             switch (transaction.Type)
             {
                 case TransactionType.Expense:
                     foreach (var historicalBalance in historicalBalances)
-                        historicalBalance.Balance -= amount;
+                        historicalBalance.Balance -= transaction.Amount;
 
                     // Update budgets.
-                    var budgets = this.Context.Budgets.GetBudgets(transaction.CategoryId.Value, transaction.Date);
-                    foreach (var budget in budgets)
-                        budget.Spent -= Math.Abs(amount);
+                    this.RevertBudgets(transaction.CategoryId.Value, transaction.Date, personalAmount);
+
+                    // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
+                    if (transaction.SplitwiseTransactionId.HasValue)
+                    {
+                        this.Revert(transaction.SplitwiseTransaction);
+
+                        this.splitwiseContext.DeleteExpense(transaction.SplitwiseTransactionId.Value);
+                        transaction.SplitwiseTransaction.IsDeleted = true;
+
+                        transaction.SplitwiseTransaction = null;
+                        transaction.SplitwiseTransactionId = null;
+                    }
 
                     break;
                 case TransactionType.Income:
                     foreach (var historicalBalance in historicalBalances)
-                        historicalBalance.Balance -= amount;
+                        historicalBalance.Balance -= transaction.Amount;
+
+                    // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
+                    if (transaction.SplitwiseTransactionId.HasValue)
+                    {
+                        this.splitwiseContext.DeleteExpense(transaction.SplitwiseTransactionId.Value);
+                        transaction.SplitwiseTransaction.IsDeleted = true;
+
+                        transaction.SplitwiseTransaction = null;
+                        transaction.SplitwiseTransactionId = null;
+                    }
 
                     break;
                 case TransactionType.Transfer:
-                    var receiverHistoricalBalances = this.Context.DailyBalances
-                        .Where(db => db.AccountId == transaction.ReceivingAccountId)
-                        .Where(hb => hb.Date >= transaction.Date)
-                        .ToList();
+                    var (receiverHistoricalBalances, _) =
+                        this.GetBalanceEntriesToEdit(transaction.ReceivingAccountId.Value, transaction.Date);
 
                     foreach (var historicalBalance in historicalBalances)
-                        historicalBalance.Balance += amount;
+                        historicalBalance.Balance += transaction.Amount;
                     foreach (var historicalBalance in receiverHistoricalBalances)
-                        historicalBalance.Balance -= amount;
+                        historicalBalance.Balance -= transaction.Amount;
 
                     break;
             }
@@ -213,7 +283,7 @@
         /// <remarks>Note that the context is not saved.</remarks>
         private void Process(RecurringTransactionEntity transaction, List<DailyBalanceEntity> addedDailyBalances)
         {
-            transaction.VerifyEntitiesNotObsolete();
+            transaction.VerifyEntitiesNotObsolete(this.splitwiseContext);
 
             var instances = new List<TransactionEntity>();
             while (!transaction.Finished)
@@ -233,6 +303,74 @@
             }
 
             this.Context.Transactions.AddRange(instances);
+        }
+
+        /// <summary>
+        /// Processes a Splitwise transaction. Meaning that the Splitwise account balances are updated if needed.
+        /// </summary>
+        /// <param name="transaction">The Splitwise transaction.</param>
+        /// <param name="addedDailyBalances">The daily balances that were already added. This is needed since the
+        /// context does not contain already added entities, resulting in possible double daily balances which results
+        /// in an error.</param>
+        private void Process(
+            SplitwiseTransactionEntity transaction, List<DailyBalanceEntity> addedDailyBalances, TransactionType type)
+        {
+            transaction.VerifyProcessable();
+
+            var splitwiseAccount = this.Context.Accounts.GetSplitwiseEntity();
+            var (historicalEntriesToEdit, newHistoricalEntry) =
+                this.GetBalanceEntriesToEdit(splitwiseAccount.Id, transaction.Date, addedDailyBalances);
+            if (newHistoricalEntry.IsSome)
+                addedDailyBalances.Add(newHistoricalEntry.Value);
+            var mutationAmount = transaction.GetSplitwiseAccountDifference();
+
+            foreach (var entry in historicalEntriesToEdit)
+                entry.Balance += mutationAmount;
+        }
+
+        /// <summary>
+        /// Reverses the processing of a Splitwise transaction. Meaning that the Splitwise account balances are updated
+        /// if needed.
+        /// </summary>
+        /// <param name="transaction">The Splitwise transaction.</param>
+        private void Revert(SplitwiseTransactionEntity transaction)
+        {
+            transaction.VerifyProcessable();
+
+            var splitwiseAccount = this.Context.Accounts.GetSplitwiseEntity();
+            var (historicalEntriesToEdit, _) =
+                this.GetBalanceEntriesToEdit(splitwiseAccount.Id, transaction.Date);
+
+            var mutationAmount = transaction.GetSplitwiseAccountDifference();
+
+            foreach (var entry in historicalEntriesToEdit)
+                entry.Balance -= mutationAmount;
+        }
+
+        /// <summary>
+        /// Processes the budget changes for a transaction.
+        /// </summary>
+        /// <param name="categoryId">The category identifier.</param>
+        /// <param name="date">The date of the transaction.</param>
+        /// <param name="personalAmount">The personal amount.</param>
+        private void ProcessBudgets(int categoryId, LocalDate date, decimal personalAmount)
+        {
+            var budgets = this.Context.Budgets.GetBudgets(categoryId, date);
+            foreach (var budget in budgets)
+                budget.Spent += Math.Abs(personalAmount);
+        }
+
+        /// <summary>
+        /// Reverts the budget changes for a transaction.
+        /// </summary>
+        /// <param name="categoryId">The category identifier.</param>
+        /// <param name="date">The date of the transaction.</param>
+        /// <param name="personalAmount">The personal amount.</param>
+        private void RevertBudgets(int categoryId, LocalDate date, decimal personalAmount)
+        {
+            var budgets = this.Context.Budgets.GetBudgets(categoryId, date);
+            foreach (var budget in budgets)
+                budget.Spent -= Math.Abs(personalAmount);
         }
 
         #endregion Single

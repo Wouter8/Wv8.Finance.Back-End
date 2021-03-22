@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       workingDirectory: ./Wv8.Finance.Back-End
+      dataExternalIntegrationTestDirectory: ./Wv8.Finance.Back-End/Data.External.IntegrationTest
+      appSettingsDirectory: ./Wv8.Finance.Back-End/Service
       AZURE_WEBAPP_NAME: wv8-finance
       AZURE_WEBAPP_PACKAGE_PATH: './Wv8.Finance.Back-End'
       DOTNET_VERSION: '5.0.102'
@@ -33,9 +35,21 @@ jobs:
       with:
         accept eula: true
         sa password: 'localDatabase1'
+    - name: Set Splitwise test API key
+      run: sed -i 's@{secrets.SpitwiseTestApiKey}@${{secrets.SPLITWISE_TEST_API_KEY}}@g' appsettings.test.json
+      working-directory: ${{env.dataExternalIntegrationTestDirectory}}
     - name: Test
       run: dotnet test
       working-directory: ${{env.workingDirectory}}
+    - name: Set Splitwise production API key
+      run: sed -i 's@{secrets.SplitwiseApiKey}@${{secrets.SPLITWISE_API_KEY}}@g' appsettings.Production.json
+      working-directory: ${{env.appSettingsDirectory}}
+    - name: Set Splitwise production user id
+      run: sed -i 's@{secrets.SplitwiseUserId}@${{secrets.SPLITWISE_USER_ID}}@g' appsettings.Production.json
+      working-directory: ${{env.appSettingsDirectory}}
+    - name: Set Splitwise production group id
+      run: sed -i 's@{secrets.SplitwiseGroupId}@${{secrets.SPLITWISE_GROUP_ID}}@g' appsettings.Production.json
+      working-directory: ${{env.appSettingsDirectory}}
     - name: Publish with dotnet
       run: dotnet publish Service -c Release -o publish
       working-directory: ${{env.workingDirectory}}

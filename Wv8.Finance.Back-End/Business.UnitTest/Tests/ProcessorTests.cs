@@ -1,11 +1,15 @@
 ﻿namespace Business.UnitTest.Tests
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
+    using Business.UnitTest.Helpers;
     using NodaTime;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
+    using PersonalFinance.Common.Exceptions;
+    using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.Models;
     using Xunit;
 
@@ -160,66 +164,125 @@
         [Fact]
         public void Test_ProcessAll_MultipleTransactions()
         {
-            // TODO: Use new generation methods.
-            var account = this.context.DailyBalances.Add(new DailyBalanceEntity
-            {
-                Balance = 0,
-                Date = DateTime.Today.AddDays(-1).ToLocalDate(),
-                Account = new AccountEntity
-                {
-                    Description = "account",
-                    Icon = new IconEntity
-                    {
-                        Color = "123456",
-                        Name = "aaa",
-                        Pack = "aaa",
-                    },
-                    IsDefault = true,
-                    IsObsolete = false,
-                },
-            }).Entity.Account;
-            var category = this.GenerateCategory();
+            var (account, _) =
+                this.context.GenerateAccount(firstBalanceDate: DateTime.Today.AddDays(-7).ToLocalDate());
+            var category = this.context.GenerateCategory();
 
-            this.context.Transactions.Add(
-                new TransactionEntity
-                {
-                    Account = account,
-                    Amount = -20,
-                    CategoryId = category.Id,
-                    Date = LocalDate.FromDateTime(DateTime.Today),
-                    Description = "Description",
-                    Processed = false,
-                    Type = TransactionType.Expense,
-                });
-            this.context.Transactions.Add(
-                new TransactionEntity
-                {
-                    Account = account,
-                    Amount = -40,
-                    CategoryId = category.Id,
-                    Date = LocalDate.FromDateTime(DateTime.Today),
-                    Description = "Description",
-                    Processed = false,
-                    Type = TransactionType.Expense,
-                });
-            this.context.RecurringTransactions.Add(
-                new RecurringTransactionEntity
-                {
-                    Account = account,
-                    Amount = -40,
-                    CategoryId = category.Id,
-                    StartDate = LocalDate.FromDateTime(DateTime.Today),
-                    Description = "Description",
-                    Type = TransactionType.Expense,
-                    Interval = 1,
-                    IntervalUnit = IntervalUnit.Weeks,
-                    NextOccurence = LocalDate.FromDateTime(DateTime.Today.AddDays(7)),
-                });
+            var today = DateTime.Today.ToLocalDate();
+            this.context.GenerateTransaction(account, category: category, date: today);
+            this.context.GenerateTransaction(account, category: category, date: today);
+            this.context.GenerateRecurringTransaction(account, category: category, startDate: today);
             this.context.SaveChanges();
 
             this.RefreshContext();
 
             this.TransactionProcessor.ProcessAll();
+        }
+
+        /// <summary>
+        /// Tests method <see cref="TransactionProcessor.ProcessAll"/>.
+        /// Verifies that a transaction with Splitwise splits is correctly processed.
+        /// </summary>
+        [Fact]
+        public void Test_Transaction_SplitDetails()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var user1 = this.SplitwiseContextMock.GenerateUser(1, "User1");
+            var user2 = this.SplitwiseContextMock.GenerateUser(2, "User2");
+
+            var transaction = this.context.GenerateTransaction(
+                account,
+                TransactionType.Expense,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                -50,
+                category,
+                splitDetails: new List<SplitDetailEntity>
+                {
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = user1.Id,
+                        Amount = 20,
+                    },
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = user2.Id,
+                        Amount = 15,
+                    },
+                });
+
+            this.context.SaveChanges();
+
+            this.TransactionProcessor.ProcessAll();
+
+            this.RefreshContext();
+
+            account = this.context.Accounts.GetEntity(account.Id);
+            splitwiseAccount = this.context.Accounts.GetEntity(splitwiseAccount.Id);
+            var expenses = this.SplitwiseContextMock.Expenses;
+            var splitwiseTransaction = this.context.SplitwiseTransactions.Single();
+
+            Assert.Equal(-50, account.CurrentBalance);
+            Assert.Equal(35, splitwiseAccount.CurrentBalance);
+
+            var expense = Assert.Single(expenses);
+            Assert.Equal(15, expense.PersonalAmount);
+            Assert.Equal(50, expense.PaidAmount);
+            Assert.Equal(transaction.Date, expense.Date);
+            Assert.Equal(transaction.Description, expense.Description);
+
+            Assert.Equal(transaction.Date, splitwiseTransaction.Date);
+            Assert.Equal(transaction.Description, splitwiseTransaction.Description);
+            Assert.True(splitwiseTransaction.Imported);
+            Assert.Equal(50, splitwiseTransaction.PaidAmount);
+            Assert.Equal(15, splitwiseTransaction.PersonalAmount);
+            Assert.Equal(35, splitwiseTransaction.OwedByOthers);
+            Assert.Equal(0, splitwiseTransaction.OwedToOthers);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="TransactionProcessor.ProcessAll"/>.
+        /// Verifies that an exception is thrown if a transaction is processed that has a split to a user which is no
+        /// longer in the Splitwise group.
+        /// </summary>
+        [Fact]
+        public void Test_Transaction_SplitDetails_UserObsolete()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var user1 = this.SplitwiseContextMock.GenerateUser(1, "User1");
+
+            var transaction = this.context.GenerateTransaction(
+                account,
+                TransactionType.Expense,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                -50,
+                category,
+                splitDetails: new List<SplitDetailEntity>
+                {
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = user1.Id,
+                        Amount = 20,
+                    },
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = 2,
+                        Amount = 15,
+                    },
+                });
+
+            this.context.SaveChanges();
+
+            Wv8Assert.Throws<IsObsoleteException>(
+                () => this.TransactionProcessor.ProcessAll(),
+                "Splitwise user is obsolete.");
         }
 
         /// <summary>
@@ -316,6 +379,123 @@
             Assert.Equal(8, instances.Count);
             Assert.Equal(1, instances.Count(t => t.Processed));
             Assert.Equal(7, instances.Count(t => !t.Processed));
+        }
+
+        /// <summary>
+        /// Tests method <see cref="TransactionProcessor.ProcessAll"/>.
+        /// Verifies that a recurring transaction with Splitwise splits is correctly processed.
+        /// </summary>
+        [Fact]
+        public void Test_RecurringTransaction_SplitDetails()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var user1 = this.SplitwiseContextMock.GenerateUser(1, "User1");
+            var user2 = this.SplitwiseContextMock.GenerateUser(2, "User2");
+
+            var recurringTransaction = this.context.GenerateRecurringTransaction(
+                account,
+                TransactionType.Expense,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                null,
+                -50,
+                category,
+                interval: 1,
+                intervalUnit: IntervalUnit.Months,
+                splitDetails: new List<SplitDetailEntity>
+                {
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = user1.Id,
+                        Amount = 20,
+                    },
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = user2.Id,
+                        Amount = 15,
+                    },
+                });
+
+            this.context.SaveChanges();
+
+            this.TransactionProcessor.ProcessAll();
+
+            this.RefreshContext();
+
+            account = this.context.Accounts.GetEntity(account.Id);
+            splitwiseAccount = this.context.Accounts.GetEntity(splitwiseAccount.Id);
+            var expenses = this.SplitwiseContextMock.Expenses;
+            var splitwiseTransaction = this.context.SplitwiseTransactions.Single();
+            var transaction = this.context.Transactions.IncludeAll().Single();
+
+            Assert.Equal(-50, account.CurrentBalance);
+            Assert.Equal(35, splitwiseAccount.CurrentBalance);
+
+            var expense = Assert.Single(expenses);
+            Assert.Equal(15, expense.PersonalAmount);
+            Assert.Equal(50, expense.PaidAmount);
+            Assert.Equal(recurringTransaction.StartDate, expense.Date);
+            Assert.Equal(recurringTransaction.Description, expense.Description);
+
+            Assert.Equal(recurringTransaction.StartDate, splitwiseTransaction.Date);
+            Assert.Equal(recurringTransaction.Description, splitwiseTransaction.Description);
+            Assert.True(splitwiseTransaction.Imported);
+            Assert.Equal(50, splitwiseTransaction.PaidAmount);
+            Assert.Equal(15, splitwiseTransaction.PersonalAmount);
+            Assert.Equal(35, splitwiseTransaction.OwedByOthers);
+            Assert.Equal(0, splitwiseTransaction.OwedToOthers);
+
+            Assert.Equal(2, transaction.SplitDetails.Count);
+            Assert.Contains(transaction.SplitDetails, sd => sd.SplitwiseUserId == 1 && sd.Amount == 20);
+            Assert.Contains(transaction.SplitDetails, sd => sd.SplitwiseUserId == 2 && sd.Amount == 15);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="TransactionProcessor.ProcessAll"/>.
+        /// Verifies that an exception is thrown if a Splitwise user specified on a recurring transaction that is to be
+        /// processed is no longer part of the group.
+        /// </summary>
+        [Fact]
+        public void Test_RecurringTransaction_SplitDetails_UserObsolete()
+        {
+            var (account, _) = this.context.GenerateAccount();
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var user1 = this.SplitwiseContextMock.GenerateUser(1, "User1");
+
+            var recurringTransaction = this.context.GenerateRecurringTransaction(
+                account,
+                TransactionType.Expense,
+                "Description",
+                DateTime.Today.ToLocalDate(),
+                null,
+                -50,
+                category,
+                interval: 1,
+                intervalUnit: IntervalUnit.Months,
+                splitDetails: new List<SplitDetailEntity>
+                {
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = user1.Id,
+                        Amount = 20,
+                    },
+                    new SplitDetailEntity
+                    {
+                        SplitwiseUserId = 2,
+                        Amount = 15,
+                    },
+                });
+
+            this.context.SaveChanges();
+
+            Wv8Assert.Throws<IsObsoleteException>(
+                () => this.TransactionProcessor.ProcessAll(),
+                "Splitwise user is obsolete.");
         }
 
         /// <summary>
