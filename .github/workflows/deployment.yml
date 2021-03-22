@@ -36,7 +36,7 @@ jobs:
         accept eula: true
         sa password: 'localDatabase1'
     - name: Set Splitwise test API key
-      run: sed -i 's@{secrets.SpitwiseTestApiKey}@${{secrets.SPLITWISE_TEST_API_KEY}}@g' appsettings.test.json
+      run: sed -i 's@{secrets.SplitwiseTestApiKey}@${{secrets.SPLITWISE_TEST_API_KEY}}@g' appsettings.test.json
       working-directory: ${{env.dataExternalIntegrationTestDirectory}}
     - name: Test
       run: dotnet test
