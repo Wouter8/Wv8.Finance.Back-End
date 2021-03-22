@@ -120,27 +120,6 @@
 
         /// <summary>
         /// Tests method <see cref="SplitwiseManager.CompleteTransactionImport"/>.
-        /// Verifies that an exception is thrown if the Splitwise transaction contains a paid amount.
-        /// </summary>
-        [Fact]
-        public void Test_CompleteTransactionImport_PaidByMe_NoAccountId()
-        {
-            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
-            var category = this.context.GenerateCategory();
-
-            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
-                1, date: DateTime.Today.ToLocalDate(), paidAmount: 10, personalAmount: 2.5M);
-
-            this.context.SaveChanges();
-
-            Wv8Assert.Throws<ValidationException>(
-                () => this.SplitwiseManager.CompleteTransactionImport(
-                    splitwiseTransaction.Id, category.Id, Maybe<int>.None),
-                "An account should be specified for a Splitwise transaction that has a paid share.");
-        }
-
-        /// <summary>
-        /// Tests method <see cref="SplitwiseManager.CompleteTransactionImport"/>.
         /// Verifies that a transaction is correctly imported when someone I paid.
         /// </summary>
         [Fact]
@@ -651,7 +630,7 @@
                 imported: true,
                 splits: splits);
             this.context.GenerateTransaction(
-                splitwiseAccount,
+                account,
                 TransactionType.Expense,
                 splitwiseTransaction.Description,
                 splitwiseTransaction.Date,
