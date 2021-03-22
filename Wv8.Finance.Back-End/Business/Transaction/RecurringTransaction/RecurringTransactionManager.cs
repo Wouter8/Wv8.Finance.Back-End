@@ -1,9 +1,12 @@
 ﻿namespace PersonalFinance.Business.Transaction.RecurringTransaction
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
+    using NodaTime;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
+    using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer.Input;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
@@ -12,6 +15,7 @@
     using PersonalFinance.Data.External.Splitwise;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
+    using Wv8.Core.Collections;
     using Wv8.Core.EntityFramework;
     using Wv8.Core.Exceptions;
 
@@ -138,19 +142,25 @@
                 entity.IntervalUnit = input.IntervalUnit;
                 entity.SplitDetails = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity()).ToList();
 
-                if (updateInstances)
-                {
-                    var instances = this.Context.Transactions.GetTransactionsFromRecurring(entity.Id);
-                    foreach (var instance in instances)
-                    {
-                        // Although always in the past, a transaction might not be processed because it still has to be confirmed.
-                        processor.RevertIfProcessed(instance);
-                        this.Context.Remove(instance);
-                    }
+                var instances = this.Context.Transactions.GetTransactionsFromRecurring(entity.Id);
+                var instancesToUpdate = updateInstances
+                    ? instances.ToList() // Copy the list
+                    // Always update all unprocessed transactions.
+                    : instances.Where(t => !t.Processed).ToList();
 
-                    entity.NextOccurence = startPeriod;
-                    entity.Finished = false;
+                foreach (var instance in instancesToUpdate)
+                {
+                    processor.RevertIfProcessed(instance);
+                    instances.Remove(instance);
+                    this.Context.Remove(instance);
                 }
+
+                entity.LastOccurence = instances
+                    .OrderByDescending(t => t.Date)
+                    .FirstOrNone()
+                    .Select(t => (LocalDate?)t.Date)
+                    .ValueOrElse(() => (LocalDate?)null);
+                entity.SetNextOccurrence();
 
                 processor.ProcessIfNeeded(entity);
 

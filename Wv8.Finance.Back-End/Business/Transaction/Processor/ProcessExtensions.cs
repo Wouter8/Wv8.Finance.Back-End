@@ -43,7 +43,14 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// <param name="transaction">The recurring transaction.</param>
         public static void SetNextOccurrence(this RecurringTransactionEntity transaction)
         {
-            var start = transaction.LastOccurence ?? transaction.StartDate;
+            if (!transaction.LastOccurence.HasValue)
+            {
+                transaction.NextOccurence = transaction.StartDate;
+                transaction.Finished = false;
+                return;
+            }
+
+            var start = transaction.LastOccurence.Value;
             var next = LocalDate.MinIsoValue;
             switch (transaction.IntervalUnit)
             {
@@ -64,6 +71,7 @@ namespace PersonalFinance.Business.Transaction.Processor
             if (!transaction.EndDate.HasValue || next <= transaction.EndDate)
             {
                 transaction.NextOccurence = next;
+                transaction.Finished = false;
             }
             else
             {

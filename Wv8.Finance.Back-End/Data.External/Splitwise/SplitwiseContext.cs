@@ -2,6 +2,7 @@ namespace PersonalFinance.Data.External.Splitwise
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Net;
     using Microsoft.Extensions.Options;
@@ -61,13 +62,13 @@ namespace PersonalFinance.Data.External.Splitwise
 
             request
                 .AddParameter("group_id", this.groupId)
-                .AddParameter("cost", totalAmountPositive)
+                .AddParameter("cost", totalAmountPositive.ToString(CultureInfo.InvariantCulture))
                 .AddParameter("description", description)
                 .AddParameter("date", dateString)
                 // Add the payer information.
                 .AddParameter("users__0__user_id", this.userId)
-                .AddParameter("users__0__owed_share", personalAmount)
-                .AddParameter("users__0__paid_share", totalAmountPositive);
+                .AddParameter("users__0__owed_share", personalAmount.ToString(CultureInfo.InvariantCulture))
+                .AddParameter("users__0__paid_share", totalAmountPositive.ToString(CultureInfo.InvariantCulture));
             foreach (var item in splits.Select((split, i) => new { i, split }))
             {
                 var split = item.split;
@@ -75,7 +76,7 @@ namespace PersonalFinance.Data.External.Splitwise
 
                 request
                     .AddParameter($"users__{index}__user_id", split.UserId)
-                    .AddParameter($"users__{index}__owed_share", split.Amount)
+                    .AddParameter($"users__{index}__owed_share", split.Amount.ToString(CultureInfo.InvariantCulture))
                     .AddParameter($"users__{index}__paid_share", 0);
             }
 
