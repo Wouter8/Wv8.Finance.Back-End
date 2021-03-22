@@ -1,4 +1,4 @@
-name: Build - Test - Deploy
+name: Deploy Stef
 
 on: workflow_dispatch
 
