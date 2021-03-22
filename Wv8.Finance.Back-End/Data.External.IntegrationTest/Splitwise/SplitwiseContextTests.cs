@@ -26,6 +26,11 @@ namespace Data.External.IntegrationTest.Splitwise
         private int otherUserId2 = 37525670;
 
         /// <summary>
+        /// The user id of a different user than the user of the tests.
+        /// </summary>
+        private int otherUserId3 = 38627498;
+
+        /// <summary>
         /// Tests method <see cref="SplitwiseContext.CreateExpense"/>.
         /// Verifies that an expense gets created correctly when multiple splits are provided.
         /// </summary>
@@ -164,16 +169,19 @@ namespace Data.External.IntegrationTest.Splitwise
         {
             var users = this.splitwiseContext.GetUsers();
 
-            Assert.Equal(2, users.Count);
+            Assert.Equal(3, users.Count);
             Assert.Contains(users, u => u.Id == this.otherUserId1);
             Assert.Contains(users, u => u.Id == this.otherUserId2);
+            Assert.Contains(users, u => u.Id == this.otherUserId3);
             Assert.DoesNotContain(users, u => u.Id == this.settings.Value.SplitwiseUserId);
 
             var otherUser1 = users.Single(u => u.Id == this.otherUserId1);
             var otherUser2 = users.Single(u => u.Id == this.otherUserId2);
+            var otherUser3 = users.Single(u => u.Id == this.otherUserId3);
 
             Assert.Equal("Wouter2", otherUser1.FirstName);
             Assert.Equal("Wouter3", otherUser2.FirstName);
+            Assert.Equal("Wouter4", otherUser3.FirstName);
         }
 
         /// <inheritdoc />
