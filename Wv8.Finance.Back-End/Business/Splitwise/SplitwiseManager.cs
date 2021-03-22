@@ -87,15 +87,9 @@ namespace PersonalFinance.Business.Splitwise
             {
                 var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
 
-                if (splitwiseTransaction.PaidAmount > 0 && accountId.IsNone)
-                {
-                    throw new ValidationException(
-                            "An account should be specified for a Splitwise transaction that has a paid share.");
-                }
-
-                var account = splitwiseTransaction.PaidAmount > 0
-                    ? this.Context.Accounts.GetEntity(accountId.Value)
-                    : splitwiseAccount;
+                var account = accountId
+                    .Select(id => this.Context.Accounts.GetEntity(id))
+                    .ValueOrElse(splitwiseAccount);
 
                 var transaction = splitwiseTransaction.ToTransaction(account, category);
 

@@ -2,6 +2,7 @@ namespace PersonalFinance.Data.Models
 {
     using System.Linq;
     using NodaTime;
+    using PersonalFinance.Common.Enums;
     using Wv8.Core;
 
     /// <summary>
@@ -54,13 +55,16 @@ namespace PersonalFinance.Data.Models
         /// </summary>
         /// <returns>The personal amount of the transaction.</returns>
         public decimal PersonalAmount =>
-            this.Amount
-            + this.PaymentRequests.Sum(pr => pr.Count * pr.Amount)
-            // When I paid for others, then subtract the amount paid for others.
-            // When someone else paid for me, then add that share to the personal amount.
-            + (this.SplitwiseTransaction.ToMaybe()
-                .Select(st => st.OwedToOthers - st.OwedByOthers)
-                .ValueOrElse(this.SplitDetails.Sum(sd => -sd.Amount)) * -1);
+            this.Type == TransactionType.Expense
+                ? this.Amount
+                  + this.PaymentRequests.Sum(pr => pr.Count * pr.Amount)
+                  // When I paid for others, then subtract the amount paid for others.
+                  // When someone else paid for me, then add that share to the personal amount.
+                  + (this.SplitwiseTransaction.ToMaybe()
+                      .Select(st => st.OwedToOthers - st.OwedByOthers)
+                      .ValueOrElse(this.SplitDetails.Sum(sd => -sd.Amount)) * -1)
+                // If the transaction is not expense, then we always use the full amount as personal amount.
+                : this.Amount;
 
         /// <summary>
         /// Indicates whether or not the transaction can be edited within this application.
@@ -69,6 +73,8 @@ namespace PersonalFinance.Data.Models
         /// Note that the category of a transaction can always be changed, since this is only used internally.
         /// </summary>
         public bool FullyEditable =>
-            this.SplitwiseTransaction.ToMaybe().Select(t => t.PaidAmount > 0).ValueOrElse(true);
+            this.SplitwiseTransaction.ToMaybe()
+                .Select(t => this.Type == TransactionType.Expense && t.PaidAmount > 0)
+                .ValueOrElse(true);
     }
 }

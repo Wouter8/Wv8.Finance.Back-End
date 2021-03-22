@@ -169,7 +169,7 @@ namespace PersonalFinance.Business.Transaction.Processor
 
                     // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
                     if (transaction.SplitwiseTransactionId.HasValue)
-                        this.Process(transaction.SplitwiseTransaction, addedDailyBalances);
+                        this.Process(transaction.SplitwiseTransaction, addedDailyBalances, TransactionType.Expense);
 
                     break;
                 case TransactionType.Income:
@@ -237,6 +237,16 @@ namespace PersonalFinance.Business.Transaction.Processor
                     foreach (var historicalBalance in historicalBalances)
                         historicalBalance.Balance -= transaction.Amount;
 
+                    // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
+                    if (transaction.SplitwiseTransactionId.HasValue)
+                    {
+                        this.splitwiseContext.DeleteExpense(transaction.SplitwiseTransactionId.Value);
+                        transaction.SplitwiseTransaction.IsDeleted = true;
+
+                        transaction.SplitwiseTransaction = null;
+                        transaction.SplitwiseTransactionId = null;
+                    }
+
                     break;
                 case TransactionType.Transfer:
                     var (receiverHistoricalBalances, _) =
@@ -302,7 +312,8 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// <param name="addedDailyBalances">The daily balances that were already added. This is needed since the
         /// context does not contain already added entities, resulting in possible double daily balances which results
         /// in an error.</param>
-        private void Process(SplitwiseTransactionEntity transaction, List<DailyBalanceEntity> addedDailyBalances)
+        private void Process(
+            SplitwiseTransactionEntity transaction, List<DailyBalanceEntity> addedDailyBalances, TransactionType type)
         {
             transaction.VerifyProcessable();
 

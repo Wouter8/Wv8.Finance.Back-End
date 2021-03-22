@@ -86,6 +86,40 @@
 
         /// <summary>
         /// Tests method <see cref="SplitwiseManager.CompleteTransactionImport"/>.
+        /// Verifies that a transaction where the user has no personal amount can be imported as income.
+        /// </summary>
+        [Fact]
+        public void Test_CompleteTransactionImport_Income()
+        {
+            var (splitwiseAccount, _) = this.context.GenerateAccount(AccountType.Splitwise);
+            var category = this.context.GenerateCategory();
+
+            var user = this.SplitwiseContextMock.GenerateUser(2, "User");
+
+            var splitwiseTransaction = this.context.GenerateSplitwiseTransaction(
+                1,
+                date: DateTime.Today.ToLocalDate(),
+                paidAmount: 10,
+                personalAmount: 5,
+                splits: new SplitDetailEntity { Amount = 5, SplitwiseUserId = user.Id }.Singleton());
+
+            this.context.SaveChanges();
+
+            var transaction = this.SplitwiseManager.CompleteTransactionImport(
+                splitwiseTransaction.Id, category.Id, Maybe<int>.None);
+            this.RefreshContext();
+
+            Assert.Equal(5, transaction.PersonalAmount);
+            Assert.Equal(5, transaction.Amount);
+            Assert.True(transaction.Processed);
+
+            // Should have +5
+            var splitwiseBalance = this.context.Accounts.GetSplitwiseEntity().CurrentBalance;
+            Assert.Equal(5, splitwiseBalance);
+        }
+
+        /// <summary>
+        /// Tests method <see cref="SplitwiseManager.CompleteTransactionImport"/>.
         /// Verifies that an exception is thrown if the Splitwise transaction contains a paid amount.
         /// </summary>
         [Fact]
