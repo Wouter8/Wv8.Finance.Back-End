@@ -108,6 +108,8 @@ namespace PersonalFinance.Service
         /// <param name="env">The web hosting environment.</param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            this.UpdateDatabase(app);
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -125,8 +127,6 @@ namespace PersonalFinance.Service
             {
                 endpoints.MapControllers();
             });
-
-            this.UpdateDatabase(app);
         }
 
         /// <summary>
