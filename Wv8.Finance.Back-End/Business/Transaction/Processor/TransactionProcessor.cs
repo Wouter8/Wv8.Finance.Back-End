@@ -67,10 +67,11 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// Reverts the processing of a transaction if it was already processed.
         /// </summary>
         /// <param name="transaction">The transaction.</param>
-        public void RevertIfProcessed(TransactionEntity transaction)
+        /// <param name="onlyInternally">A value indicating if the transaction should only be reverted internally. This means that no removal is send to Splitwise.</param>
+        public void RevertIfProcessed(TransactionEntity transaction, bool onlyInternally = false)
         {
             if (transaction.Processed)
-                this.Revert(transaction);
+                this.Revert(transaction, onlyInternally);
         }
 
         /// <summary>
@@ -202,8 +203,9 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// This alters all historical values starting at the transaction date.
         /// </summary>
         /// <param name="transaction">The transaction.</param>
+        /// <param name="onlyInternally">A value indicating if the transaction should only be reverted internally. This means that no removal is send to Splitwise.</param>
         /// <remarks>Note that the context is not saved.</remarks>
-        private void Revert(TransactionEntity transaction)
+        private void Revert(TransactionEntity transaction, bool onlyInternally)
         {
             if (!transaction.Processed)
                 throw new NotSupportedException("Transaction has not been processed.");
@@ -225,11 +227,13 @@ namespace PersonalFinance.Business.Transaction.Processor
                     {
                         this.Revert(transaction.SplitwiseTransaction);
 
-                        this.splitwiseContext.DeleteExpense(transaction.SplitwiseTransactionId.Value);
-                        transaction.SplitwiseTransaction.IsDeleted = true;
-
-                        transaction.SplitwiseTransaction = null;
-                        transaction.SplitwiseTransactionId = null;
+                        if (!onlyInternally)
+                        {
+                            this.splitwiseContext.DeleteExpense(transaction.SplitwiseTransactionId.Value);
+                            transaction.SplitwiseTransaction.IsDeleted = true;
+                            transaction.SplitwiseTransaction = null;
+                            transaction.SplitwiseTransactionId = null;
+                        }
                     }
 
                     break;
@@ -237,14 +241,16 @@ namespace PersonalFinance.Business.Transaction.Processor
                     foreach (var historicalBalance in historicalBalances)
                         historicalBalance.Balance -= transaction.Amount;
 
-                    // Update the Splitwise account balance if the transaction has a linked Splitwise transaction.
                     if (transaction.SplitwiseTransactionId.HasValue)
                     {
-                        this.splitwiseContext.DeleteExpense(transaction.SplitwiseTransactionId.Value);
-                        transaction.SplitwiseTransaction.IsDeleted = true;
-
-                        transaction.SplitwiseTransaction = null;
-                        transaction.SplitwiseTransactionId = null;
+                        // An income transaction related to Splitwise is always on the Splitwise account, so the balances are already updated above.
+                        if (!onlyInternally)
+                        {
+                            this.splitwiseContext.DeleteExpense(transaction.SplitwiseTransactionId.Value);
+                            transaction.SplitwiseTransaction.IsDeleted = true;
+                            transaction.SplitwiseTransaction = null;
+                            transaction.SplitwiseTransactionId = null;
+                        }
                     }
 
                     break;

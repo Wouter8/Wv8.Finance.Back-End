@@ -25,7 +25,7 @@ namespace PersonalFinance.Business.Splitwise
         /// <summary>
         /// The lock object, to make sure importing is not done multiple times.
         /// </summary>
-        private static readonly object lockObj = new ();
+        private static readonly object lockObj = new object();
 
         /// <summary>
         /// The current status of the importer.
@@ -160,10 +160,10 @@ namespace PersonalFinance.Business.Splitwise
 
                     var transaction = transactionsBySplitwiseId.TryGetValue(newExpense.Id);
 
-                    // Revert the transaction before updating values.
+                    // Revert the transaction before updating values, don't send the update to Splitwise again.
                     if (transaction.IsSome)
                     {
-                        processor.RevertIfProcessed(transaction.Value);
+                        processor.RevertIfProcessed(transaction.Value, true);
 
                         // Remove the transaction, it is re-added if needed.
                         this.Context.Transactions.Remove(transaction.Value);
