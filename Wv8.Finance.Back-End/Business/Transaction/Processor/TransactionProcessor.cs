@@ -74,17 +74,6 @@ namespace PersonalFinance.Business.Transaction.Processor
                 this.Revert(transaction, onlyInternally);
         }
 
-        /// <summary>
-        /// Processes a specific recurring transaction if the recurring transaction has a start date which is before or
-        /// equal to the current date.
-        /// </summary>
-        /// <param name="recurringTransaction">The recurring transaction.</param>
-        public void ProcessIfNeeded(RecurringTransactionEntity recurringTransaction)
-        {
-            if (recurringTransaction.NeedsProcessing())
-                this.Process(recurringTransaction);
-        }
-
         #endregion Checks
 
         #region Single
@@ -105,6 +94,16 @@ namespace PersonalFinance.Business.Transaction.Processor
                 this.ProcessBudgets(newCategoryId, transaction.Date, personalAmount);
 
             transaction.CategoryId = newCategoryId;
+        }
+
+        /// <summary>
+        /// Processes a recurring transaction. Meaning that instances get created.
+        /// </summary>
+        /// <param name="transaction">The recurring transaction.</param>
+        /// <remarks>Note that the context is not saved.</remarks>
+        public void Process(RecurringTransactionEntity transaction)
+        {
+            this.Process(transaction, new List<DailyBalanceEntity>());
         }
 
         /// <summary>
@@ -273,16 +272,6 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// Processes a recurring transaction. Meaning that instances get created.
         /// </summary>
         /// <param name="transaction">The recurring transaction.</param>
-        /// <remarks>Note that the context is not saved.</remarks>
-        private void Process(RecurringTransactionEntity transaction)
-        {
-            this.Process(transaction, new List<DailyBalanceEntity>());
-        }
-
-        /// <summary>
-        /// Processes a recurring transaction. Meaning that instances get created.
-        /// </summary>
-        /// <param name="transaction">The recurring transaction.</param>
         /// <param name="addedDailyBalances">The daily balances that were already added. This is needed since the
         /// context does not contain already added entities, resulting in possible double daily balances which results
         /// in an error.</param>
@@ -294,8 +283,7 @@ namespace PersonalFinance.Business.Transaction.Processor
             var instances = new List<TransactionEntity>();
             while (!transaction.Finished)
             {
-                // Create transactions until a couple days in the future.
-                if (transaction.NextOccurence > DateTime.Today.AddDays(7).ToLocalDate())
+                if (!transaction.NeedsProcessing())
                     break;
 
                 var instance = transaction.CreateOccurence();

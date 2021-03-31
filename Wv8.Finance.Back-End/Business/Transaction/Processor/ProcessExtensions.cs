@@ -34,7 +34,8 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// <returns>A boolean indicating if the transaction needs to be processed.</returns>
         public static bool NeedsProcessing(this RecurringTransactionEntity entity)
         {
-            return entity.StartDate <= LocalDate.FromDateTime(DateTime.Today);
+            // Add instances a week in the future.
+            return entity.StartDate <= LocalDate.FromDateTime(DateTime.Today.AddDays(7));
         }
 
         /// <summary>

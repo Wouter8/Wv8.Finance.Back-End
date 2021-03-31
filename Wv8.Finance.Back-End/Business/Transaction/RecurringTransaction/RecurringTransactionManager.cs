@@ -162,7 +162,7 @@
                     .ValueOrElse(() => (LocalDate?)null);
                 entity.SetNextOccurrence();
 
-                processor.ProcessIfNeeded(entity);
+                processor.Process(entity);
 
                 this.Context.SaveChanges();
 
@@ -228,7 +228,7 @@
                     SplitDetails = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity()).ToList(),
                 };
 
-                processor.ProcessIfNeeded(entity);
+                processor.Process(entity);
 
                 this.Context.RecurringTransactions.Add(entity);
                 this.Context.SaveChanges();
