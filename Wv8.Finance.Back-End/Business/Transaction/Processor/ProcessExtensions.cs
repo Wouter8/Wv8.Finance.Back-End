@@ -8,6 +8,7 @@ namespace PersonalFinance.Business.Transaction.Processor
     using PersonalFinance.Common.Exceptions;
     using PersonalFinance.Data.External.Splitwise;
     using PersonalFinance.Data.Models;
+    using Wv8.Core;
 
     /// <summary>
     /// A class providing helper methods in the form of extension methods to process transactions.
@@ -34,8 +35,12 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// <returns>A boolean indicating if the transaction needs to be processed.</returns>
         public static bool NeedsProcessing(this RecurringTransactionEntity entity)
         {
-            // Add instances a week in the future.
-            return entity.StartDate <= LocalDate.FromDateTime(DateTime.Today.AddDays(7));
+            return !entity.Finished &&
+                   entity.NextOccurence
+                       .ToMaybe()
+                       .ValueOrElse(entity.StartDate)
+                   // Add instances a week in the future.
+                   <= LocalDate.FromDateTime(DateTime.Today.AddDays(7));
         }
 
         /// <summary>

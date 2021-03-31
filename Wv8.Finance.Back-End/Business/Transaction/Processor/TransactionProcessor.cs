@@ -403,10 +403,9 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// in an error.</param>
         private void ProcessRecurringTransactions(List<DailyBalanceEntity> addedDailyBalances)
         {
-            var today = LocalDate.FromDateTime(DateTime.Today);
             var recurringTransactions = this.Context.RecurringTransactions
                 .IncludeAll()
-                .Where(rt => !rt.Finished && rt.StartDate <= today)
+                .Where(rt => !rt.Finished)
                 .ToList();
 
             foreach (var recurringTransaction in recurringTransactions)
