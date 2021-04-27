@@ -49,6 +49,20 @@
         Transaction CreateTransaction(InputTransaction input);
 
         /// <summary>
+        /// Updates the sender of a transfer transaction.
+        /// </summary>
+        /// <param name="id">The identifier of the transaction.</param>
+        /// <param name="accountId">The new sending account identifier.</param>
+        void UpdateTransactionSender(int id, int accountId);
+
+        /// <summary>
+        /// Updates the receiver of a transfer transaction.
+        /// </summary>
+        /// <param name="id">The identifier of the transaction.</param>
+        /// <param name="accountId">The new receiving account identifier.</param>
+        void UpdateTransactionReceiver(int id, int accountId);
+
+        /// <summary>
         /// Updates the category of a transaction.
         /// </summary>
         /// <param name="id">The identifier of the transaction.</param>

@@ -76,6 +76,32 @@ namespace PersonalFinance.Business.Splitwise
         }
 
         /// <inheritdoc />
+        public Transaction CompleteTransferImport(int splitwiseId, int accountId)
+        {
+            var splitwiseTransaction = this.Context.SplitwiseTransactions.GetEntity(splitwiseId);
+            var splitwiseAccount = this.Context.Accounts.GetSplitwiseEntity();
+
+            return this.ConcurrentInvoke(() =>
+            {
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
+
+                var account = this.Context.Accounts.GetEntity(accountId);
+                if (account.Type != AccountType.Normal)
+                    throw new ValidationException("A normal account should be specified.");
+
+                var transaction = splitwiseTransaction.ToTransaction(splitwiseAccount, account);
+
+                processor.ProcessIfNeeded(transaction);
+
+                this.Context.Transactions.Add(transaction);
+
+                this.Context.SaveChanges();
+
+                return transaction.AsTransaction();
+            });
+        }
+
+        /// <inheritdoc />
         public Transaction CompleteTransactionImport(int splitwiseId, int categoryId, Maybe<int> accountId)
         {
             var splitwiseTransaction = this.Context.SplitwiseTransactions.GetEntity(splitwiseId);

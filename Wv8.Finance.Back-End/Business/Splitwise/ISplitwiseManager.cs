@@ -27,6 +27,15 @@ namespace PersonalFinance.Business.Splitwise
         public List<SplitwiseUser> GetSplitwiseUsers();
 
         /// <summary>
+        /// Imports a Splitwise transaction as a transfer transaction by specifying the sending/receiving account for the transaction.
+        /// This can be used when adding a settlement transaction where another user paid the user to settle the balances.
+        /// </summary>
+        /// <param name="splitwiseId">The identifier of the Splitwise transaction.</param>
+        /// <param name="accountId">The sending/receiving account for the transaction.</param>
+        /// <returns>The imported transaction.</returns>
+        public Transaction CompleteTransferImport(int splitwiseId, int accountId);
+
+        /// <summary>
         /// Imports a Splitwise transaction by specifying a category for the transaction.
         /// </summary>
         /// <param name="splitwiseId">The identifier of the Splitwise transaction.</param>

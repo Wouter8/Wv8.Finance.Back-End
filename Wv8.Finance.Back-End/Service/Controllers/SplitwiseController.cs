@@ -64,6 +64,19 @@ namespace PersonalFinance.Service.Controllers
         }
 
         /// <summary>
+        /// Imports a Splitwise transaction as a transfer transaction by specifying the receiving account for the transaction.
+        /// This can be used when adding a settlement transaction where another user paid the user to settle the balances.
+        /// </summary>
+        /// <param name="splitwiseId">The identifier of the Splitwise transaction.</param>
+        /// <param name="accountId">The receiving account for the transaction.</param>
+        /// <returns>The imported transaction.</returns>
+        [HttpPost("complete-import-transfer/{splitwiseId}")]
+        public Transaction CompleteTransferImport(int splitwiseId, int accountId)
+        {
+            return this.manager.CompleteTransferImport(splitwiseId, accountId);
+        }
+
+        /// <summary>
         /// Imports new/updated transactions from Splitwise.
         /// </summary>
         /// <returns>The result of running the importer.</returns>

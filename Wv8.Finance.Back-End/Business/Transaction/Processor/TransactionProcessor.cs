@@ -83,7 +83,7 @@ namespace PersonalFinance.Business.Transaction.Processor
         /// This does not alter account balances and does not send an update to Splitwise.
         /// </summary>
         /// <param name="transaction">The transaction.</param>
-        /// <param name="newCategoryId">The old category identifier.</param>
+        /// <param name="newCategoryId">The new category identifier.</param>
         public void ChangeCategory(TransactionEntity transaction, int newCategoryId)
         {
             var personalAmount = transaction.PersonalAmount;
@@ -261,6 +261,17 @@ namespace PersonalFinance.Business.Transaction.Processor
                         historicalBalance.Balance += transaction.Amount;
                     foreach (var historicalBalance in receiverHistoricalBalances)
                         historicalBalance.Balance -= transaction.Amount;
+
+                    if (transaction.SplitwiseTransactionId.HasValue)
+                    {
+                        if (!onlyInternally)
+                        {
+                            this.splitwiseContext.DeleteExpense(transaction.SplitwiseTransactionId.Value);
+                            transaction.SplitwiseTransaction.IsDeleted = true;
+                            transaction.SplitwiseTransaction = null;
+                            transaction.SplitwiseTransactionId = null;
+                        }
+                    }
 
                     break;
             }

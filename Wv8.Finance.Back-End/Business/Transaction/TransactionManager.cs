@@ -256,10 +256,66 @@ namespace PersonalFinance.Business.Transaction
             this.ConcurrentInvoke(() =>
             {
                 var transaction = this.Context.Transactions.GetEntity(id);
+
+                if (transaction.Type == TransactionType.Transfer)
+                    throw new ValidationException("A transfer transaction can not have a category.");
+
                 this.Context.Categories.GetEntity(categoryId);
 
                 var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
                 processor.ChangeCategory(transaction, categoryId);
+
+                this.Context.SaveChanges();
+            });
+        }
+
+        /// <inheritdoc />
+        public void UpdateTransactionSender(int id, int accountId)
+        {
+            this.ConcurrentInvoke(() =>
+            {
+                var transaction = this.Context.Transactions.GetEntity(id);
+
+                if (transaction.Type != TransactionType.Transfer)
+                    throw new ValidationException("Only a transfer transaction can have a sending account.");
+
+                var newSender = this.Context.Accounts.GetEntity(accountId);
+
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
+
+                // Transfer transaction do not use budgets or categories, so we can use the normal revert process.
+                processor.RevertIfProcessed(transaction, true);
+
+                transaction.AccountId = newSender.Id;
+                transaction.Account = newSender;
+
+                processor.ProcessIfNeeded(transaction);
+
+                this.Context.SaveChanges();
+            });
+        }
+
+        /// <inheritdoc />
+        public void UpdateTransactionReceiver(int id, int accountId)
+        {
+            this.ConcurrentInvoke(() =>
+            {
+                var transaction = this.Context.Transactions.GetEntity(id);
+
+                if (transaction.Type != TransactionType.Transfer)
+                    throw new ValidationException("Only a transfer transaction can have a receiving account.");
+
+                var newReceiver = this.Context.Accounts.GetEntity(accountId);
+
+                var processor = new TransactionProcessor(this.Context, this.splitwiseContext);
+
+                // Transfer transaction do not use budgets or categories, so we can use the normal revert process.
+                processor.RevertIfProcessed(transaction, true);
+
+                transaction.ReceivingAccountId = newReceiver.Id;
+                transaction.ReceivingAccount = newReceiver;
+
+                processor.ProcessIfNeeded(transaction);
 
                 this.Context.SaveChanges();
             });

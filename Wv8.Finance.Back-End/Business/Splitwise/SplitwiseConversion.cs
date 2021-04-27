@@ -144,7 +144,6 @@ namespace PersonalFinance.Business.Splitwise
                 SplitDetails = entity.SplitDetails,
             };
 
-            // Handle it as a settlement expense.
             if (entity.PaidAmount > 0 && account.Type == AccountType.Splitwise)
             {
                 transaction.Type = TransactionType.Income;
@@ -154,6 +153,50 @@ namespace PersonalFinance.Business.Splitwise
             {
                 transaction.Type = TransactionType.Expense;
                 transaction.Amount = -entity.PaidAmount;
+            }
+
+            return transaction;
+        }
+
+        /// <summary>
+        /// Converts a Splitwise transaction to a transfer transaction. Creates a transaction with the correct type.
+        /// Also marks the Splitwise transaction as imported.
+        /// </summary>
+        /// <param name="entity">The Splitwise transaction.</param>
+        /// <param name="splitwiseAccount">The Spltiwise account.</param>
+        /// <param name="internalAccount">The receiving/sending account.</param>
+        /// <returns>The created transaction.</returns>
+        public static TransactionEntity ToTransaction(
+            this SplitwiseTransactionEntity entity, AccountEntity splitwiseAccount, AccountEntity internalAccount)
+        {
+            entity.Imported = true;
+
+            var transaction = new TransactionEntity
+            {
+                Description = entity.Description,
+                Date = entity.Date,
+                SplitwiseTransactionId = entity.Id,
+                SplitwiseTransaction = entity,
+                PaymentRequests = new List<PaymentRequestEntity>(),
+                SplitDetails = entity.SplitDetails,
+                Type = TransactionType.Transfer,
+            };
+
+            if (entity.PaidAmount > 0)
+            {
+                transaction.Account = internalAccount;
+                transaction.AccountId = internalAccount.Id;
+                transaction.ReceivingAccount = splitwiseAccount;
+                transaction.ReceivingAccountId = splitwiseAccount.Id;
+                transaction.Amount = entity.PaidAmount;
+            }
+            else
+            {
+                transaction.Account = splitwiseAccount;
+                transaction.AccountId = splitwiseAccount.Id;
+                transaction.ReceivingAccount = internalAccount;
+                transaction.ReceivingAccountId = internalAccount.Id;
+                transaction.Amount = entity.PersonalAmount;
             }
 
             return transaction;

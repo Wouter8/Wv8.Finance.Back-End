@@ -88,6 +88,28 @@
         }
 
         /// <summary>
+        /// Updates the sender of a transfer transaction.
+        /// </summary>
+        /// <param name="id">The identifier of the transaction.</param>
+        /// <param name="accountId">The new sending account identifier.</param>
+        [HttpPut("{id}/update-sender")]
+        public void UpdateTransactionSender(int id, int accountId)
+        {
+            this.manager.UpdateTransactionSender(id, accountId);
+        }
+
+        /// <summary>
+        /// Updates the receiver of a transfer transaction.
+        /// </summary>
+        /// <param name="id">The identifier of the transaction.</param>
+        /// <param name="accountId">The new receiving account identifier.</param>
+        [HttpPut("{id}/update-receiver")]
+        public void UpdateTransactionReceiver(int id, int accountId)
+        {
+            this.manager.UpdateTransactionReceiver(id, accountId);
+        }
+
+        /// <summary>
         /// Updates the category of a transaction.
         /// </summary>
         /// <param name="id">The identifier of the transaction.</param>
