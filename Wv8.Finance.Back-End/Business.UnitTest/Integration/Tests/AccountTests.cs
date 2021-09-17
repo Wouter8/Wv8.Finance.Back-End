@@ -1,8 +1,8 @@
-namespace Business.UnitTest.Tests
+namespace Business.UnitTest.Integration.Tests
 {
     using System.Collections.Generic;
     using System.Linq;
-    using Business.UnitTest.Helpers;
+    using Business.UnitTest.Integration.Helpers;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
@@ -13,7 +13,7 @@ namespace Business.UnitTest.Tests
     /// <summary>
     /// Tests for the account manager.
     /// </summary>
-    public class AccountTests : BaseTest
+    public class AccountTests : BaseIntegrationTest
     {
         #region GetAccount
 

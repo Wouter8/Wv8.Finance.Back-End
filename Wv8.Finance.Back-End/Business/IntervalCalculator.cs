@@ -14,38 +14,39 @@ namespace PersonalFinance.Business
         /// <summary>
         /// Gets the intervals within a given period, with a maximum amount of intervals.
         /// </summary>
-        /// <param name="start">The start of the period.</param>
-        /// <param name="end">The end of the period.</param>
+        /// <param name="start">The inclusive start of the period.</param>
+        /// <param name="end">The inclusive end of the period.</param>
         /// <param name="maxIntervals">The maximum amount of intervals.</param>
         /// <returns>A tuple containing the interval unit and the list of intervals.</returns>
         public static (ReportIntervalUnit, List<DateInterval>) GetIntervals(LocalDate start, LocalDate end, int maxIntervals)
         {
-            var days = Period.Between(start, end, PeriodUnits.Days).Days;
+            var exclusiveEnd = end.PlusDays(1);
+            var days = Period.Between(start, exclusiveEnd, PeriodUnits.Days).Days;
             if (days <= maxIntervals)
             {
-                return (ReportIntervalUnit.Days, DateIntervals(start, end, Period.FromDays(1)));
+                return (ReportIntervalUnit.Days, DateIntervals(start, exclusiveEnd, Period.FromDays(1)));
             }
 
-            var weeks = Period.Between(start, end, PeriodUnits.Weeks).Weeks;
+            var weeks = Period.Between(start, exclusiveEnd, PeriodUnits.Weeks).Weeks;
             if (weeks <= maxIntervals)
             {
-                return (ReportIntervalUnit.Weeks, DateIntervals(start, end, Period.FromWeeks(1)));
+                return (ReportIntervalUnit.Weeks, DateIntervals(start, exclusiveEnd, Period.FromWeeks(1)));
             }
 
-            var months = Period.Between(start, end, PeriodUnits.Months).Months;
+            var months = Period.Between(start, exclusiveEnd, PeriodUnits.Months).Months;
             if (months <= maxIntervals)
             {
-                return (ReportIntervalUnit.Months, DateIntervals(start, end, Period.FromMonths(1)));
+                return (ReportIntervalUnit.Months, DateIntervals(start, exclusiveEnd, Period.FromMonths(1)));
             }
 
-            var years = Period.Between(start, end, PeriodUnits.Years).Years;
+            var years = Period.Between(start, exclusiveEnd, PeriodUnits.Years).Years;
             if (years <= maxIntervals)
             {
-                return (ReportIntervalUnit.Years, DateIntervals(start, end, Period.FromYears(1)));
+                return (ReportIntervalUnit.Years, DateIntervals(start, exclusiveEnd, Period.FromYears(1)));
             }
 
             throw new InvalidOperationException(
-                $"Not able to create a maximum of {maxIntervals} intervals between {start} and {end}.");
+                $"Not able to create a maximum of {maxIntervals} intervals between {start:dd-MM-yyyy} and {end:dd-MM-yyyy}.");
         }
 
         /// <summary>

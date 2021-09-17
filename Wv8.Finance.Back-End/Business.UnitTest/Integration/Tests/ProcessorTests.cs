@@ -1,9 +1,9 @@
-﻿namespace Business.UnitTest.Tests
+﻿namespace Business.UnitTest.Integration.Tests
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Business.UnitTest.Helpers;
+    using Business.UnitTest.Integration.Helpers;
     using NodaTime;
     using PersonalFinance.Business.Transaction.Processor;
     using PersonalFinance.Common;
@@ -16,7 +16,7 @@
     /// <summary>
     /// A test class testing the functionality of <see cref="TransactionProcessor"/>.
     /// </summary>
-    public class ProcessorTests : BaseTest
+    public class ProcessorTests : BaseIntegrationTest
     {
         /// <summary>
         /// Tests that transactions in the past get properly processed.

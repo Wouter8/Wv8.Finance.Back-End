@@ -1,4 +1,4 @@
-namespace Business.UnitTest.Helpers
+namespace Business.UnitTest.Integration.Helpers
 {
     using PersonalFinance.Data.External.Splitwise.Models;
     using PersonalFinance.Data.Models;

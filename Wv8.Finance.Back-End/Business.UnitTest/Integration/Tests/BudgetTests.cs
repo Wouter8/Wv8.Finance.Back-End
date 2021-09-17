@@ -1,4 +1,4 @@
-﻿namespace Business.UnitTest.Tests
+﻿namespace Business.UnitTest.Integration.Tests
 {
     using System;
     using NodaTime;
@@ -12,7 +12,7 @@
     /// <summary>
     /// A class containing tests for the budget manager.
     /// </summary>
-    public class BudgetTests : BaseTest
+    public class BudgetTests : BaseIntegrationTest
     {
         #region GetBudget
 

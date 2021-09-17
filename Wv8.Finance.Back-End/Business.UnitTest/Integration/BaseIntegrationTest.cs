@@ -1,10 +1,10 @@
-namespace Business.UnitTest
+namespace Business.UnitTest.Integration
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Runtime.InteropServices;
-    using Business.UnitTest.Mocks;
+    using Business.UnitTest.Integration.Mocks;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.SqlServer.NodaTime.Extensions;
     using Microsoft.Extensions.Configuration;
@@ -33,7 +33,7 @@ namespace Business.UnitTest
     /// A class with basic functionality for tests.
     /// </summary>
     [Collection("Tests")]
-    public abstract class BaseTest : IDisposable
+    public abstract class BaseIntegrationTest : IDisposable
     {
         /// <summary>
         /// The database context to assert things by manually querying the database.
@@ -46,9 +46,9 @@ namespace Business.UnitTest
         private readonly ServiceProvider serviceProvider;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseTest"/> class.
+        /// Initializes a new instance of the <see cref="BaseIntegrationTest"/> class.
         /// </summary>
-        protected BaseTest()
+        protected BaseIntegrationTest()
         {
             var services = new ServiceCollection();
 

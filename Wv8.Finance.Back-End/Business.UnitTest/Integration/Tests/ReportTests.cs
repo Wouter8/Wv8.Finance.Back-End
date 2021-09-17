@@ -1,4 +1,4 @@
-﻿namespace Business.UnitTest.Tests
+﻿namespace Business.UnitTest.Integration.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -11,7 +11,7 @@
     /// <summary>
     /// Tests for the reports manager.
     /// </summary>
-    public class ReportTests : BaseTest
+    public class ReportTests : BaseIntegrationTest
     {
         #region GetCurrentDateReport
 

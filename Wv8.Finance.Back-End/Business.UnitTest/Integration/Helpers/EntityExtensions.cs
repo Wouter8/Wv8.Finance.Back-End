@@ -1,4 +1,4 @@
-namespace Business.UnitTest.Helpers
+namespace Business.UnitTest.Integration.Helpers
 {
     using System.Linq;
     using PersonalFinance.Common;
