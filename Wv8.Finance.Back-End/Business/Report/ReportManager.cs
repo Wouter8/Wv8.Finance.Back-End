@@ -110,7 +110,7 @@ namespace PersonalFinance.Business.Report
         /// <inheritdoc />
         public CategoryReport GetCategoryReport(int categoryId, LocalDate start, LocalDate end)
         {
-            var (unit, intervals) = this.GetIntervals(start, end, 12);
+            var (unit, intervals) = IntervalCalculator.GetIntervals(start, end, 12);
 
             var transactions = this.Context.Transactions.GetTransactions(categoryId, start, end);
 

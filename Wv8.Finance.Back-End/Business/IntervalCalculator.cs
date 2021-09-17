@@ -1,34 +1,51 @@
-namespace PersonalFinance.Business.Shared.Date
+namespace PersonalFinance.Business
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using NodaTime;
-    using PersonalFinance.Common;
+    using PersonalFinance.Common.Enums;
 
     /// <summary>
-    /// A class containing extension methods relevant to dates.
+    /// A static class with methods relevant to calculating an interval.
     /// </summary>
-    public static class DateExtensions
+    public static class IntervalCalculator
     {
         /// <summary>
-        /// Gets the first date of the month of the provided date.
+        /// Gets the intervals within a given period, with a maximum amount of intervals.
         /// </summary>
-        /// <param name="date">The date.</param>
-        /// <returns>The date which is the first date of the month.</returns>
-        public static LocalDate FirstDateOfMonth(this LocalDate date)
+        /// <param name="start">The start of the period.</param>
+        /// <param name="end">The end of the period.</param>
+        /// <param name="maxIntervals">The maximum amount of intervals.</param>
+        /// <returns>A tuple containing the interval unit and the list of intervals.</returns>
+        public static (ReportIntervalUnit, List<DateInterval>) GetIntervals(LocalDate start, LocalDate end, int maxIntervals)
         {
-            return new LocalDate(date.Year, date.Month, 1);
-        }
+            var days = Period.Between(start, end, PeriodUnits.Days).Days;
+            if (days <= maxIntervals)
+            {
+                return (ReportIntervalUnit.Days, DateIntervals(start, end, Period.FromDays(1)));
+            }
 
-        /// <summary>
-        /// Gets the last date of the month of the provided date.
-        /// </summary>
-        /// <param name="date">The date.</param>
-        /// <returns>The date which is the last date of the month.</returns>
-        public static LocalDate LastDateOfMonth(this LocalDate date)
-        {
-            return new LocalDate(date.Year, date.Month, 1).PlusMonths(1);
+            var weeks = Period.Between(start, end, PeriodUnits.Weeks).Weeks;
+            if (weeks <= maxIntervals)
+            {
+                return (ReportIntervalUnit.Weeks, DateIntervals(start, end, Period.FromWeeks(1)));
+            }
+
+            var months = Period.Between(start, end, PeriodUnits.Months).Months;
+            if (months <= maxIntervals)
+            {
+                return (ReportIntervalUnit.Months, DateIntervals(start, end, Period.FromMonths(1)));
+            }
+
+            var years = Period.Between(start, end, PeriodUnits.Years).Years;
+            if (years <= maxIntervals)
+            {
+                return (ReportIntervalUnit.Years, DateIntervals(start, end, Period.FromYears(1)));
+            }
+
+            throw new InvalidOperationException(
+                $"Not able to create a maximum of {maxIntervals} intervals between {start} and {end}.");
         }
 
         /// <summary>
@@ -40,19 +57,9 @@ namespace PersonalFinance.Business.Shared.Date
         /// <param name="end">The end of the period.</param>
         /// <param name="period">The length of each interval.</param>
         /// <returns>The list of intervals.</returns>
-        public static List<DateInterval> ToDateIntervals(this LocalDate start, LocalDate end, Period period)
+        private static List<DateInterval> DateIntervals(LocalDate start, LocalDate end, Period period)
         {
             return start.DateBetweenPerInterval(end, period).ToList().ToIntervals();
-        }
-
-        /// <summary>
-        /// Converts the intervals to the dates to be used in reports. This is always the start of the interval.
-        /// </summary>
-        /// <param name="intervals">The intervals.</param>
-        /// <returns>The dates.</returns>
-        public static List<LocalDate> ToDates(this List<DateInterval> intervals)
-        {
-            return intervals.Select(i => i.Start).ToList();
         }
 
         /// <summary>

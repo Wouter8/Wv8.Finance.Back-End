@@ -1,10 +1,7 @@
 ﻿namespace PersonalFinance.Business
 {
     using System;
-    using System.Collections.Generic;
     using Microsoft.EntityFrameworkCore;
-    using NodaTime;
-    using PersonalFinance.Business.Shared.Date;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
     using Wv8.Core;
@@ -82,43 +79,6 @@
                 throw new ValidationException($"The amount has to be greater than 0.");
 
             return type;
-        }
-
-        /// <summary>
-        /// Gets the intervals within a given period, with a maximum amount of intervals.
-        /// </summary>
-        /// <param name="start">The start of the period.</param>
-        /// <param name="end">The end of the period.</param>
-        /// <param name="maxIntervals">The maximum amount of intervals.</param>
-        /// <returns>A tuple containing the interval unit and the list of intervals.</returns>
-        protected (ReportIntervalUnit, List<DateInterval>) GetIntervals(LocalDate start, LocalDate end, int maxIntervals)
-        {
-            var days = Period.Between(start, end, PeriodUnits.Days).Days;
-            if (days <= maxIntervals)
-            {
-                return (ReportIntervalUnit.Days, start.ToDateIntervals(end, Period.FromDays(1)));
-            }
-
-            var weeks = Period.Between(start, end, PeriodUnits.Weeks).Weeks;
-            if (weeks <= maxIntervals)
-            {
-                return (ReportIntervalUnit.Weeks, start.ToDateIntervals(end, Period.FromWeeks(1)));
-            }
-
-            var months = Period.Between(start, end, PeriodUnits.Months).Months;
-            if (months <= maxIntervals)
-            {
-                return (ReportIntervalUnit.Months, start.ToDateIntervals(end, Period.FromMonths(1)));
-            }
-
-            var years = Period.Between(start, end, PeriodUnits.Years).Years;
-            if (years <= maxIntervals)
-            {
-                return (ReportIntervalUnit.Years, start.ToDateIntervals(end, Period.FromYears(1)));
-            }
-
-            throw new InvalidOperationException(
-                $"Not able to create a maximum of {maxIntervals} intervals between {start} and {end}.");
         }
     }
 }
