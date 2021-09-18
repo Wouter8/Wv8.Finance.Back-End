@@ -1,4 +1,4 @@
-namespace Business.UnitTest.Mocks
+namespace Business.UnitTest.Integration.Mocks
 {
     using System;
     using System.Collections.Generic;

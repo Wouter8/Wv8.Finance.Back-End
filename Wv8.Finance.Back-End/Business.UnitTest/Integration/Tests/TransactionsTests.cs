@@ -1,9 +1,9 @@
-﻿namespace Business.UnitTest.Tests
+﻿namespace Business.UnitTest.Integration.Tests
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Business.UnitTest.Helpers;
+    using Business.UnitTest.Integration.Helpers;
     using NodaTime;
     using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Business.Transaction;
@@ -22,7 +22,7 @@
     /// <summary>
     /// A test class testing the functionality of the <see cref="TransactionManager"/>.
     /// </summary>
-    public class TransactionsTests : BaseTest
+    public class TransactionsTests : BaseIntegrationTest
     {
         #region GetTransaction
 

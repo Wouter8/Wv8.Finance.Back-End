@@ -1,17 +1,20 @@
-﻿namespace Business.UnitTest.Tests
+﻿namespace Business.UnitTest.Integration.Tests
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Business.UnitTest.Integration.Helpers;
+    using NodaTime;
     using PersonalFinance.Business.Report;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
+    using Wv8.Core.Exceptions;
     using Xunit;
 
     /// <summary>
     /// Tests for the reports manager.
     /// </summary>
-    public class ReportTests : BaseTest
+    public class ReportTests : BaseIntegrationTest
     {
         #region GetCurrentDateReport
 
@@ -307,5 +310,148 @@
         }
 
         #endregion GetCurrentDateReport
+
+        #region GetCategoryReport
+
+        /// <summary>
+        /// Tests whether the report is correctly calculated.
+        /// </summary>
+        [Fact]
+        public void GetCategoryReport_Results()
+        {
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount();
+
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 01, 03);
+
+            // Add relevant transactions
+            // Day 1: -70 + 30 = -40
+            this.context.GenerateTransaction(account, TransactionType.Expense, category: category, date: Ld(2021, 01, 01), amount: -50);
+            this.context.GenerateTransaction(account, TransactionType.Expense, category: category, date: Ld(2021, 01, 01), amount: -20);
+            this.context.GenerateTransaction(account, TransactionType.Income, category: category, date: Ld(2021, 01, 01), amount: 30);
+            // Day 2: +50
+            this.context.GenerateTransaction(account, TransactionType.Income, category: category, date: Ld(2021, 01, 02), amount: 50);
+            // Day 3: - 20
+            this.context.GenerateTransaction(account, TransactionType.Expense, category: category, date: Ld(2021, 01, 03), amount: -20);
+
+            this.context.SaveChanges();
+
+            var report = this.ReportManager.GetCategoryReport(category.Id, start, end);
+
+            var results = new List<(decimal expenses, decimal incomes, decimal result)>
+            {
+                (-70, 30, -40),
+                (0, 50, 50),
+                (-20, 0, -20),
+            };
+            for (var i = 0; i < 3; i++)
+            {
+                var (expenses, incomes, result) = results[i];
+
+                Assert.Equal(expenses, report.Expenses[i]);
+                Assert.Equal(incomes, report.Incomes[i]);
+                Assert.Equal(result, report.Results[i]);
+            }
+        }
+
+        /// <summary>
+        /// Tests whether an empty report is returned when there's no data for the category.
+        /// </summary>
+        [Fact]
+        public void GetCategoryReport_NoData()
+        {
+            var category = this.context.GenerateCategory();
+
+            // 12 days
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 01, 12);
+
+            this.context.SaveChanges();
+
+            var report = this.ReportManager.GetCategoryReport(category.Id, start, end);
+
+            Assert.All(report.Expenses, v => Assert.True(v == 0));
+            Assert.All(report.Incomes, v => Assert.True(v == 0));
+            Assert.All(report.Results, v => Assert.True(v == 0));
+        }
+
+        /// <summary>
+        /// Tests whether the correct transactions are included in the report.
+        /// </summary>
+        [Fact]
+        public void GetCategoryReport_TransactionFiltered_Date()
+        {
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount();
+
+            // 12 days
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 01, 12);
+
+            // Add transactions outside of range
+            this.context.GenerateTransaction(account, TransactionType.Expense, category: category, date: Ld(2020, 01, 01));
+            this.context.GenerateTransaction(account, TransactionType.Expense, category: category, date: Ld(2020, 12, 31));
+            this.context.GenerateTransaction(account, TransactionType.Expense, category: category, date: Ld(2021, 01, 13));
+            this.context.GenerateTransaction(account, TransactionType.Expense, category: category, date: Ld(2021, 12, 31));
+            this.context.GenerateTransaction(account, TransactionType.Income, category: category, date: Ld(2020, 01, 01));
+            this.context.GenerateTransaction(account, TransactionType.Income, category: category, date: Ld(2020, 12, 31));
+            this.context.GenerateTransaction(account, TransactionType.Income, category: category, date: Ld(2021, 01, 13));
+            this.context.GenerateTransaction(account, TransactionType.Income, category: category, date: Ld(2021, 12, 31));
+
+            this.context.SaveChanges();
+
+            var report = this.ReportManager.GetCategoryReport(category.Id, start, end);
+
+            Assert.All(report.Expenses, v => Assert.True(v == 0));
+            Assert.All(report.Incomes, v => Assert.True(v == 0));
+            Assert.All(report.Results, v => Assert.True(v == 0));
+        }
+
+        /// <summary>
+        /// Tests whether the correct transactions are included in the report.
+        /// </summary>
+        [Fact]
+        public void GetCategoryReport_TransactionFiltered_DifferentCategory()
+        {
+            var category1 = this.context.GenerateCategory();
+            var category2 = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount();
+
+            // 12 days
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 01, 12);
+
+            // Add transactions to category2
+            this.context.GenerateTransaction(account, TransactionType.Expense, category: category2, date: Ld(2021, 01, 01));
+
+            this.context.SaveChanges();
+
+            // Request report for category1
+            var report = this.ReportManager.GetCategoryReport(category1.Id, start, end);
+
+            Assert.All(report.Expenses, v => Assert.True(v == 0));
+            Assert.All(report.Incomes, v => Assert.True(v == 0));
+            Assert.All(report.Results, v => Assert.True(v == 0));
+        }
+
+        /// <summary>
+        /// Tests whether an exception is thrown if the category does not exist.
+        /// </summary>
+        [Fact]
+        public void GetCategoryReport_NonExistingCategory()
+        {
+            var nonExistingId = -1;
+            Wv8Assert.Throws<DoesNotExistException>(
+                () => this.ReportManager.GetCategoryReport(nonExistingId, Ld(2021, 01, 01), Ld(2021, 01, 03)),
+                $"Category with identifier {nonExistingId} does not exist.");
+        }
+
+        #endregion GetCategoryReport
+
+        private static LocalDate Ld(int year, int month, int day)
+        {
+            return new LocalDate(year, month, day);
+        }
     }
 }

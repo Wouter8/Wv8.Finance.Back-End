@@ -1,11 +1,11 @@
-﻿namespace Business.UnitTest.Tests
+﻿namespace Business.UnitTest.Integration.Tests
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Business.UnitTest.Helpers;
+    using Business.UnitTest.Integration.Helpers;
     using NodaTime;
     using PersonalFinance.Business.Splitwise;
     using PersonalFinance.Common;
@@ -15,13 +15,12 @@
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
-    using Wv8.Core.Exceptions;
     using Xunit;
 
     /// <summary>
     /// A test class testing the functionality of the <see cref="SplitwiseManager"/>.
     /// </summary>
-    public class SplitwiseTests : BaseTest
+    public class SplitwiseTests : BaseIntegrationTest
     {
         private int splitwiseUserId = 1;
 

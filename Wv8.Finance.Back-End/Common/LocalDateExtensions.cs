@@ -1,7 +1,9 @@
 ﻿namespace PersonalFinance.Common
 {
     using System;
+    using System.Collections.Generic;
     using System.Globalization;
+    using System.Linq;
     using NodaTime;
     using Wv8.Core;
 
@@ -79,6 +81,17 @@
         public static LocalDate? ToLocalDate(this DateTime? dateTime)
         {
             return dateTime.ToMaybe().Select(LocalDate.FromDateTime).ToNullable();
+        }
+
+        /// <summary>
+        /// Converts a local date to a date time in UTC. The date time will have the same date as the local date, and
+        /// have its time set to midnight.
+        /// </summary>
+        /// <param name="date">The date.</param>
+        /// <returns>The date time.</returns>
+        public static DateTime ToDateTimeUtc(this LocalDate date)
+        {
+            return date.AtStartOfDayInZone(DateTimeZone.Utc).ToDateTimeUtc();
         }
     }
 }

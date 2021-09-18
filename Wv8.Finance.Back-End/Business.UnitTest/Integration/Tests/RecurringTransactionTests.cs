@@ -1,9 +1,9 @@
-﻿namespace Business.UnitTest.Tests
+﻿namespace Business.UnitTest.Integration.Tests
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Business.UnitTest.Helpers;
+    using Business.UnitTest.Integration.Helpers;
     using NodaTime;
     using PersonalFinance.Business.Transaction.RecurringTransaction;
     using PersonalFinance.Common;
@@ -18,7 +18,7 @@
     /// <summary>
     /// A test class testing the <see cref="RecurringTransactionManager"/>.
     /// </summary>
-    public class RecurringTransactionTests : BaseTest
+    public class RecurringTransactionTests : BaseIntegrationTest
     {
         #region GetRecurringTransaction
 

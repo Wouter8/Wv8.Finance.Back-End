@@ -1,8 +1,8 @@
-namespace Business.UnitTest.Helpers
+namespace Business.UnitTest.Integration.Helpers
 {
     using System;
     using System.Collections.Generic;
-    using Business.UnitTest.Mocks;
+    using Business.UnitTest.Integration.Mocks;
     using NodaTime;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;

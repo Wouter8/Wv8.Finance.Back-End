@@ -6,9 +6,12 @@ namespace PersonalFinance.Business.Report
     using NodaTime;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Budget;
+    using PersonalFinance.Business.Shared;
+    using PersonalFinance.Business.Shared.Date;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer.Reports;
+    using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
     using Wv8.Core;
@@ -101,6 +104,37 @@ namespace PersonalFinance.Business.Report
                 UnconfirmedTransactions = unconfirmedTransactions.Select(t => t.AsTransaction()).ToList(),
                 HistoricalBalance = historicalNetWorth.ToDictionary(kv => kv.Key.ToDateString(), kv => kv.Value),
                 NetWorth = netWorth,
+            };
+        }
+
+        /// <inheritdoc />
+        public CategoryReport GetCategoryReport(int categoryId, LocalDate start, LocalDate end)
+        {
+            // Verify category exists.
+            this.Context.Categories.GetEntity(categoryId, false);
+
+            var (unit, intervals) = IntervalCalculator.GetIntervals(start, end, 12);
+
+            var transactions = this.Context.Transactions.GetTransactions(categoryId, start, end);
+
+            var expenseTransactions = transactions.Where(t => t.Type == TransactionType.Expense).ToList();
+            var incomeTransactions = transactions.Where(t => t.Type == TransactionType.Income).ToList();
+
+            var expensePerInterval =
+                expenseTransactions.MapTransactionsPerInterval(intervals, ts => ts.Sum());
+            var incomePerInterval =
+                incomeTransactions.MapTransactionsPerInterval(intervals, ts => ts.Sum());
+            var resultPerInterval = expensePerInterval.Select((i, index) => i + incomePerInterval[index]).ToList();
+
+            var dates = intervals.ToDates();
+
+            return new CategoryReport
+            {
+                Dates = dates,
+                Unit = unit,
+                Expenses = expensePerInterval,
+                Incomes = incomePerInterval,
+                Results = resultPerInterval,
             };
         }
     }

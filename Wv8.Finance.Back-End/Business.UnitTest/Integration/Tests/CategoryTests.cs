@@ -1,4 +1,4 @@
-﻿namespace Business.UnitTest.Tests
+﻿namespace Business.UnitTest.Integration.Tests
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -10,7 +10,7 @@
     /// <summary>
     /// A class containing tests for the category manager.
     /// </summary>
-    public class CategoryTests : BaseTest
+    public class CategoryTests : BaseIntegrationTest
     {
         #region GetCategory
 
