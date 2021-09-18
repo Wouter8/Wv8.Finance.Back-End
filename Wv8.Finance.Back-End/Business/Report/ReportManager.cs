@@ -110,6 +110,9 @@ namespace PersonalFinance.Business.Report
         /// <inheritdoc />
         public CategoryReport GetCategoryReport(int categoryId, LocalDate start, LocalDate end)
         {
+            // Verify category exists.
+            this.Context.Categories.GetEntity(categoryId, false);
+
             var (unit, intervals) = IntervalCalculator.GetIntervals(start, end, 12);
 
             var transactions = this.Context.Transactions.GetTransactions(categoryId, start, end);
