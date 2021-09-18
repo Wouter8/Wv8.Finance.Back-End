@@ -23,6 +23,16 @@
         }
 
         /// <summary>
+        /// Converts a list of dates to a list of strings in a normal format.
+        /// </summary>
+        /// <param name="dates">The dates to be converted.</param>
+        /// <returns>The strings.</returns>
+        public static List<string> ToDateStrings(this List<LocalDate> dates)
+        {
+            return dates.Select(d => d.ToString("d", new CultureInfo("en-US"))).ToList();
+        }
+
+        /// <summary>
         /// Converts a date to a string in a normal format.
         /// </summary>
         /// <param name="date">The date to be converted.</param>

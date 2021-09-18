@@ -41,7 +41,7 @@
         /// <param name="end">The last date of the report.</param>
         /// <returns>The category report.</returns>
         [HttpGet("category/{categoryId}")]
-        public CategoryReport GetCategoryReport(int categoryId, LocalDate start, LocalDate end)
+        public CategoryReport GetCategoryReport(int categoryId, string start, string end)
         {
             return this.manager.GetCategoryReport(categoryId, start, end);
         }

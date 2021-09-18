@@ -12,7 +12,7 @@ namespace PersonalFinance.Business
     /// <summary>
     /// Base class for specific validators providing base functionality.
     /// </summary>
-    public abstract class BaseValidator
+    public class BaseValidator
     {
         /// <summary>
         /// Validates that a provided icon pack and icon name is valid.

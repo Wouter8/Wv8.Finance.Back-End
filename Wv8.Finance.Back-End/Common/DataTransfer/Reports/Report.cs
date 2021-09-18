@@ -12,7 +12,7 @@ namespace PersonalFinance.Common.DataTransfer.Reports
         /// <summary>
         /// The dates at which each interval starts.
         /// </summary>
-        public List<LocalDate> Dates { get; set; }
+        public List<string> Dates { get; set; }
 
         /// <summary>
         /// A value indicating how long each interval is.

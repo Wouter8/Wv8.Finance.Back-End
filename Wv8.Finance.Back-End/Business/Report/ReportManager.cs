@@ -22,13 +22,17 @@ namespace PersonalFinance.Business.Report
     /// </summary>
     public class ReportManager : BaseManager, IReportManager
     {
+        private readonly BaseValidator validator;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ReportManager"/> class.
         /// </summary>
         /// <param name="context">The database context.</param>
         public ReportManager(Context context)
             : base(context)
-        { }
+        {
+            this.validator = new BaseValidator();
+        }
 
         /// <inheritdoc />
         public CurrentDateReport GetCurrentDateReport()
@@ -108,8 +112,11 @@ namespace PersonalFinance.Business.Report
         }
 
         /// <inheritdoc />
-        public CategoryReport GetCategoryReport(int categoryId, LocalDate start, LocalDate end)
+        public CategoryReport GetCategoryReport(int categoryId, string startString, string endString)
         {
+            var start = this.validator.DateString(startString, "start");
+            var end = this.validator.DateString(endString, "end");
+
             // Verify category exists.
             this.Context.Categories.GetEntity(categoryId, false);
 
@@ -130,7 +137,7 @@ namespace PersonalFinance.Business.Report
 
             return new CategoryReport
             {
-                Dates = dates,
+                Dates = dates.ToDateStrings(),
                 Unit = unit,
                 Expenses = expensePerInterval,
                 Incomes = incomePerInterval,

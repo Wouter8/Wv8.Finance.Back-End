@@ -21,6 +21,6 @@ namespace PersonalFinance.Business.Report
         /// <param name="start">The first date of the report.</param>
         /// <param name="end">The last date of the report.</param>
         /// <returns>The category report.</returns>
-        CategoryReport GetCategoryReport(int categoryId, LocalDate start, LocalDate end);
+        CategoryReport GetCategoryReport(int categoryId, string start, string end);
     }
 }
