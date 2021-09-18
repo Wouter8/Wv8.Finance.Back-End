@@ -258,7 +258,6 @@ namespace Business.UnitTest.Unit
                 $"Not able to create a maximum of 2 intervals between 01-01-2021 and 01-01-2024.");
         }
 
-
         private static LocalDate Ld(int year, int month, int day)
         {
             return new LocalDate(year, month, day);
