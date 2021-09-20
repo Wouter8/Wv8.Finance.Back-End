@@ -7,7 +7,6 @@ namespace PersonalFinance.Business.Report
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Business.Shared;
-    using PersonalFinance.Business.Shared.Date;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer.Reports;
@@ -118,7 +117,7 @@ namespace PersonalFinance.Business.Report
             var end = this.validator.DateString(endString, "end");
 
             // Verify category exists.
-            this.Context.Categories.GetEntity(categoryId, false);
+            this.Context.Categories.GetEntity(categoryId);
 
             var (unit, intervals) = IntervalCalculator.GetIntervals(start, end, 12);
 
@@ -142,6 +141,29 @@ namespace PersonalFinance.Business.Report
                 Expenses = expensePerInterval,
                 Incomes = incomePerInterval,
                 Results = resultPerInterval,
+            };
+        }
+
+        /// <inheritdoc />
+        public AccountReport GetAccountReport(int accountId, string startString, string endString)
+        {
+            var start = this.validator.DateString(startString, "start");
+            var end = this.validator.DateString(endString, "end");
+
+            // Verify account exists
+            this.Context.Accounts.GetEntity(accountId);
+
+            var dailyBalances = this.Context.DailyBalances.GetDailyBalances(accountId)
+                .Within(start, end)
+                .ToBalanceIntervals()
+                .ToFixedPeriod(start, end)
+                .ToDailyIntervals();
+
+            return new AccountReport
+            {
+                Unit = ReportIntervalUnit.Days,
+                Dates = dailyBalances.Select(hb => hb.Interval).ToList().ToDates().ToDateStrings(),
+                Balances = dailyBalances.Select(hb => hb.Balance).ToList(),
             };
         }
     }

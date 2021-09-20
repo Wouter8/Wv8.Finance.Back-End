@@ -315,6 +315,23 @@ namespace PersonalFinance.Data.Extensions
         /// Retrieves a list of transactions based on some filters.
         /// </summary>
         /// <param name="set">The database set.</param>
+        /// <param name="accountId">The account identifier.</param>
+        /// <param name="start">The start date of the period to search for.</param>
+        /// <param name="end">The end date of the period to search for.</param>
+        /// <returns>The list of transactions.</returns>
+        public static List<TransactionEntity> GetTransactionsOfAccount(this DbSet<TransactionEntity> set, int accountId, LocalDate start, LocalDate end)
+        {
+            return set
+                .IncludeAll()
+                .Where(t => t.AccountId == accountId || t.ReceivingAccountId == accountId)
+                .Where(t => start <= t.Date && end >= t.Date)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Retrieves a list of transactions based on some filters.
+        /// </summary>
+        /// <param name="set">The database set.</param>
         /// <param name="recurringTransactionId">The recurring transaction identifier.</param>
         /// <returns>The list of transactions.</returns>
         public static List<TransactionEntity> GetTransactionsFromRecurring(this DbSet<TransactionEntity> set, int recurringTransactionId)
@@ -322,6 +339,20 @@ namespace PersonalFinance.Data.Extensions
             return set
                 .IncludeAll()
                 .Where(t => t.RecurringTransactionId == recurringTransactionId)
+                .ToList();
+        }
+
+
+        /// <summary>
+        /// Retrieves a list of daily balances of an account.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <param name="accountId">The account identifier.</param>
+        /// <returns>The list of daily balances.</returns>
+        public static List<DailyBalanceEntity> GetDailyBalances(this DbSet<DailyBalanceEntity> set, int accountId)
+        {
+            return set
+                .Where(db => db.AccountId == accountId)
                 .ToList();
         }
 

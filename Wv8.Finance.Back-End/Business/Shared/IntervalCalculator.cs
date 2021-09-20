@@ -1,4 +1,4 @@
-namespace PersonalFinance.Business
+namespace PersonalFinance.Business.Shared
 {
     using System;
     using System.Collections.Generic;
