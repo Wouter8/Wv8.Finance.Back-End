@@ -342,7 +342,6 @@ namespace PersonalFinance.Data.Extensions
                 .ToList();
         }
 
-
         /// <summary>
         /// Retrieves a list of daily balances of an account.
         /// </summary>
