@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Linq;
+    using Business.UnitTest.Integration.Helpers;
     using PersonalFinance.Common.DataTransfer.Output;
     using Wv8.Core;
     using Wv8.Core.Exceptions;
@@ -12,6 +13,16 @@
     /// </summary>
     public class CategoryTests : BaseIntegrationTest
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CategoryTests"/> class.
+        /// </summary>
+        /// <param name="spFixture">See <see cref="BaseIntegrationTest"/>.</param>
+        public CategoryTests(ServiceProviderFixture spFixture)
+            : base(spFixture)
+        {
+        }
+
+
         #region GetCategory
 
         /// <summary>

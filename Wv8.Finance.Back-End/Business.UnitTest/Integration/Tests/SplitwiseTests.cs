@@ -22,6 +22,15 @@
     /// </summary>
     public class SplitwiseTests : BaseIntegrationTest
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SplitwiseTests"/> class.
+        /// </summary>
+        /// <param name="spFixture">See <see cref="BaseIntegrationTest"/>.</param>
+        public SplitwiseTests(ServiceProviderFixture spFixture)
+            : base(spFixture)
+        {
+        }
+
         private int splitwiseUserId = 1;
 
         #region GetSplitwiseTransactions

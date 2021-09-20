@@ -15,6 +15,15 @@ namespace Business.UnitTest.Integration.Tests
     /// </summary>
     public class AccountTests : BaseIntegrationTest
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AccountTests"/> class.
+        /// </summary>
+        /// <param name="spFixture">See <see cref="BaseIntegrationTest"/>.</param>
+        public AccountTests(ServiceProviderFixture spFixture)
+            : base(spFixture)
+        {
+        }
+
         #region GetAccount
 
         /// <summary>

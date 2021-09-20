@@ -19,6 +19,15 @@
     public class ProcessorTests : BaseIntegrationTest
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="ProcessorTests"/> class.
+        /// </summary>
+        /// <param name="spFixture">See <see cref="BaseIntegrationTest"/>.</param>
+        public ProcessorTests(ServiceProviderFixture spFixture)
+            : base(spFixture)
+        {
+        }
+
+        /// <summary>
         /// Tests that transactions in the past get properly processed.
         /// </summary>
         [Fact]

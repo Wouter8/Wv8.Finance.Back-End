@@ -131,13 +131,13 @@ namespace PersonalFinance.Business.Report
                 expenseTransactions.MapTransactionsPerInterval(intervals, ts => ts.Sum());
             var incomePerInterval =
                 incomeTransactions.MapTransactionsPerInterval(intervals, ts => ts.Sum());
-            var resultPerInterval = expensePerInterval.Select((i, index) => i + incomePerInterval[index]).ToList();
-
-            var dates = intervals.ToDates();
+            var resultPerInterval = expensePerInterval.All(e => e == 0) || incomePerInterval.All(i => i == 0)
+                ? Maybe<List<decimal>>.None
+                : expensePerInterval.Select((i, index) => i + incomePerInterval[index]).ToList();
 
             return new CategoryReport
             {
-                Dates = dates.ToDateStrings(),
+                Dates = intervals.ToDates().ToDateStrings(),
                 Unit = unit,
                 Expenses = expensePerInterval,
                 Incomes = incomePerInterval,

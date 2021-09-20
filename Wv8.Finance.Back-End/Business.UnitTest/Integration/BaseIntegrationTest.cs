@@ -2,8 +2,10 @@ namespace Business.UnitTest.Integration
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using Business.UnitTest.Integration.Helpers;
     using Business.UnitTest.Integration.Mocks;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.SqlServer.NodaTime.Extensions;
@@ -24,6 +26,7 @@ namespace Business.UnitTest.Integration
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data;
+    using PersonalFinance.Data.Extensions;
     using PersonalFinance.Data.External.Splitwise;
     using Wv8.Core;
     using Xunit;
@@ -33,7 +36,7 @@ namespace Business.UnitTest.Integration
     /// A class with basic functionality for tests.
     /// </summary>
     [Collection("Tests")]
-    public abstract class BaseIntegrationTest : IDisposable
+    public abstract class BaseIntegrationTest
     {
         /// <summary>
         /// The database context to assert things by manually querying the database.
@@ -48,37 +51,14 @@ namespace Business.UnitTest.Integration
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseIntegrationTest"/> class.
         /// </summary>
-        protected BaseIntegrationTest()
+        /// <param name="spFixture">The fixture containing the service provider.</param>
+        protected BaseIntegrationTest(ServiceProviderFixture spFixture)
         {
-            var services = new ServiceCollection();
-
-            // Settings
-            services.AddTransient(_ => this.GetApplicationSettings());
-
-            // Database context
-            services.AddDbContext<Context>(
-                options => options.UseSqlServer(
-                    this.GetDatabaseConnectionString(),
-                    sqlOptions => sqlOptions.UseNodaTime()),
-                ServiceLifetime.Transient);
-
-            // Managers
-            services.AddTransient<IAccountManager, AccountManager>();
-            services.AddTransient<ICategoryManager, CategoryManager>();
-            services.AddTransient<IBudgetManager, BudgetManager>();
-            services.AddTransient<ITransactionManager, TransactionManager>();
-            services.AddTransient<IRecurringTransactionManager, RecurringTransactionManager>();
-            services.AddTransient<IReportManager, ReportManager>();
-            services.AddTransient<ISplitwiseManager, SplitwiseManager>();
-
-            // Mocks
-            services.AddSingleton<ISplitwiseContext, SplitwiseContextMock>();
-
-            this.serviceProvider = services.BuildServiceProvider();
+            this.serviceProvider = spFixture.ServiceProvider;
 
             this.RefreshContext();
-            this.context.Database.EnsureDeleted();
-            this.context.Database.Migrate();
+            this.ClearDatabase();
+            this.ClearMocks();
         }
 
         /// <summary>
@@ -125,12 +105,6 @@ namespace Business.UnitTest.Integration
         /// The Splitwise context mock.
         /// </summary>
         protected SplitwiseContextMock SplitwiseContextMock => (SplitwiseContextMock)this.serviceProvider.GetService<ISplitwiseContext>();
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            this.serviceProvider?.Dispose();
-        }
 
         #region InputHelpers
 
@@ -539,43 +513,29 @@ namespace Business.UnitTest.Integration
             this.context = this.serviceProvider.GetService<Context>();
         }
 
-        /// <summary>
-        /// Gets the correct database connection string based on the OS.
-        /// GitHub Actions uses Linux.
-        /// </summary>
-        /// <returns>The connections string.</returns>
-        private string GetDatabaseConnectionString()
+        private void ClearDatabase()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                return "Server=(LocalDb)\\MSSQLLocalDB;Database=Wv8-Finance-Test;Integrated Security=SSPI;";
-            }
+            this.context.SplitDetails.RemoveRange(this.context.SplitDetails);
+            this.context.SplitwiseTransactions.RemoveRange(this.context.SplitwiseTransactions);
+            this.context.PaymentRequests.RemoveRange(this.context.PaymentRequests);
+            this.context.Transactions.RemoveRange(this.context.Transactions);
+            this.context.RecurringTransactions.RemoveRange(this.context.RecurringTransactions);
+            this.context.Budgets.RemoveRange(this.context.Budgets);
+            this.context.DailyBalances.RemoveRange(this.context.DailyBalances);
+            this.context.Categories.RemoveRange(this.context.Categories);
+            this.context.Accounts.RemoveRange(this.context.Accounts);
+            this.context.Icons.RemoveRange(this.context.Icons);
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                return "Server=localhost;Database=Wv8-Finance-Test;User Id=SA;Password=localDatabase1;";
-            }
+            // Same as initial data in migration.
+            this.context.SetSplitwiseSynchronizationTime(new DateTime(1, 1, 1, 0, 0, 0, 0));
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                return "Server=localhost;Database=Wv8-Finance-Test;User Id=SA;Password=localDatabase1;";
-            }
-
-            // This should not happen.
-            return string.Empty;
+            this.context.SaveChanges();
+            this.RefreshContext();
         }
 
-        private IOptions<ApplicationSettings> GetApplicationSettings()
+        private void ClearMocks()
         {
-            var config = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.test.json")
-                .Build()
-                .GetSection("ApplicationSettings");
-            var appSettings = new ApplicationSettings();
-
-            config.Bind(appSettings);
-
-            return Options.Create(appSettings);
+            this.SplitwiseContextMock.Clear();
         }
 
         /// <summary>
@@ -587,5 +547,18 @@ namespace Business.UnitTest.Integration
         {
             return Guid.NewGuid().ToString().Substring(0, length);
         }
+    }
+
+    /// <summary>
+    /// A collection definition for all integration tests.
+    /// </summary>
+    [CollectionDefinition("Tests")]
+    [SuppressMessage(
+        "StyleCop.CSharp.MaintainabilityRules",
+        "SA1402:FileMayOnlyContainASingleType",
+        Justification = "Simple class relevant for the base class.")]
+    public class IntegrationTestsCollection : ICollectionFixture<ServiceProviderFixture>
+    {
+        // This class is needed to add the ICollectionFixture.
     }
 }

@@ -24,6 +24,15 @@
     /// </summary>
     public class TransactionsTests : BaseIntegrationTest
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TransactionsTests"/> class.
+        /// </summary>
+        /// <param name="spFixture">See <see cref="BaseIntegrationTest"/>.</param>
+        public TransactionsTests(ServiceProviderFixture spFixture)
+            : base(spFixture)
+        {
+        }
+
         #region GetTransaction
 
         /// <summary>

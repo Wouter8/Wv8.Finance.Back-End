@@ -1,6 +1,7 @@
 ﻿namespace Business.UnitTest.Integration.Tests
 {
     using System;
+    using Business.UnitTest.Integration.Helpers;
     using NodaTime;
     using PersonalFinance.Business.Budget;
     using PersonalFinance.Common;
@@ -14,6 +15,16 @@
     /// </summary>
     public class BudgetTests : BaseIntegrationTest
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BudgetTests"/> class.
+        /// </summary>
+        /// <param name="spFixture">See <see cref="BaseIntegrationTest"/>.</param>
+        public BudgetTests(ServiceProviderFixture spFixture)
+            : base(spFixture)
+        {
+        }
+
+
         #region GetBudget
 
         /// <summary>

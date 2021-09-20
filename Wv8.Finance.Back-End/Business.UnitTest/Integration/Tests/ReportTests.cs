@@ -16,6 +16,15 @@
     /// </summary>
     public class ReportTests : BaseIntegrationTest
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReportTests"/> class.
+        /// </summary>
+        /// <param name="spFixture">See <see cref="BaseIntegrationTest"/>.</param>
+        public ReportTests(ServiceProviderFixture spFixture)
+            : base(spFixture)
+        {
+        }
+
         #region GetCurrentDateReport
 
         /// <summary>
@@ -337,7 +346,7 @@
 
             this.context.SaveChanges();
 
-            var report = this.ReportManager.GetCategoryReport(category.Id, start, end);
+            var report = this.ReportManager.GetCategoryReport(category.Id, start.ToDateString(), end.ToDateString());
 
             var results = new List<(decimal expenses, decimal incomes, decimal result)>
             {
@@ -345,13 +354,14 @@
                 (0, 50, 50),
                 (-20, 0, -20),
             };
+
             for (var i = 0; i < 3; i++)
             {
                 var (expenses, incomes, result) = results[i];
 
                 Assert.Equal(expenses, report.Expenses[i]);
                 Assert.Equal(incomes, report.Incomes[i]);
-                Assert.Equal(result, report.Results[i]);
+                Assert.Equal(result, report.Results.Value[i]);
             }
         }
 
@@ -369,11 +379,11 @@
 
             this.context.SaveChanges();
 
-            var report = this.ReportManager.GetCategoryReport(category.Id, start, end);
+            var report = this.ReportManager.GetCategoryReport(category.Id, start.ToDateString(), end.ToDateString());
 
             Assert.All(report.Expenses, v => Assert.True(v == 0));
             Assert.All(report.Incomes, v => Assert.True(v == 0));
-            Assert.All(report.Results, v => Assert.True(v == 0));
+            Wv8Assert.IsNone(report.Results);
         }
 
         /// <summary>
@@ -401,11 +411,11 @@
 
             this.context.SaveChanges();
 
-            var report = this.ReportManager.GetCategoryReport(category.Id, start, end);
+            var report = this.ReportManager.GetCategoryReport(category.Id, start.ToDateString(), end.ToDateString());
 
             Assert.All(report.Expenses, v => Assert.True(v == 0));
             Assert.All(report.Incomes, v => Assert.True(v == 0));
-            Assert.All(report.Results, v => Assert.True(v == 0));
+            Wv8Assert.IsNone(report.Results);
         }
 
         /// <summary>
@@ -428,11 +438,11 @@
             this.context.SaveChanges();
 
             // Request report for category1
-            var report = this.ReportManager.GetCategoryReport(category1.Id, start, end);
+            var report = this.ReportManager.GetCategoryReport(category1.Id, start.ToDateString(), end.ToDateString());
 
             Assert.All(report.Expenses, v => Assert.True(v == 0));
             Assert.All(report.Incomes, v => Assert.True(v == 0));
-            Assert.All(report.Results, v => Assert.True(v == 0));
+            Wv8Assert.IsNone(report.Results);
         }
 
         /// <summary>
@@ -443,8 +453,61 @@
         {
             var nonExistingId = -1;
             Wv8Assert.Throws<DoesNotExistException>(
-                () => this.ReportManager.GetCategoryReport(nonExistingId, Ld(2021, 01, 01), Ld(2021, 01, 03)),
+                () => this.ReportManager.GetCategoryReport(
+                    nonExistingId, Ld(2021, 01, 01).ToDateString(), Ld(2021, 01, 03).ToDateString()),
                 $"Category with identifier {nonExistingId} does not exist.");
+        }
+
+        /// <summary>
+        /// Tests whether the results are <c>None</c> when the category only contain expenses.
+        /// </summary>
+        [Fact]
+        public void GetCategoryReport_OnlyExpenses()
+        {
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount();
+
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 01, 03);
+
+            // Add expense transactions
+            this.context.GenerateTransaction(account, TransactionType.Expense, category: category, date: Ld(2021, 01, 01), amount: -50);
+            this.context.GenerateTransaction(account, TransactionType.Expense, category: category, date: Ld(2021, 01, 01), amount: -20);
+            this.context.GenerateTransaction(account, TransactionType.Expense, category: category, date: Ld(2021, 01, 02), amount: -50);
+            this.context.GenerateTransaction(account, TransactionType.Expense, category: category, date: Ld(2021, 01, 03), amount: -20);
+
+            this.context.SaveChanges();
+
+            var report = this.ReportManager.GetCategoryReport(category.Id, start.ToDateString(), end.ToDateString());
+
+            Assert.All(report.Incomes, i => Assert.Equal(0, i));
+            Wv8Assert.IsNone(report.Results);
+        }
+
+        /// <summary>
+        /// Tests whether the results are <c>None</c> when the category only contain income transactions.
+        /// </summary>
+        [Fact]
+        public void GetCategoryReport_OnlyIncomes()
+        {
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount();
+
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 01, 03);
+
+            // Add expense transactions
+            this.context.GenerateTransaction(account, TransactionType.Income, category: category, date: Ld(2021, 01, 01), amount: 50);
+            this.context.GenerateTransaction(account, TransactionType.Income, category: category, date: Ld(2021, 01, 01), amount: 20);
+            this.context.GenerateTransaction(account, TransactionType.Income, category: category, date: Ld(2021, 01, 02), amount: 50);
+            this.context.GenerateTransaction(account, TransactionType.Income, category: category, date: Ld(2021, 01, 03), amount: 20);
+
+            this.context.SaveChanges();
+
+            var report = this.ReportManager.GetCategoryReport(category.Id, start.ToDateString(), end.ToDateString());
+
+            Assert.All(report.Expenses, i => Assert.Equal(0, i));
+            Wv8Assert.IsNone(report.Results);
         }
 
         #endregion GetCategoryReport

@@ -27,12 +27,12 @@ namespace Business.UnitTest.Integration.Mocks
         /// <summary>
         /// The list of mocked expenses.
         /// </summary>
-        public List<Expense> Expenses { get; } = new List<Expense>();
+        public List<Expense> Expenses { get; private set; } = new List<Expense>();
 
         /// <summary>
         /// The list of mocked users.
         /// </summary>
-        public List<User> Users { get; } = new List<User>();
+        public List<User> Users { get; private set; } = new List<User>();
 
         /// <inheritdoc />
         public Expense CreateExpense(decimal totalAmount, string description, LocalDate date, List<Split> splits)
@@ -77,6 +77,17 @@ namespace Business.UnitTest.Integration.Mocks
         public List<User> GetUsers()
         {
             return this.Users;
+        }
+
+        /// <summary>
+        /// Clears the mock data.
+        /// </summary>
+        public void Clear()
+        {
+            this.Expenses = new List<Expense>();
+            this.Users = new List<User>();
+            this.ExtraTimeWhenImporting = false;
+            SplitwiseContextMock.nextExpenseId = 0;
         }
     }
 }

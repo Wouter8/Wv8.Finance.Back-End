@@ -20,6 +20,15 @@
     /// </summary>
     public class RecurringTransactionTests : BaseIntegrationTest
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RecurringTransactionTests"/> class.
+        /// </summary>
+        /// <param name="spFixture">See <see cref="BaseIntegrationTest"/>.</param>
+        public RecurringTransactionTests(ServiceProviderFixture spFixture)
+            : base(spFixture)
+        {
+        }
+
         #region GetRecurringTransaction
 
         /// <summary>
