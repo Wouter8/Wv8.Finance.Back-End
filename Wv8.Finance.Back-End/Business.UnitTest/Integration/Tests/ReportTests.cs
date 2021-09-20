@@ -548,6 +548,157 @@
 
         #endregion GetCategoryReport
 
+        #region GetAccountReport
+
+        /// <summary>
+        /// Tests <see cref="IReportManager.GetAccountReport"/>.
+        /// Verifies that the correct values are returned when there are no daily balances.
+        /// </summary>
+        [Fact]
+        public void GetAccountReport_SingleDailyBalances()
+        {
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 01, 03);
+
+            var (account, dailyBalance) = this.context.GenerateAccount();
+            dailyBalance.Balance = 50;
+            dailyBalance.Date = Ld(2021, 01, 01);
+
+            this.context.SaveChanges();
+
+            var report = this.ReportManager.GetAccountReport(account.Id, start.ToDateString(), end.ToDateString());
+
+            Assert.Equal(3, report.Balances.Count);
+            Assert.All(report.Balances, b => Assert.Equal(50, b));
+        }
+
+        /// <summary>
+        /// Tests <see cref="IReportManager.GetAccountReport"/>.
+        /// Verifies that an exception is thrown when the account does not exist.
+        /// </summary>
+        [Fact]
+        public void GetAccountReport_AccountDoesNotExist()
+        {
+            Wv8Assert.Throws<DoesNotExistException>(
+                () => this.ReportManager.GetAccountReport(
+                    -1, Ld(2021, 01, 01).ToDateString(), Ld(2021, 01, 01).ToDateString()),
+                "Account with identifier -1 does not exist.");
+        }
+
+        /// <summary>
+        /// Tests <see cref="IReportManager.GetAccountReport"/>.
+        /// Verifies that the correct values are returned when the range starts before the first daily balance of the
+        /// account.
+        /// </summary>
+        [Fact]
+        public void GetAccountReport_FirstBalanceDuringPeriod()
+        {
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 01, 03);
+
+            var (account, dailyBalance) = this.context.GenerateAccount();
+            dailyBalance.Balance = 50;
+            dailyBalance.Date = Ld(2021, 01, 02);
+
+            this.context.SaveChanges();
+
+            var report = this.ReportManager.GetAccountReport(account.Id, start.ToDateString(), end.ToDateString());
+
+            Assert.Equal(3, report.Balances.Count);
+
+            var b1 = report.Balances[0];
+            var b2 = report.Balances[1];
+            var b3 = report.Balances[2];
+
+            Assert.Equal(0, b1);
+            Assert.Equal(50, b2);
+            Assert.Equal(50, b3);
+        }
+
+        /// <summary>
+        /// Tests <see cref="IReportManager.GetAccountReport"/>.
+        /// Verifies that the correct values are returned when the account has daily balances before the start of the
+        /// range.
+        /// </summary>
+        [Fact]
+        public void GetAccountReport_FirstBalanceBeforePeriod()
+        {
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 01, 03);
+
+            var (account, dailyBalance) = this.context.GenerateAccount();
+            dailyBalance.Balance = 50;
+            dailyBalance.Date = Ld(2020, 01, 01);
+
+            this.context.SaveChanges();
+
+            var report = this.ReportManager.GetAccountReport(account.Id, start.ToDateString(), end.ToDateString());
+
+            Assert.Equal(3, report.Balances.Count);
+            Assert.All(report.Balances, b => Assert.Equal(50, b));
+        }
+
+        /// <summary>
+        /// Tests <see cref="IReportManager.GetAccountReport"/>.
+        /// Verifies that the correct values are returned if there are no daily balances within the range.
+        /// </summary>
+        [Fact]
+        public void GetAccountReport_NoBalancesDuringPeriod()
+        {
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 01, 03);
+
+            var (account, dailyBalance) = this.context.GenerateAccount();
+            dailyBalance.Balance = 50;
+            dailyBalance.Date = Ld(2021, 02, 01);
+
+            this.context.SaveChanges();
+
+            var report = this.ReportManager.GetAccountReport(account.Id, start.ToDateString(), end.ToDateString());
+
+            Assert.Equal(3, report.Balances.Count);
+            Assert.All(report.Balances, b => Assert.Equal(0, b));
+        }
+
+        /// <summary>
+        /// Tests <see cref="IReportManager.GetAccountReport"/>.
+        /// Verifies that the correct values are returned if there are no daily balances within the range.
+        /// </summary>
+        [Fact]
+        public void GetAccountReport_Change()
+        {
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 01, 05);
+
+            var (account, dailyBalance) = this.context.GenerateAccount();
+            dailyBalance.Balance = 50;
+            dailyBalance.Date = Ld(2021, 01, 01);
+
+            this.context.GenerateDailyBalance(account, Ld(2021, 01, 03), 75);
+            this.context.GenerateDailyBalance(account, Ld(2021, 01, 04), 100);
+            this.context.GenerateDailyBalance(account, Ld(2021, 01, 05), 0);
+
+            this.context.SaveChanges();
+
+            var report = this.ReportManager.GetAccountReport(account.Id, start.ToDateString(), end.ToDateString());
+
+            Assert.Equal(5, report.Balances.Count);
+
+            var b1 = report.Balances[0];
+            var b2 = report.Balances[1];
+            var b3 = report.Balances[2];
+            var b4 = report.Balances[3];
+            var b5 = report.Balances[4];
+
+            Assert.Equal(50, b1);
+            Assert.Equal(50, b2);
+            Assert.Equal(75, b3);
+            Assert.Equal(100, b4);
+            Assert.Equal(0, b5);
+        }
+
+        #endregion GetAccountReport
+
         private static LocalDate Ld(int year, int month, int day)
         {
             return new LocalDate(year, month, day);

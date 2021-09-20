@@ -45,5 +45,18 @@
         {
             return this.manager.GetCategoryReport(categoryId, start, end);
         }
+
+        /// <summary>
+        /// Retrieves the report for a specific account.
+        /// </summary>
+        /// <param name="accountId">The identifier of the account.</param>
+        /// <param name="start">The first date of the report.</param>
+        /// <param name="end">The last date of the report.</param>
+        /// <returns>The account report.</returns>
+        [HttpGet("account/{accountId}")]
+        public AccountReport GetAccountReport(int accountId, string start, string end)
+        {
+            return this.manager.GetAccountReport(accountId, start, end);
+        }
     }
 }

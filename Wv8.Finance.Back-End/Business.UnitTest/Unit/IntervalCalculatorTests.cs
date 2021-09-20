@@ -4,6 +4,7 @@ namespace Business.UnitTest.Unit
     using Business.UnitTest.Integration.Helpers;
     using NodaTime;
     using PersonalFinance.Business;
+    using PersonalFinance.Business.Shared;
     using PersonalFinance.Common.Enums;
     using Xunit;
 

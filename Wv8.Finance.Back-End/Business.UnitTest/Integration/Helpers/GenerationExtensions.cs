@@ -64,6 +64,28 @@ namespace Business.UnitTest.Integration.Helpers
         }
 
         /// <summary>
+        /// Creates a daily balance entity with specified values.
+        /// </summary>
+        /// <param name="context">The database context.</param>
+        /// <param name="account">The account.</param>
+        /// <param name="date">The date.</param>
+        /// <param name="balance">The balance.</param>
+        /// <returns>The created entity.</returns>
+        public static DailyBalanceEntity GenerateDailyBalance(
+            this Context context,
+            AccountEntity account,
+            LocalDate date,
+            decimal balance)
+        {
+            return context.DailyBalances.Add(new DailyBalanceEntity
+            {
+                Account = account,
+                Balance = balance,
+                Date = date,
+            }).Entity;
+        }
+
+        /// <summary>
         /// Creates a category with specified, or random values.
         /// </summary>
         /// <param name="context">The database context.</param>
