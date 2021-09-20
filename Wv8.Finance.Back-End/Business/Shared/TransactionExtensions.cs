@@ -42,10 +42,12 @@ namespace PersonalFinance.Business.Shared
         /// Sums the amount of the transactions.
         /// </summary>
         /// <param name="transactions">The transactions.</param>
+        /// <param name="usePersonalAmount">If <c>true</c> <see cref="TransactionEntity.PersonalAmount"/> is used
+        /// instead of <see cref="TransactionEntity.Amount"/>.</param>
         /// <returns>The sum of the amount.</returns>
-        public static decimal Sum(this List<TransactionEntity> transactions)
+        public static decimal Sum(this List<TransactionEntity> transactions, bool usePersonalAmount)
         {
-            return transactions.Sum(t => t.Amount);
+            return transactions.Sum(t => usePersonalAmount ? t.PersonalAmount : t.Amount);
         }
     }
 }

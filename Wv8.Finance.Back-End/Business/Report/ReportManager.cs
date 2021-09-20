@@ -128,9 +128,9 @@ namespace PersonalFinance.Business.Report
             var incomeTransactions = transactions.Where(t => t.Type == TransactionType.Income).ToList();
 
             var expensePerInterval =
-                expenseTransactions.MapTransactionsPerInterval(intervals, ts => ts.Sum());
+                expenseTransactions.MapTransactionsPerInterval(intervals, ts => ts.Sum(true));
             var incomePerInterval =
-                incomeTransactions.MapTransactionsPerInterval(intervals, ts => ts.Sum());
+                incomeTransactions.MapTransactionsPerInterval(intervals, ts => ts.Sum(true));
             var resultPerInterval = expensePerInterval.All(e => e == 0) || incomePerInterval.All(i => i == 0)
                 ? Maybe<List<decimal>>.None
                 : expensePerInterval.Select((i, index) => i + incomePerInterval[index]).ToList();

@@ -8,6 +8,7 @@
     using PersonalFinance.Business.Report;
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
+    using PersonalFinance.Data.Models;
     using Wv8.Core.Exceptions;
     using Xunit;
 
@@ -363,6 +364,41 @@
                 Assert.Equal(incomes, report.Incomes[i]);
                 Assert.Equal(result, report.Results.Value[i]);
             }
+        }
+
+        /// <summary>
+        /// Tests whether the personal amount of transaction is used.
+        /// </summary>
+        [Fact]
+        public void GetCategoryReport_PersonalAmount()
+        {
+            var category = this.context.GenerateCategory();
+            var (account, _) = this.context.GenerateAccount();
+
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 01, 01);
+
+            var otherUser = this.SplitwiseContextMock.GenerateUser();
+
+            // Add transaction with splits
+            this.context.GenerateTransaction(
+                account,
+                TransactionType.Expense,
+                category: category,
+                date: Ld(2021, 01, 01),
+                amount: -50,
+                splitDetails: new List<SplitDetailEntity>
+                    { new SplitDetailEntity { Amount = 25, SplitwiseUserId = otherUser.Id } });
+            // Also an income transaction such that the result calculation can be tested.
+            this.context.GenerateTransaction(account, TransactionType.Income, category: category, date: Ld(2021, 01, 01), amount: 30);
+
+            this.context.SaveChanges();
+
+            var report = this.ReportManager.GetCategoryReport(category.Id, start.ToDateString(), end.ToDateString());
+
+            Assert.Equal(-25, report.Expenses[0]);
+            Assert.Equal(30, report.Incomes[0]);
+            Assert.Equal(5, report.Results.Value[0]);
         }
 
         /// <summary>
