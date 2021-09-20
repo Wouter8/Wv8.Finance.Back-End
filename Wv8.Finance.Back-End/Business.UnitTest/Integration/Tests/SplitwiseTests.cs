@@ -22,6 +22,8 @@
     /// </summary>
     public class SplitwiseTests : BaseIntegrationTest
     {
+        private int splitwiseUserId = 1;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SplitwiseTests"/> class.
         /// </summary>
@@ -30,8 +32,6 @@
             : base(spFixture)
         {
         }
-
-        private int splitwiseUserId = 1;
 
         #region GetSplitwiseTransactions
 
