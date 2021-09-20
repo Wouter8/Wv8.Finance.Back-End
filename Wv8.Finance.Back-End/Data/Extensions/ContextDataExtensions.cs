@@ -353,6 +353,7 @@ namespace PersonalFinance.Data.Extensions
         {
             return set
                 .Where(db => db.AccountId == accountId)
+                .OrderBy(db => db.Date)
                 .ToList();
         }
 

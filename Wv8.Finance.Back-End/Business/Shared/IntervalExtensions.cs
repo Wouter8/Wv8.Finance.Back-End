@@ -4,6 +4,7 @@ namespace PersonalFinance.Business.Shared
     using System.Collections.Generic;
     using System.Linq;
     using NodaTime;
+    using PersonalFinance.Common;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
@@ -47,6 +48,7 @@ namespace PersonalFinance.Business.Shared
 
                     return true;
                 })
+                .OrderBy(db => db.Date)
                 .ToList();
         }
 
@@ -58,6 +60,10 @@ namespace PersonalFinance.Business.Shared
         public static List<BalanceInterval> ToBalanceIntervals(this List<DailyBalanceEntity> dailyBalances)
         {
             var intervals = new List<BalanceInterval>();
+
+            if (!dailyBalances.Any())
+                return intervals;
+
             for (var i = dailyBalances.Count - 1; i >= 1; i--)
             {
                 // The end date of a date interval is inclusive, so end at the day before the next interval starts.
@@ -66,6 +72,9 @@ namespace PersonalFinance.Business.Shared
 
                 intervals.Add(new BalanceInterval(intervalStart.Date, end, intervalStart.Balance));
             }
+
+            var last = dailyBalances.Last();
+            intervals.Add(new BalanceInterval(last.Date, DateTime.MaxValue.ToLocalDate(), last.Balance));
 
             intervals.Reverse();
 
@@ -87,10 +96,9 @@ namespace PersonalFinance.Business.Shared
         {
             var result = new List<BalanceInterval>();
 
-            var startBalance = balanceIntervals
+            var firstEntry = balanceIntervals
                 .OrderByDescending(bi => bi.Interval.Start)
-                .FirstOrNone(bi => bi.Interval.Start <= start)
-                .Select(bi => bi.Balance);
+                .FirstOrNone(bi => bi.Interval.Start <= start);
             var relevantEntries = balanceIntervals
                 .Where(bi => bi.Interval.Start > start && bi.Interval.Start <= end)
                 .OrderBy(bi => bi.Interval.Start)
@@ -98,16 +106,22 @@ namespace PersonalFinance.Business.Shared
 
             BalanceInterval Cap(BalanceInterval bi)
             {
-                var s = bi.Interval.Start < start ? start : bi.Interval.Start;
-                var e = bi.Interval.End > end ? end : bi.Interval.End;
+                var s = bi.Interval.Start <= start ? start : bi.Interval.Start;
+                var e = bi.Interval.End >= end ? end : bi.Interval.End;
                 return new BalanceInterval(s, e, bi.Balance);
             }
 
-            if (startBalance.IsNone)
-            {
-                var firstEntry = relevantEntries.First(bi => bi.Interval.Start >= start);
-                result.Add(new BalanceInterval(start, firstEntry.Interval.Start.PlusDays(-1), 0));
-            }
+            var firstBalance = firstEntry.Select(e => e.Balance).ValueOrElse(0);
+            var firstEnd = !relevantEntries.Any()
+                ? end
+                : firstEntry
+                    .Select(e => e.Interval.End)
+                    .ValueOrElse(relevantEntries
+                        .FirstOrNone()
+                        .Select(e => e.Interval.Start.PlusDays(-1))
+                        .ValueOrElse(end));
+
+            result.Add(new BalanceInterval(start, firstEnd, firstBalance));
 
             result.AddRange(relevantEntries);
             result = result.Select(Cap).ToList();
