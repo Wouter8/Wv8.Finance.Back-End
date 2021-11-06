@@ -35,19 +35,23 @@ namespace PersonalFinance.Business.Shared
         public static List<DailyBalanceEntity> Within(
             this List<DailyBalanceEntity> dailyBalances, LocalDate start, LocalDate end)
         {
-            var foundFirstRelevant = false;
             return dailyBalances
                 .OrderByDescending(db => db.Date)
                 .SkipWhile(db => db.Date > end)
-                .TakeWhile(db =>
+                .GroupBy(db => db.AccountId)
+                .SelectMany(dbs =>
                 {
-                    if (foundFirstRelevant)
-                        return false;
+                    var foundFirstRelevant = false;
+                    return dbs.TakeWhile(db =>
+                    {
+                        if (foundFirstRelevant)
+                            return false;
 
-                    if (db.Date <= start)
-                        foundFirstRelevant = true;
+                        if (db.Date <= start)
+                            foundFirstRelevant = true;
 
-                    return true;
+                        return true;
+                    });
                 })
                 .OrderBy(db => db.Date)
                 .ToList();
