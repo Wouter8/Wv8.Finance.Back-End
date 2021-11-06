@@ -36,10 +36,10 @@ namespace PersonalFinance.Business.Report
         /// <inheritdoc />
         public CurrentDateReport GetCurrentDateReport()
         {
-            // 3 week range.
+            // 3 month range.
             var today = DateTime.Today.ToLocalDate();
-            var firstDate = today.PlusWeeks(-2);
-            var lastDate = today.PlusDays(7);
+            var firstDate = today.PlusWeeks(-12);
+            var nextWeek = today.PlusDays(7); // Used to retrieve transactions in the future.
 
             // Accounts + balances
             var allAccounts = this.Context.Accounts.IncludeAll().ToList();
@@ -47,35 +47,17 @@ namespace PersonalFinance.Business.Report
             // because an account might be inactive but have a historical balance which is not 0.
             var accounts = allAccounts.Where(a => !a.IsObsolete).ToList();
             var dailyBalances = this.Context.DailyBalances
-                .AsEnumerable()
-                .GroupBy(db => db.AccountId)
-                .ToDictionary(
-                    kv => kv.Key,
-                    kv => kv.OrderByDescending(db => db.Date).ToList());
+                .ToList()
+                .Within(firstDate, today)
+                .ToBalanceIntervals()
+                .ToFixedPeriod(firstDate, today)
+                .ToDailyIntervals();
             var netWorth = accounts.Sum(a => a.CurrentBalance);
-
-            var historicalNetWorth = new Dictionary<LocalDate, decimal>();
-            for (var i = 0; i < (lastDate - firstDate).Days; i++)
-            {
-                var day = firstDate.PlusDays(i);
-                var sum = 0m;
-
-                foreach (var account in allAccounts)
-                {
-                    sum += dailyBalances[account.Id]
-                        .OrderByDescending(h => h.Date)
-                        .FirstOrNone(h => h.Date <= day)
-                        .Select(h => h.Balance)
-                        .ValueOrElse(0);
-                }
-
-                historicalNetWorth.Add(day, sum);
-            }
 
             // Transactions: latest, upcoming and unconfirmed
             var allTransactions = this.Context.Transactions
                 .IncludeAll()
-                .Where(t => t.Date >= firstDate && t.Date <= lastDate)
+                .Where(t => t.Date >= firstDate && t.Date <= nextWeek)
                 .OrderByDescending(t => t.Date)
                 .ThenByDescending(t => t.Id)
                 .ToList();
@@ -105,7 +87,7 @@ namespace PersonalFinance.Business.Report
                 LatestTransactions = latestTransactions.Select(t => t.AsTransaction()).ToList(),
                 UpcomingTransactions = upcomingTransactions.Select(t => t.AsTransaction()).ToList(),
                 UnconfirmedTransactions = unconfirmedTransactions.Select(t => t.AsTransaction()).ToList(),
-                HistoricalBalance = historicalNetWorth.ToDictionary(kv => kv.Key.ToDateString(), kv => kv.Value),
+                HistoricalBalance = dailyBalances.ToDictionary(bi => bi.Interval.Start.ToDateString(), bi => bi.Balance),
                 NetWorth = netWorth,
             };
         }

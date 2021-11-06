@@ -97,10 +97,10 @@
             var account3 = this.GenerateAccount(); // Obsolete account, take historical balance into account.
 
             this.GenerateTransaction(
-                accountId: account3.Id, date: DateTime.Today.AddDays(-7).ToLocalDate(), amount: -50);
+                accountId: account3.Id, date: DateTime.Today.AddDays(-7 * 8).ToLocalDate(), amount: -50);
             this.GenerateTransaction(
                 accountId: account3.Id,
-                date: DateTime.Today.AddDays(-3).ToLocalDate(),
+                date: DateTime.Today.AddDays(-7 * 4).ToLocalDate(),
                 amount: 50);
             this.AccountManager.SetAccountObsolete(account3.Id, true);
 
@@ -111,19 +111,19 @@
                 accountId: account1.Id, date: DateTime.Today.AddDays(7).ToLocalDate(), amount: -50);
             // Transaction in the past
             this.GenerateTransaction(
-                accountId: account1.Id, date: DateTime.Today.AddDays(-7).ToLocalDate(), amount: -50);
+                accountId: account1.Id, date: DateTime.Today.AddDays(-7 * 8).ToLocalDate(), amount: -50);
             // Transaction in between
             this.GenerateTransaction(
-                accountId: account1.Id, date: DateTime.Today.AddDays(-3).ToLocalDate(), amount: -50);
+                accountId: account1.Id, date: DateTime.Today.AddDays(-7 * 4).ToLocalDate(), amount: -50);
             this.GenerateTransaction(
-                accountId: account2.Id, date: DateTime.Today.AddDays(-3).ToLocalDate(), amount: -50);
+                accountId: account2.Id, date: DateTime.Today.AddDays(-7 * 4).ToLocalDate(), amount: -50);
             // Transaction on already existing date, but for different accounts
             this.GenerateTransaction(
-                accountId: account2.Id, date: DateTime.Today.AddDays(-7).ToLocalDate(), amount: -50);
+                accountId: account2.Id, date: DateTime.Today.AddDays(-7 * 8).ToLocalDate(), amount: -50);
             this.GenerateTransaction(
                 accountId: account1.Id,
                 type: TransactionType.Transfer,
-                date: DateTime.Today.AddDays(-3).ToLocalDate(),
+                date: DateTime.Today.AddDays(-7 * 4).ToLocalDate(),
                 amount: 50,
                 receivingAccountId: account2.Id);
 
@@ -139,23 +139,26 @@
                 },
                 new
                 {
-                    StartDay = 7,
+                    StartDay = 7 * 4,
                     Value = -150,
                 },
                 new
                 {
-                    StartDay = 11,
+                    StartDay = 7 * 8,
                     Value = -200,
                 },
                 new
                 {
-                    StartDay = 14,
+                    StartDay = 7 * 12,
                     Value = -250,
                 },
             };
             historicalEntriesVerification.Reverse();
 
-            Assert.Equal(21, report.HistoricalBalance.Count);
+            Assert.Equal(85, report.HistoricalBalance.Count);
+            Assert.True(report.HistoricalBalance.ContainsKey(DateTime.Today.AddDays(-7 * 12).ToLocalDate().ToDateString()));
+            Assert.True(report.HistoricalBalance.ContainsKey(DateTime.Today.ToLocalDate().ToDateString()));
+
             for (var i = 0; i < historicalEntries.Count; i++)
             {
                 var entry = historicalEntries[i];
@@ -163,10 +166,6 @@
 
                 Assert.Equal(verification.Value, entry);
             }
-
-            Assert.True(report.HistoricalBalance.ContainsKey(DateTime.Today.AddDays(-7).ToLocalDate().ToDateString()));
-            Assert.True(report.HistoricalBalance.ContainsKey(DateTime.Today.AddDays(-3).ToLocalDate().ToDateString()));
-            Assert.True(report.HistoricalBalance.ContainsKey(DateTime.Today.ToLocalDate().ToDateString()));
         }
 
         /// <summary>

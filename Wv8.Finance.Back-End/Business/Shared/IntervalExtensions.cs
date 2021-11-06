@@ -8,6 +8,7 @@ namespace PersonalFinance.Business.Shared
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
+    using Wv8.Core.EntityFramework;
 
     /// <summary>
     /// A class containing extension methods relevant to intervals.
@@ -59,26 +60,14 @@ namespace PersonalFinance.Business.Shared
         /// <returns>The list of balance intervals.</returns>
         public static List<BalanceInterval> ToBalanceIntervals(this List<DailyBalanceEntity> dailyBalances)
         {
-            var intervals = new List<BalanceInterval>();
+            var intervalsByAccount = dailyBalances.GroupBy(db => db.AccountId)
+                .ToDictionary(kv => kv.Key, kv => kv.ToList().ToIntervalsForOneAccount());
 
-            if (!dailyBalances.Any())
-                return intervals;
+            var allIntervals = intervalsByAccount.Values.SelectMany(l => l).ToList();
 
-            for (var i = dailyBalances.Count - 1; i >= 1; i--)
-            {
-                // The end date of a date interval is inclusive, so end at the day before the next interval starts.
-                var end = dailyBalances[i].Date.PlusDays(-1);
-                var intervalStart = dailyBalances[i - 1];
-
-                intervals.Add(new BalanceInterval(intervalStart.Date, end, intervalStart.Balance));
-            }
-
-            var last = dailyBalances.Last();
-            intervals.Add(new BalanceInterval(last.Date, DateTime.MaxValue.ToLocalDate(), last.Balance));
-
-            intervals.Reverse();
-
-            return intervals;
+            return allIntervals.Any()
+                ? intervalsByAccount.Values.SelectMany(l => l).ToList().Merge()
+                : new List<BalanceInterval>();
         }
 
         /// <summary>
@@ -144,6 +133,92 @@ namespace PersonalFinance.Business.Shared
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Converts a list of daily balances to a list of balance intervals. Expects <paramref name="dailyBalances"/>
+        /// to only contain balances of a single account.
+        /// </summary>
+        /// <param name="dailyBalances">The daily balances.</param>
+        /// <returns>The list of balance intervals.</returns>
+        private static List<BalanceInterval> ToIntervalsForOneAccount(this List<DailyBalanceEntity> dailyBalances)
+        {
+            var intervals = new List<BalanceInterval>();
+
+            if (!dailyBalances.Any())
+                return intervals;
+
+            for (var i = dailyBalances.Count - 1; i >= 1; i--)
+            {
+                // The end date of a date interval is inclusive, so end at the day before the next interval starts.
+                var end = dailyBalances[i].Date.PlusDays(-1);
+                var intervalStart = dailyBalances[i - 1];
+
+                intervals.Add(new BalanceInterval(intervalStart.Date, end, intervalStart.Balance));
+            }
+
+            var last = dailyBalances.Last();
+            intervals.Add(new BalanceInterval(last.Date, DateTime.MaxValue.ToLocalDate(), last.Balance));
+
+            intervals.Reverse();
+
+            return intervals;
+        }
+
+        /// <summary>
+        /// Combines overlapping balance intervals.
+        /// </summary>
+        /// <param name="balanceIntervals">The balance intervals to combine.</param>
+        /// <returns>The list of combined balance intervals.</returns>
+        private static List<BalanceInterval> Merge(this List<BalanceInterval> balanceIntervals)
+        {
+            // Store the changes for each interval. On the start the balance gets added, after the end the balance gets
+            // removed. This way consecutive intervals will have 1 change between intervals.
+            var changes = new Dictionary<LocalDate, decimal>();
+
+            var maxDate = balanceIntervals.Max(bi => bi.Interval.End);
+
+            foreach (var bi in balanceIntervals)
+            {
+                var addDate = bi.Interval.Start;
+                var existingStartChanges = changes.TryGetValue(addDate).ValueOrElse(0);
+                changes[addDate] = existingStartChanges + bi.Balance;
+
+                // Adding the remove change for the last interval is not needed as we don't want to start a new interval
+                // for that date. This also fixes exceptions that would arise when adding a day to the max date.
+                if (bi.Interval.End != maxDate)
+                {
+                    var removeDate = bi.Interval.End.PlusDays(1); // This will break for DateTime.MaxValue dates
+                    var existingEndChanges = changes.TryGetValue(removeDate).ValueOrElse(0);
+                    changes[removeDate] = existingEndChanges - bi.Balance;
+                }
+            }
+
+            // Order the changes
+            var orderedChanges = changes.OrderBy(c => c.Key).ToList();
+
+            // The start and balance for the next interval, these are updated while looping over the changes.
+            var (previousEnd, previousBalance) = orderedChanges.First();
+
+            var mergedIntervals = new List<BalanceInterval>();
+
+            // Loop over all changes and create an interval for each one. Skip the first entry as that marks the start
+            // of the first interval.
+            for (var i = 1; i < orderedChanges.Count; i++)
+            {
+                var end = orderedChanges[i];
+
+                mergedIntervals.Add(new BalanceInterval(previousEnd, end.Key.PlusDays(-1), previousBalance));
+
+                var newBalance = previousBalance + end.Value;
+
+                previousEnd = end.Key;
+                previousBalance = newBalance;
+            }
+
+            mergedIntervals.Add(new BalanceInterval(previousEnd, maxDate, previousBalance));
+
+            return mergedIntervals;
         }
     }
 }
