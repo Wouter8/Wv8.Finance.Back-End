@@ -12,6 +12,7 @@ namespace PersonalFinance.Data.External.Splitwise
     using PersonalFinance.Data.External.Splitwise.RequestResults;
     using RestSharp;
     using RestSharp.Serializers.NewtonsoftJson;
+    using MemoryCache = System.Runtime.Caching.MemoryCache;
 
     /// <summary>
     /// A class containing functionality to communicate with Splitwise.
@@ -39,6 +40,8 @@ namespace PersonalFinance.Data.External.Splitwise
         /// </summary>
         private readonly int groupId;
 
+        private readonly TypedMemoryCache<List<User>> userCache;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SplitwiseContext"/> class.
         /// </summary>
@@ -57,6 +60,8 @@ namespace PersonalFinance.Data.External.Splitwise
 
                 this.userId = splitwiseSettings.Value.SplitwiseUserId;
                 this.groupId = splitwiseSettings.Value.SplitwiseGroupId;
+
+                this.userCache = new TypedMemoryCache<List<User>>("splitwiseUsers");
             }
         }
 
@@ -142,16 +147,19 @@ namespace PersonalFinance.Data.External.Splitwise
         {
             this.VerifyEnabled();
 
-            var request = new RestRequest("get_group", Method.GET);
+            return this.userCache.Get("users", () =>
+            {
+                var request = new RestRequest("get_group", Method.GET);
 
-            request.AddParameter("id", this.groupId);
+                request.AddParameter("id", this.groupId);
 
-            return this.Execute<GetGroupResult>(request)
-                .Group
-                .Members
-                .Where(u => u.Id != this.userId)
-                .Select(u => u.ToDomainObject())
-                .ToList();
+                return this.Execute<GetGroupResult>(request)
+                    .Group
+                    .Members
+                    .Where(u => u.Id != this.userId)
+                    .Select(u => u.ToDomainObject())
+                    .ToList();
+            });
         }
 
         /// <summary>
