@@ -38,11 +38,6 @@ namespace PersonalFinance.Business.Splitwise
         private readonly ISplitwiseContext splitwiseContext;
 
         /// <summary>
-        /// The user identifier in Splitwise.
-        /// </summary>
-        private int splitwiseUserId;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="SplitwiseManager"/> class.
         /// </summary>
         /// <param name="settings">The application settings.</param>
@@ -52,7 +47,6 @@ namespace PersonalFinance.Business.Splitwise
             : base(context)
         {
             this.splitwiseContext = splitwiseContext;
-            this.splitwiseUserId = settings.Value.SplitwiseUserId;
         }
 
         /// <inheritdoc />

@@ -19,6 +19,12 @@ namespace PersonalFinance.Data.External.Splitwise
     public class SplitwiseContext : ISplitwiseContext
     {
         /// <summary>
+        /// <c>true</c> if the Splitwise settings are provided, <c>false</c> otherwise.
+        /// If this is <c>false</c> then all methods will return an exception.
+        /// </summary>
+        private readonly bool integrationEnabled;
+
+        /// <summary>
         /// The client to use for HTTP requests.
         /// </summary>
         private readonly IRestClient client;
@@ -39,18 +45,32 @@ namespace PersonalFinance.Data.External.Splitwise
         /// <param name="settings">The application settings.</param>
         public SplitwiseContext(IOptions<ApplicationSettings> settings)
         {
-            var baseUrl = settings.Value.SplitwiseRootUrl;
-            this.client = new RestClient(baseUrl).UseNewtonsoftJson();
+            var splitwiseSettings = settings.Value.SplitwiseSettingsMaybe;
+            this.integrationEnabled = splitwiseSettings.IsSome;
 
-            this.client.AddDefaultHeader("Authorization", $"Bearer {settings.Value.SplitwiseApiKey}");
+            if (this.integrationEnabled)
+            {
+                var baseUrl = splitwiseSettings.Value.SplitwiseRootUrl;
+                this.client = new RestClient(baseUrl).UseNewtonsoftJson();
 
-            this.userId = settings.Value.SplitwiseUserId;
-            this.groupId = settings.Value.SplitwiseGroupId;
+                this.client.AddDefaultHeader("Authorization", $"Bearer {splitwiseSettings.Value.SplitwiseApiKey}");
+
+                this.userId = splitwiseSettings.Value.SplitwiseUserId;
+                this.groupId = splitwiseSettings.Value.SplitwiseGroupId;
+            }
+        }
+
+        /// <inheritdoc />
+        public bool IntegrationEnabled()
+        {
+            return this.integrationEnabled;
         }
 
         /// <inheritdoc/>
         public Expense CreateExpense(decimal totalAmount, string description, LocalDate date, List<Split> splits)
         {
+            this.VerifyEnabled();
+
             var utcDate = DateTime.SpecifyKind(date.ToDateTimeUnspecified(), DateTimeKind.Utc);
             var dateString = utcDate.ToString("O");
 
@@ -89,6 +109,8 @@ namespace PersonalFinance.Data.External.Splitwise
         /// <inheritdoc/>
         public void DeleteExpense(int id)
         {
+            this.VerifyEnabled();
+
             var request = new RestRequest($"delete_expense/{id}", Method.POST);
 
             this.Execute<VoidResult>(request);
@@ -97,6 +119,8 @@ namespace PersonalFinance.Data.External.Splitwise
         /// <inheritdoc/>
         public List<Expense> GetExpenses(DateTime updatedAfter)
         {
+            this.VerifyEnabled();
+
             var updatedAfterString = updatedAfter.ToString("O");
             var limit = 0; // 0 is unlimited.
 
@@ -116,6 +140,8 @@ namespace PersonalFinance.Data.External.Splitwise
         /// <inheritdoc/>
         public List<User> GetUsers()
         {
+            this.VerifyEnabled();
+
             var request = new RestRequest("get_group", Method.GET);
 
             request.AddParameter("id", this.groupId);
@@ -157,6 +183,12 @@ namespace PersonalFinance.Data.External.Splitwise
 
             throw new Exception(
                 $"Error while retrieving information from Splitwise: status code was {response.StatusCode}.");
+        }
+
+        private void VerifyEnabled()
+        {
+            if (!this.integrationEnabled)
+                throw new InvalidOperationException("Splitwise integration disabled.");
         }
     }
 }

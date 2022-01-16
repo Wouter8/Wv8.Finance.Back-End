@@ -11,6 +11,12 @@ namespace PersonalFinance.Data.External.Splitwise
     public interface ISplitwiseContext
     {
         /// <summary>
+        /// A method which returns whether Splitwise integration is enabled.
+        /// </summary>
+        /// <returns><c>true</c> if the integration is enabled, <c>false</c> otherwise.</returns>
+        public bool IntegrationEnabled();
+
+        /// <summary>
         /// Creates an expense in Splitwise.
         /// </summary>
         /// <param name="totalAmount">The total amount of the transaction.</param>

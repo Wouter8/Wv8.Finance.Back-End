@@ -173,7 +173,7 @@ namespace Data.External.IntegrationTest.Splitwise
             Assert.Contains(users, u => u.Id == this.otherUserId1);
             Assert.Contains(users, u => u.Id == this.otherUserId2);
             Assert.Contains(users, u => u.Id == this.otherUserId3);
-            Assert.DoesNotContain(users, u => u.Id == this.settings.Value.SplitwiseUserId);
+            Assert.DoesNotContain(users, u => u.Id == this.settings.SplitwiseUserId);
 
             var otherUser1 = users.Single(u => u.Id == this.otherUserId1);
             var otherUser2 = users.Single(u => u.Id == this.otherUserId2);
