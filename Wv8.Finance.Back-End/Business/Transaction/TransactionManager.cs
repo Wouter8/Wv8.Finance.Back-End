@@ -135,7 +135,12 @@ namespace PersonalFinance.Business.Transaction
 
                 // Verify a Splitwise account exists when adding providing splits.
                 if (input.SplitwiseSplits.Any())
+                {
                     this.Context.Accounts.GetSplitwiseEntity();
+                    var splitwiseUserIds = this.splitwiseContext.GetUsers().Select(su => su.Id).ToHashSet();
+                    if (input.SplitwiseSplits.Any(s => !splitwiseUserIds.Contains(s.UserId)))
+                        throw new ValidationException("Obsolete Splitwise user specified.");
+                }
 
                 processor.RevertIfProcessed(entity);
 
@@ -219,7 +224,12 @@ namespace PersonalFinance.Business.Transaction
 
                 // Verify a Splitwise account exists when adding providing splits.
                 if (input.SplitwiseSplits.Any())
+                {
                     this.Context.Accounts.GetSplitwiseEntity();
+                    var splitwiseUserIds = this.splitwiseContext.GetUsers().Select(su => su.Id).ToHashSet();
+                    if (input.SplitwiseSplits.Any(s => !splitwiseUserIds.Contains(s.UserId)))
+                        throw new ValidationException("Obsolete Splitwise user specified.");
+                }
 
                 var entity = new TransactionEntity
                 {
@@ -235,7 +245,7 @@ namespace PersonalFinance.Business.Transaction
                     ReceivingAccountId = input.ReceivingAccountId.ToNullable(),
                     ReceivingAccount = receivingAccount.ToNullIfNone(),
                     NeedsConfirmation = input.NeedsConfirmation,
-                    IsConfirmed = input.NeedsConfirmation ? false : (bool?)null,
+                    IsConfirmed = input.NeedsConfirmation ? false : null,
                     PaymentRequests = input.PaymentRequests.Select(pr => pr.ToPaymentRequestEntity()).ToList(),
                     SplitDetails = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity()).ToList(),
                 };
