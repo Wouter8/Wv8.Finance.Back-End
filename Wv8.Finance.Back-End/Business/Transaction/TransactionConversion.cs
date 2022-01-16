@@ -13,6 +13,7 @@
     using PersonalFinance.Common.DataTransfer.Output;
     using PersonalFinance.Data.Models;
     using Wv8.Core;
+    using Splitwise = PersonalFinance.Data.External.Splitwise.Models;
 
     /// <summary>
     /// Conversion class containing conversion methods.
@@ -39,11 +40,12 @@
         /// </summary>
         /// <param name="split">The inputted split.</param>
         /// <returns>The created entity.</returns>
-        public static SplitDetailEntity ToSplitDetailEntity(this InputSplitwiseSplit split)
+        public static SplitDetailEntity ToSplitDetailEntity(this InputSplitwiseSplit split, Dictionary<int, Splitwise.User> splitwiseUsers)
         {
             return new SplitDetailEntity
             {
                 SplitwiseUserId = split.UserId,
+                SplitwiseUserName = splitwiseUsers[split.UserId].Name,
                 Amount = split.Amount,
             };
         }

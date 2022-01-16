@@ -22,5 +22,12 @@ namespace PersonalFinance.Data.External.Splitwise.Models
         /// The last name of the user.
         /// </summary>
         public Maybe<string> LastName { get; set; }
+
+        /// <summary>
+        /// The name of the user in Splitwise.
+        /// </summary>
+        public string Name => this.LastName.IsSome
+            ? $"{this.FirstName} {this.LastName.Value}"
+            : $"{this.FirstName}";
     }
 }

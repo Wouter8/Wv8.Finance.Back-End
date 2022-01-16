@@ -80,6 +80,7 @@ namespace PersonalFinance.Business.Splitwise
             return new SplitDetailEntity
             {
                 SplitwiseUserId = split.UserId,
+                SplitwiseUserName = split.UserName,
                 Amount = split.Amount,
             };
         }
@@ -96,6 +97,7 @@ namespace PersonalFinance.Business.Splitwise
                 TransactionId = entity.TransactionId.ToMaybe(),
                 SplitwiseTransactionId = entity.SplitwiseTransactionId.ToMaybe(),
                 SplitwiseUserId = entity.SplitwiseUserId,
+                SplitwiseUserName = entity.SplitwiseUserName,
                 Amount = entity.Amount,
             };
         }
@@ -107,13 +109,10 @@ namespace PersonalFinance.Business.Splitwise
         /// <returns>The data transfer object.</returns>
         public static SplitwiseUser AsSplitwiseUser(this SW.User user)
         {
-            var name = user.LastName.IsSome
-                ? $"{user.FirstName} {user.LastName.Value}"
-                : $"{user.FirstName}";
             return new SplitwiseUser
             {
                 Id = user.Id,
-                Name = name,
+                Name = user.Name,
             };
         }
 

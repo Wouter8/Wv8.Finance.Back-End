@@ -120,6 +120,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                     {
                         Amount = sd.Amount,
                         SplitwiseUserId = sd.SplitwiseUserId,
+                        SplitwiseUserName = sd.SplitwiseUserName,
                     }).ToList(),
             };
             transaction.LastOccurence = transaction.NextOccurence.Value;

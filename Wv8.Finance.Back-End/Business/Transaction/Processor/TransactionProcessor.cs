@@ -152,6 +152,10 @@ namespace PersonalFinance.Business.Transaction.Processor
                 transaction.SplitwiseTransactionId = expense.Id;
                 transaction.SplitwiseTransaction = expense.ToSplitwiseTransactionEntity();
 
+                // Set the existing split details on the Splitwise transaction, otherwise
+                // duplicate entries are added.
+                transaction.SplitwiseTransaction.SplitDetails = transaction.SplitDetails;
+
                 // The category is known at this point, so set imported to true.
                 transaction.SplitwiseTransaction.Imported = true;
             }

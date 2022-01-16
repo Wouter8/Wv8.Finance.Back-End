@@ -123,9 +123,16 @@
                     this.validator.AccountType(receivingAccount.Type);
                 }
 
-                // Verify a Splitwise account exists when adding providing splits.
+                var splits = new List<SplitDetailEntity>();
                 if (input.SplitwiseSplits.Any())
+                {
+                    // Verify a Splitwise account exists when adding providing splits.
                     this.Context.Accounts.GetSplitwiseEntity();
+                    var splitwiseUsers = this.splitwiseContext.GetUsers().ToDictionary(su => su.Id);
+                    if (input.SplitwiseSplits.Any(s => !splitwiseUsers.ContainsKey(s.UserId)))
+                        throw new ValidationException("Unknown Splitwise user specified.");
+                    splits = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity(splitwiseUsers)).ToList();
+                }
 
                 entity.AccountId = input.AccountId;
                 entity.Account = account;
@@ -140,7 +147,7 @@
                 entity.NeedsConfirmation = input.NeedsConfirmation;
                 entity.Interval = input.Interval;
                 entity.IntervalUnit = input.IntervalUnit;
-                entity.SplitDetails = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity()).ToList();
+                entity.SplitDetails = splits;
 
                 var instances = this.Context.Transactions.GetTransactionsFromRecurring(entity.Id);
                 var instancesToUpdate = updateInstances
@@ -203,9 +210,16 @@
                     this.validator.AccountType(receivingAccount.Type);
                 }
 
-                // Verify a Splitwise account exists when adding providing splits.
+                var splits = new List<SplitDetailEntity>();
                 if (input.SplitwiseSplits.Any())
+                {
+                    // Verify a Splitwise account exists when adding providing splits.
                     this.Context.Accounts.GetSplitwiseEntity();
+                    var splitwiseUsers = this.splitwiseContext.GetUsers().ToDictionary(su => su.Id);
+                    if (input.SplitwiseSplits.Any(s => !splitwiseUsers.ContainsKey(s.UserId)))
+                        throw new ValidationException("Unknown Splitwise user specified.");
+                    splits = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity(splitwiseUsers)).ToList();
+                }
 
                 var entity = new RecurringTransactionEntity
                 {
@@ -225,7 +239,7 @@
                     NeedsConfirmation = input.NeedsConfirmation,
                     NextOccurence = startPeriod,
                     PaymentRequests = new List<PaymentRequestEntity>(), // TODO: Payment requests
-                    SplitDetails = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity()).ToList(),
+                    SplitDetails = splits,
                 };
 
                 processor.Process(entity);

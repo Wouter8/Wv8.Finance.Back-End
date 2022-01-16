@@ -293,17 +293,20 @@ namespace Business.UnitTest.Integration.Helpers
         /// <param name="amount">The amount.</param>
         /// <param name="transactionId">The transaction id.</param>
         /// <param name="splitwiseTransactionId">The Splitwise transaction id.</param>
+        /// <param name="splitwiseUserName">The Splitwise user name.</param>
         /// <returns>The created entity.</returns>
         public static SplitDetailEntity GenerateSplitDetail(
             this Context context,
             int splitwiseUserId,
             decimal amount = 10m,
             int? transactionId = null,
-            int? splitwiseTransactionId = null)
+            int? splitwiseTransactionId = null,
+            string splitwiseUserName = "User")
         {
             return context.SplitDetails.Add(new SplitDetailEntity
             {
                 SplitwiseUserId = splitwiseUserId,
+                SplitwiseUserName = splitwiseUserName,
                 Amount = amount,
                 TransactionId = transactionId,
                 SplitwiseTransactionId = splitwiseTransactionId,

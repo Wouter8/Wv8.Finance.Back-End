@@ -8,10 +8,9 @@ namespace PersonalFinance.Data.External.Splitwise.DataTransfer
     public class UserOwed
     {
         /// <summary>
-        /// The identifier of the user.
+        /// The user.
         /// </summary>
-        [JsonProperty("user_id")]
-        public int UserId { get; set; }
+        public User User { get; set; }
 
         /// <summary>
         /// The amount that the user has paid.

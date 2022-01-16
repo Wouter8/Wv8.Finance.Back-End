@@ -18,6 +18,7 @@ namespace Business.UnitTest.Integration.Helpers
             return new Split
             {
                 UserId = splitDetailEntity.SplitwiseUserId,
+                UserName = splitDetailEntity.SplitwiseUserName,
                 Amount = splitDetailEntity.Amount,
             };
         }
