@@ -9,6 +9,7 @@
     using PersonalFinance.Common;
     using PersonalFinance.Common.Enums;
     using PersonalFinance.Data.Models;
+    using Wv8.Core.Collections;
     using Wv8.Core.Exceptions;
     using Xunit;
 
@@ -386,8 +387,8 @@
                 category: category,
                 date: Ld(2021, 01, 01),
                 amount: -50,
-                splitDetails: new List<SplitDetailEntity>
-                    { new SplitDetailEntity { Amount = 25, SplitwiseUserId = otherUser.Id } });
+                splitDetails: this.context.GenerateSplitDetail(otherUser.Id, 25).Singleton());
+
             // Also an income transaction such that the result calculation can be tested.
             this.context.GenerateTransaction(account, TransactionType.Income, category: category, date: Ld(2021, 01, 01), amount: 30);
 
