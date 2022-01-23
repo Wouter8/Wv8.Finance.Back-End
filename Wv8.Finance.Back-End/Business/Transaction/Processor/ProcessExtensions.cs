@@ -120,6 +120,7 @@ namespace PersonalFinance.Business.Transaction.Processor
                     {
                         Amount = sd.Amount,
                         SplitwiseUserId = sd.SplitwiseUserId,
+                        SplitwiseUserName = sd.SplitwiseUserName,
                     }).ToList(),
             };
             transaction.LastOccurence = transaction.NextOccurence.Value;
@@ -151,11 +152,21 @@ namespace PersonalFinance.Business.Transaction.Processor
             if (transaction.CategoryId.HasValue && transaction.Category.IsObsolete)
                 throw new IsObsoleteException($"Category is obsolete.");
 
-            var currentSplitwiseUserIds = splitwiseContext.GetUsers().Select(u => u.Id).ToList();
-            foreach (var splitDetail in transaction.SplitDetails)
+            if (transaction.SplitDetails.Any())
             {
-                if (!currentSplitwiseUserIds.Contains(splitDetail.SplitwiseUserId))
-                    throw new IsObsoleteException("Splitwise user is obsolete.");
+                if (splitwiseContext.IntegrationEnabled())
+                {
+                    var currentSplitwiseUserIds = splitwiseContext.GetUsers().Select(u => u.Id).ToList();
+                    foreach (var splitDetail in transaction.SplitDetails)
+                    {
+                        if (!currentSplitwiseUserIds.Contains(splitDetail.SplitwiseUserId))
+                            throw new IsObsoleteException("Splitwise user is obsolete.");
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException("Splitwise integration is disabled.");
+                }
             }
         }
 
@@ -181,11 +192,21 @@ namespace PersonalFinance.Business.Transaction.Processor
             if (transaction.CategoryId.HasValue && transaction.Category.IsObsolete)
                 throw new IsObsoleteException($"Category is obsolete.");
 
-            var currentSplitwiseUserIds = splitwiseContext.GetUsers().Select(u => u.Id).ToList();
-            foreach (var splitDetail in transaction.SplitDetails)
+            if (transaction.SplitDetails.Any())
             {
-                if (!currentSplitwiseUserIds.Contains(splitDetail.SplitwiseUserId))
-                    throw new IsObsoleteException("Splitwise user is obsolete.");
+                if (splitwiseContext.IntegrationEnabled())
+                {
+                    var currentSplitwiseUserIds = splitwiseContext.GetUsers().Select(u => u.Id).ToList();
+                    foreach (var splitDetail in transaction.SplitDetails)
+                    {
+                        if (!currentSplitwiseUserIds.Contains(splitDetail.SplitwiseUserId))
+                            throw new IsObsoleteException("Splitwise user is obsolete.");
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException("Splitwise integration is disabled.");
+                }
             }
         }
 

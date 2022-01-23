@@ -11,6 +11,11 @@ namespace PersonalFinance.Data.External.Splitwise.Models
         public int UserId { get; set; }
 
         /// <summary>
+        /// The name of the user from Splitwise.
+        /// </summary>
+        public string UserName { get; set; }
+
+        /// <summary>
         /// The amount split.
         /// </summary>
         public decimal Amount { get; set; }

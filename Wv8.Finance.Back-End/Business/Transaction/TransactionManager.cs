@@ -133,9 +133,16 @@ namespace PersonalFinance.Business.Transaction
                         throw new ValidationException("Sender account can not be the same as receiver account.");
                 }
 
-                // Verify a Splitwise account exists when adding providing splits.
+                var splits = new List<SplitDetailEntity>();
                 if (input.SplitwiseSplits.Any())
+                {
+                    // Verify a Splitwise account exists when adding providing splits.
                     this.Context.Accounts.GetSplitwiseEntity();
+                    var splitwiseUsers = this.splitwiseContext.GetUsers().ToDictionary(su => su.Id);
+                    if (input.SplitwiseSplits.Any(s => !splitwiseUsers.ContainsKey(s.UserId)))
+                        throw new ValidationException("Unknown Splitwise user specified.");
+                    splits = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity(splitwiseUsers)).ToList();
+                }
 
                 processor.RevertIfProcessed(entity);
 
@@ -148,7 +155,7 @@ namespace PersonalFinance.Business.Transaction
                 entity.Category = category.ToNullIfNone();
                 entity.ReceivingAccountId = input.ReceivingAccountId.ToNullable();
                 entity.ReceivingAccount = receivingAccount.ToNullIfNone();
-                entity.SplitDetails = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity()).ToList();
+                entity.SplitDetails = splits;
 
                 var existingPaymentRequestIds = input.PaymentRequests
                     .SelectSome(pr => pr.Id)
@@ -217,9 +224,16 @@ namespace PersonalFinance.Business.Transaction
                         throw new ValidationException("Sender account can not be the same as receiver account.");
                 }
 
-                // Verify a Splitwise account exists when adding providing splits.
+                var splits = new List<SplitDetailEntity>();
                 if (input.SplitwiseSplits.Any())
+                {
+                    // Verify a Splitwise account exists when adding providing splits.
                     this.Context.Accounts.GetSplitwiseEntity();
+                    var splitwiseUsers = this.splitwiseContext.GetUsers().ToDictionary(su => su.Id);
+                    if (input.SplitwiseSplits.Any(s => !splitwiseUsers.ContainsKey(s.UserId)))
+                        throw new ValidationException("Unknown Splitwise user specified.");
+                    splits = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity(splitwiseUsers)).ToList();
+                }
 
                 var entity = new TransactionEntity
                 {
@@ -235,9 +249,9 @@ namespace PersonalFinance.Business.Transaction
                     ReceivingAccountId = input.ReceivingAccountId.ToNullable(),
                     ReceivingAccount = receivingAccount.ToNullIfNone(),
                     NeedsConfirmation = input.NeedsConfirmation,
-                    IsConfirmed = input.NeedsConfirmation ? false : (bool?)null,
+                    IsConfirmed = input.NeedsConfirmation ? false : null,
                     PaymentRequests = input.PaymentRequests.Select(pr => pr.ToPaymentRequestEntity()).ToList(),
-                    SplitDetails = input.SplitwiseSplits.Select(s => s.ToSplitDetailEntity()).ToList(),
+                    SplitDetails = splits,
                 };
 
                 processor.ProcessIfNeeded(entity);

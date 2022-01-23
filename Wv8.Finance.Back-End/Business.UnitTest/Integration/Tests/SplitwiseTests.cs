@@ -1,4 +1,4 @@
-﻿namespace Business.UnitTest.Integration.Tests
+namespace Business.UnitTest.Integration.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -109,7 +109,7 @@
                 date: DateTime.Today.ToLocalDate(),
                 paidAmount: 10,
                 personalAmount: 5,
-                splits: new SplitDetailEntity { Amount = 5, SplitwiseUserId = user.Id }.Singleton());
+                splits: this.context.GenerateSplitDetail(user.Id, 5).Singleton());
 
             this.context.SaveChanges();
 
@@ -144,7 +144,7 @@
                 date: DateTime.Today.ToLocalDate(),
                 paidAmount: 10,
                 personalAmount: 2.5M,
-                splits: new SplitDetailEntity { Amount = 7.5M, SplitwiseUserId = splitwiseUser.Id }.Singleton());
+                splits: this.context.GenerateSplitDetail(splitwiseUser.Id, 7.5M).Singleton());
 
             this.context.SaveChanges();
 
@@ -278,8 +278,8 @@
             var expense = this.SplitwiseContextMock.GenerateExpense(
                 1, paidAmount: 50, personalAmount: 10, splits: new List<Split>
                 {
-                    new Split { UserId = 2, Amount = 15 },
-                    new Split { UserId = 3, Amount = 25 },
+                    this.GenerateSplit(2, 15),
+                    this.GenerateSplit(3, 25),
                 });
 
             this.SplitwiseManager.ImportFromSplitwise();
@@ -508,8 +508,8 @@
             // Add an update to the transaction, with updated split details.
             var newSplits = new List<Split>
             {
-                new Split { UserId = user2.Id, Amount = 25 },
-                new Split { UserId = user3.Id, Amount = 15 },
+                this.GenerateSplit(user2.Id, 25),
+                this.GenerateSplit(user3.Id, 15),
             };
             var expense = this.SplitwiseContextMock.GenerateExpense(
                 1,
@@ -651,8 +651,8 @@
             // Add new version to mock. In future so should not be processed.
             var newSplits = new List<Split>
             {
-                new Split { UserId = user2.Id, Amount = 10 },
-                new Split { UserId = user3.Id, Amount = 25 },
+                this.GenerateSplit(user2.Id, 10),
+                this.GenerateSplit(user3.Id, 25),
             };
             var expense = this.SplitwiseContextMock.GenerateExpense(
                 1,
@@ -1092,6 +1092,16 @@
         private User GenerateSplitwiseUser()
         {
             return this.SplitwiseContextMock.GenerateUser(this.splitwiseUserId, "User");
+        }
+
+        private Split GenerateSplit(int userId = 0, decimal amount = 10, string userName = "User")
+        {
+            return new Split
+            {
+                UserId = userId,
+                Amount = amount,
+                UserName = userName,
+            };
         }
     }
 }

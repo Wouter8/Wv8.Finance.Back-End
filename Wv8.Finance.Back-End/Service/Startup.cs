@@ -21,6 +21,7 @@ namespace PersonalFinance.Service
     using PersonalFinance.Data.External.Splitwise;
     using PersonalFinance.Service.Middleware;
     using PersonalFinance.Service.Services;
+    using Wv8.Core;
     using Wv8.Core.ModelBinding;
 
     /// <summary>
@@ -73,6 +74,11 @@ namespace PersonalFinance.Service
 
             // Settings
             services.Configure<ApplicationSettings>(this.Configuration.GetSection("ApplicationSettings"));
+            var splitwiseSettings = this.Configuration
+                .GetSection("ApplicationSettings")
+                .GetSection("SplitwiseSettings")
+                .Get<SplitwiseSettings>()
+                .ToMaybe();
 
             // DbContext
             services.AddDbContext<Context>(options =>
@@ -98,7 +104,8 @@ namespace PersonalFinance.Service
 
             // Services
             services.AddHostedService<PeriodicProcessorService>();
-            services.AddHostedService<PeriodicSplitwiseImporter>();
+            if (splitwiseSettings.IsSome)
+                services.AddHostedService<PeriodicSplitwiseImporter>();
         }
 
         /// <summary>

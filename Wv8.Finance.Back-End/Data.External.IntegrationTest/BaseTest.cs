@@ -18,17 +18,18 @@ namespace Data.External.IntegrationTest
         protected readonly SplitwiseContext splitwiseContext;
 
         /// <summary>
-        /// The application settings.
+        /// The Splitwise settings.
         /// </summary>
-        protected readonly IOptions<ApplicationSettings> settings;
+        protected readonly SplitwiseSettings settings;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTest"/> class.
         /// </summary>
         protected BaseTest()
         {
-            this.settings = this.GetApplicationSettings();
-            this.splitwiseContext = new SplitwiseContext(this.settings);
+            var applicationSettings = this.GetApplicationSettings();
+            this.splitwiseContext = new SplitwiseContext(applicationSettings);
+            this.settings = applicationSettings.Value.SplitwiseSettingsMaybe.Value;
         }
 
         private IOptions<ApplicationSettings> GetApplicationSettings()

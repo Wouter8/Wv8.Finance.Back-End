@@ -35,6 +35,12 @@ namespace Business.UnitTest.Integration.Mocks
         public List<User> Users { get; private set; } = new List<User>();
 
         /// <inheritdoc />
+        public bool IntegrationEnabled()
+        {
+            return true;
+        }
+
+        /// <inheritdoc />
         public Expense CreateExpense(decimal totalAmount, string description, LocalDate date, List<Split> splits)
         {
             var totalAmountPositive = Math.Abs(totalAmount);

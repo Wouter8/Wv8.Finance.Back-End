@@ -21,7 +21,7 @@ namespace PersonalFinance.Data.External.Splitwise
         /// <returns>The domain expense object.</returns>
         public static Expense ToDomainObject(this DT.Expense expense, int userId)
         {
-            var user = expense.Users.SingleOrNone(u => u.UserId == userId);
+            var user = expense.Users.SingleOrNone(u => u.User.Id == userId);
 
             return new Expense
             {
@@ -33,11 +33,12 @@ namespace PersonalFinance.Data.External.Splitwise
                 PaidAmount = user.Select(u => u.PaidShare).ValueOrElse(0),
                 PersonalAmount = user.Select(u => u.OwedShare).ValueOrElse(0),
                 Splits = expense.Users
-                    .Where(u => u.UserId != userId)
+                    .Where(u => u.User.Id != userId)
                     .Where(u => u.PaidShare == 0 && u.OwedShare > 0)
                     .Select(u => new Split
                     {
-                        UserId = u.UserId,
+                        UserId = u.User.Id,
+                        UserName = u.User.ToDomainObject().Name,
                         Amount = u.OwedShare,
                     }).ToList(),
             };

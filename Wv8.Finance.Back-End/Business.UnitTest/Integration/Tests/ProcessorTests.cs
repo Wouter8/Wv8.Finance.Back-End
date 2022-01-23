@@ -211,16 +211,8 @@
                 category,
                 splitDetails: new List<SplitDetailEntity>
                 {
-                    new SplitDetailEntity
-                    {
-                        SplitwiseUserId = user1.Id,
-                        Amount = 20,
-                    },
-                    new SplitDetailEntity
-                    {
-                        SplitwiseUserId = user2.Id,
-                        Amount = 15,
-                    },
+                    this.context.GenerateSplitDetail(user1.Id, 20),
+                    this.context.GenerateSplitDetail(user2.Id, 15),
                 });
 
             this.context.SaveChanges();
@@ -275,16 +267,8 @@
                 category,
                 splitDetails: new List<SplitDetailEntity>
                 {
-                    new SplitDetailEntity
-                    {
-                        SplitwiseUserId = user1.Id,
-                        Amount = 20,
-                    },
-                    new SplitDetailEntity
-                    {
-                        SplitwiseUserId = 2,
-                        Amount = 15,
-                    },
+                    this.context.GenerateSplitDetail(user1.Id, 20),
+                    this.context.GenerateSplitDetail(2, 15),
                 });
 
             this.context.SaveChanges();
@@ -416,16 +400,8 @@
                 intervalUnit: IntervalUnit.Months,
                 splitDetails: new List<SplitDetailEntity>
                 {
-                    new SplitDetailEntity
-                    {
-                        SplitwiseUserId = user1.Id,
-                        Amount = 20,
-                    },
-                    new SplitDetailEntity
-                    {
-                        SplitwiseUserId = user2.Id,
-                        Amount = 15,
-                    },
+                    this.context.GenerateSplitDetail(user1.Id, 20),
+                    this.context.GenerateSplitDetail(user2.Id, 15),
                 });
 
             this.context.SaveChanges();
@@ -488,16 +464,8 @@
                 intervalUnit: IntervalUnit.Months,
                 splitDetails: new List<SplitDetailEntity>
                 {
-                    new SplitDetailEntity
-                    {
-                        SplitwiseUserId = user1.Id,
-                        Amount = 20,
-                    },
-                    new SplitDetailEntity
-                    {
-                        SplitwiseUserId = 2,
-                        Amount = 15,
-                    },
+                    this.context.GenerateSplitDetail(user1.Id, 20),
+                    this.context.GenerateSplitDetail(2, 15),
                 });
 
             this.context.SaveChanges();

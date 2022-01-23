@@ -2,6 +2,9 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using PersonalFinance.Data;
 
 namespace PersonalFinance.Data.Migrations
 {
@@ -247,6 +250,10 @@ namespace PersonalFinance.Data.Migrations
 
                     b.Property<int>("SplitwiseUserId")
                         .HasColumnType("int");
+
+                    b.Property<string>("SplitwiseUserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("TransactionId")
                         .HasColumnType("int");

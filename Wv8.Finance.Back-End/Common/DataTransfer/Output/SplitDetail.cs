@@ -23,6 +23,11 @@ namespace PersonalFinance.Common.DataTransfer.Output
         public int SplitwiseUserId { get; set; }
 
         /// <summary>
+        /// The name of the user from Splitwise. This is used as back-up when the user has become obsolete.
+        /// </summary>
+        public string SplitwiseUserName { get; set; }
+
+        /// <summary>
         /// The amount split.
         /// </summary>
         public decimal Amount { get; set; }

@@ -191,6 +191,7 @@ namespace PersonalFinance.Data.Extensions
                 .HasIndex(sd => new { sd.TransactionId, sd.SplitwiseUserId })
                 .IsUnique();
             entity.Property(sd => sd.Amount).HasPrecision(12, 2);
+            entity.Property(sd => sd.SplitwiseUserName).IsRequired();
 
             builder.Entity<BaseTransactionEntity>()
                 .HasMany(t => t.SplitDetails)
