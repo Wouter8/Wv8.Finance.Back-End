@@ -14,9 +14,11 @@
             migrationBuilder.DropIndex("IX_SplitDetails_TransactionId_SplitwiseUserId", "SplitDetails");
 
             // Set the transaction identifier of splits created for splitwise transactions.
-            migrationBuilder.Sql(@"UPDATE [dbo].[SplitDetails]
-SET [TransactionId] = (SELECT TOP 1 t.[Id] FROM [dbo].[Transactions] t WHERE t.[SplitwiseTransactionId] = [SplitwiseTransactionId])
-WHERE [SplitwiseTransactionId] IS NOT NULL AND [TransactionId] IS NULL;");
+            migrationBuilder.Sql(@"UPDATE sd
+SET sd.[TransactionId] = t.[Id]
+FROM [dbo].[SplitDetails] sd INNER JOIN [dbo].[Transactions] t ON t.[SplitwiseTransactionId] = sd.[SplitwiseTransactionId]
+WHERE sd.[SplitwiseTransactionId] IS NOT NULL AND [TransactionId] IS NULL;
+");
 
             // Remove duplicate entries.
             migrationBuilder.Sql(@"DELETE FROM [dbo].[SplitDetails]
