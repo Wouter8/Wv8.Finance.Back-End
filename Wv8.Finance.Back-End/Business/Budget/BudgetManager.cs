@@ -83,7 +83,7 @@
                 // Dates changed, so recalculate spent.
                 if (entity.StartDate != periodStart || entity.EndDate != periodEnd)
                 {
-                    entity.Spent = Math.Abs(this.Context.Transactions.GetTransactions(entity.CategoryId, periodStart, periodEnd).Sum(t => t.Amount));
+                    entity.Spent = Math.Abs(this.Context.Transactions.GetTransactions(entity.CategoryId, periodStart, periodEnd, false).Sum(t => t.Amount));
                 }
 
                 entity.Amount = amount;
@@ -112,7 +112,7 @@
                 {
                     CategoryId = categoryId,
                     Amount = amount,
-                    Spent = Math.Abs(this.Context.Transactions.GetTransactions(categoryId, periodStart, periodEnd).Sum(t => t.Amount)),
+                    Spent = Math.Abs(this.Context.Transactions.GetTransactions(categoryId, periodStart, periodEnd, false).Sum(t => t.Amount)),
                     StartDate = periodStart,
                     EndDate = periodEnd,
                     Category = category,

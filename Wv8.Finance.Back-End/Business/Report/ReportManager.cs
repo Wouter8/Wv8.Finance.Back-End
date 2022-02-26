@@ -87,7 +87,7 @@ namespace PersonalFinance.Business.Report
                 LatestTransactions = latestTransactions.Select(t => t.AsTransaction()).ToList(),
                 UpcomingTransactions = upcomingTransactions.Select(t => t.AsTransaction()).ToList(),
                 UnconfirmedTransactions = unconfirmedTransactions.Select(t => t.AsTransaction()).ToList(),
-                HistoricalBalance = dailyBalances.ToDictionary(bi => bi.Interval.Start.ToDateString(), bi => bi.Balance),
+                HistoricalBalance = dailyBalances.ToDto(),
                 NetWorth = netWorth,
             };
         }
@@ -103,7 +103,7 @@ namespace PersonalFinance.Business.Report
 
             var (unit, intervals) = IntervalCalculator.GetIntervals(start, end, 12);
 
-            var transactions = this.Context.Transactions.GetTransactions(categoryId, start, end);
+            var transactions = this.Context.Transactions.GetTransactions(categoryId, start, end, false);
 
             var expenseTransactions = transactions.Where(t => t.Type == TransactionType.Expense).ToList();
             var incomeTransactions = transactions.Where(t => t.Type == TransactionType.Income).ToList();
@@ -131,6 +131,7 @@ namespace PersonalFinance.Business.Report
         {
             var start = this.validator.DateString(startString, "start");
             var end = this.validator.DateString(endString, "end");
+            this.validator.Period(start, end, true);
 
             // Verify account exists
             this.Context.Accounts.GetEntity(accountId);
@@ -146,6 +147,38 @@ namespace PersonalFinance.Business.Report
                 Unit = ReportIntervalUnit.Days,
                 Dates = dailyBalances.Select(hb => hb.Interval).ToList().ToDates().ToDateStrings(),
                 Balances = dailyBalances.Select(hb => hb.Balance).ToList(),
+            };
+        }
+
+        public PeriodReport GetPeriodReport(string startString, string endString)
+        {
+            var start = this.validator.DateString(startString, "start");
+            var end = this.validator.DateString(endString, "end");
+            this.validator.Period(start, end, true);
+
+            var (unit, intervals) = IntervalCalculator.GetIntervals(start, end);
+
+            var dailyBalances = this.Context.DailyBalances
+                .ToList()
+                .Within(start, end)
+                .ToBalanceIntervals()
+                .ToFixedPeriod(start, end)
+                .ToDailyIntervals();
+
+            var transactions = this.Context.Transactions.GetTransactions(Maybe<int>.None, start, end, true);
+            var transactionsByInterval = transactions.GroupByInterval(intervals);
+            var transactionsByCategory = transactions.GroupByCategory();
+
+            return new PeriodReport
+            {
+                Dates = intervals.ToDates().ToDateStrings(),
+                Unit = unit,
+                Totals = transactions.Sum(),
+                SumsPerInterval = transactionsByInterval.Select(kv => kv.Value.Sum()).ToList(),
+                TotalsPerCategory = transactionsByCategory.ToDictionary(
+                    kv => kv.Key,
+                    kv => kv.Value.Sum()),
+                DailyBalances = dailyBalances.ToDto(),
             };
         }
     }
