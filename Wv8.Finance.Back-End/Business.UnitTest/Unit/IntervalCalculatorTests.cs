@@ -1,6 +1,7 @@
 namespace Business.UnitTest.Unit
 {
     using System;
+    using System.Linq;
     using Business.UnitTest.Integration.Helpers;
     using NodaTime;
     using PersonalFinance.Business;
@@ -14,7 +15,7 @@ namespace Business.UnitTest.Unit
     public class IntervalCalculatorTests
     {
         /// <summary>
-        /// Tests method <see cref="IntervalCalculator.GetIntervals"/>.
+        /// Tests method <see cref="IntervalCalculator.GetIntervals(NodaTime.LocalDate,NodaTime.LocalDate,int)"/>.
         /// Verifies that intervals of days are returned correctly.
         /// </summary>
         [Fact]
@@ -40,7 +41,7 @@ namespace Business.UnitTest.Unit
         }
 
         /// <summary>
-        /// Tests method <see cref="IntervalCalculator.GetIntervals"/>.
+        /// Tests method <see cref="IntervalCalculator.GetIntervals(NodaTime.LocalDate,NodaTime.LocalDate,int)"/>.
         /// Verifies that intervals of days are returned correctly.
         /// </summary>
         [Fact]
@@ -66,7 +67,7 @@ namespace Business.UnitTest.Unit
         }
 
         /// <summary>
-        /// Tests method <see cref="IntervalCalculator.GetIntervals"/>.
+        /// Tests method <see cref="IntervalCalculator.GetIntervals(NodaTime.LocalDate,NodaTime.LocalDate,int)"/>.
         /// Verifies that intervals of weeks are returned correctly.
         /// </summary>
         [Fact]
@@ -91,7 +92,7 @@ namespace Business.UnitTest.Unit
         }
 
         /// <summary>
-        /// Tests method <see cref="IntervalCalculator.GetIntervals"/>.
+        /// Tests method <see cref="IntervalCalculator.GetIntervals(NodaTime.LocalDate,NodaTime.LocalDate,int)"/>.
         /// Verifies that intervals of weeks are returned correctly.
         /// </summary>
         [Fact]
@@ -117,7 +118,7 @@ namespace Business.UnitTest.Unit
         }
 
         /// <summary>
-        /// Tests method <see cref="IntervalCalculator.GetIntervals"/>.
+        /// Tests method <see cref="IntervalCalculator.GetIntervals(NodaTime.LocalDate,NodaTime.LocalDate,int)"/>.
         /// Verifies that intervals of months are returned correctly.
         /// </summary>
         [Fact]
@@ -142,7 +143,7 @@ namespace Business.UnitTest.Unit
         }
 
         /// <summary>
-        /// Tests method <see cref="IntervalCalculator.GetIntervals"/>.
+        /// Tests method <see cref="IntervalCalculator.GetIntervals(NodaTime.LocalDate,NodaTime.LocalDate,int)"/>.
         /// Verifies that intervals of months are returned correctly.
         /// </summary>
         [Fact]
@@ -168,7 +169,7 @@ namespace Business.UnitTest.Unit
         }
 
         /// <summary>
-        /// Tests method <see cref="IntervalCalculator.GetIntervals"/>.
+        /// Tests method <see cref="IntervalCalculator.GetIntervals(NodaTime.LocalDate,NodaTime.LocalDate,int)"/>.
         /// Verifies that intervals of years are returned correctly.
         /// </summary>
         [Fact]
@@ -193,7 +194,7 @@ namespace Business.UnitTest.Unit
         }
 
         /// <summary>
-        /// Tests method <see cref="IntervalCalculator.GetIntervals"/>.
+        /// Tests method <see cref="IntervalCalculator.GetIntervals(NodaTime.LocalDate,NodaTime.LocalDate,int)"/>.
         /// Verifies that intervals of years are returned correctly.
         /// </summary>
         [Fact]
@@ -219,7 +220,7 @@ namespace Business.UnitTest.Unit
         }
 
         /// <summary>
-        /// Tests method <see cref="IntervalCalculator.GetIntervals"/>.
+        /// Tests method <see cref="IntervalCalculator.GetIntervals(NodaTime.LocalDate,NodaTime.LocalDate,int)"/>.
         /// Verifies that the last interval is capped at the end date.
         /// </summary>
         [Fact]
@@ -243,7 +244,7 @@ namespace Business.UnitTest.Unit
         }
 
         /// <summary>
-        /// Tests method <see cref="IntervalCalculator.GetIntervals"/>.
+        /// Tests method <see cref="IntervalCalculator.GetIntervals(NodaTime.LocalDate,NodaTime.LocalDate,int)"/>.
         /// Verifies that the last interval is capped at the end date.
         /// </summary>
         [Fact]
@@ -257,6 +258,142 @@ namespace Business.UnitTest.Unit
             Wv8Assert.Throws<InvalidOperationException>(
                 () => IntervalCalculator.GetIntervals(start, end, 2),
                 $"Not able to create a maximum of 2 intervals between 01-01-2021 and 01-01-2024.");
+        }
+
+        [Fact]
+        public void GetIntervals_PreDefined_Day()
+        {
+            // 1 month
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 01, 31);
+
+            var (unit, intervals) = IntervalCalculator.GetIntervals(start, end);
+
+            Assert.Equal(ReportIntervalUnit.Days, unit);
+
+            for (var i = 0; i < 31; i++)
+            {
+                Assert.Equal(start.PlusDays(i), intervals[i].Start);
+                Assert.Equal(start.PlusDays(i), intervals[i].End);
+            }
+        }
+
+        [Fact]
+        public void GetIntervals_PreDefined_Day_MidMonth()
+        {
+            // 1 month
+            var start = Ld(2021, 01, 15);
+            var end = Ld(2021, 02, 14);
+
+            var (unit, intervals) = IntervalCalculator.GetIntervals(start, end);
+
+            Assert.Equal(ReportIntervalUnit.Days, unit);
+
+            for (var i = 0; i < 31; i++)
+            {
+                Assert.Equal(start.PlusDays(i), intervals[i].Start);
+                Assert.Equal(start.PlusDays(i), intervals[i].End);
+            }
+
+            // 6 days
+            start = Ld(2021, 01, 15);
+            end = Ld(2021, 01, 21);
+
+            (unit, intervals) = IntervalCalculator.GetIntervals(start, end);
+
+            Assert.Equal(ReportIntervalUnit.Days, unit);
+
+            for (var i = 0; i < 6; i++)
+            {
+                Assert.Equal(start.PlusDays(i), intervals[i].Start);
+                Assert.Equal(start.PlusDays(i), intervals[i].End);
+            }
+        }
+
+        [Fact]
+        public void GetIntervals_PreDefined_Week()
+        {
+            // 1 month and 1 day
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 02, 01);
+
+            var (unit, intervals) = IntervalCalculator.GetIntervals(start, end);
+
+            Assert.Equal(ReportIntervalUnit.Weeks, unit);
+
+            for (var i = 0; i < 4; i++)
+            {
+                Assert.Equal(start.PlusWeeks(i), intervals[i].Start);
+                Assert.Equal(start.PlusWeeks(i).PlusDays(6), intervals[i].End);
+            }
+            Assert.Equal(start.PlusWeeks(4), intervals.Last().Start);
+            Assert.Equal(end, intervals.Last().End);
+        }
+
+        [Fact]
+        public void GetIntervals_PreDefined_Month()
+        {
+            // 6 months
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2021, 06, 30);
+
+            var (unit, intervals) = IntervalCalculator.GetIntervals(start, end);
+
+            Assert.Equal(ReportIntervalUnit.Months, unit);
+
+            for (var i = 0; i < 6; i++)
+            {
+                Assert.Equal(start.PlusMonths(i), intervals[i].Start);
+                Assert.Equal(start.PlusMonths(i + 1).PlusDays(-1), intervals[i].End);
+            }
+
+            // 3 years
+            start = Ld(2021, 01, 01);
+            end = Ld(2023, 12, 31);
+
+            (unit, intervals) = IntervalCalculator.GetIntervals(start, end);
+
+            Assert.Equal(ReportIntervalUnit.Months, unit);
+
+            for (var i = 0; i < 36; i++)
+            {
+                Assert.Equal(start.PlusMonths(i), intervals[i].Start);
+                Assert.Equal(start.PlusMonths(i + 1).PlusDays(-1), intervals[i].End);
+            }
+        }
+
+        [Fact]
+        public void GetIntervals_PreDefined_Year()
+        {
+            // 3 years and 1 day
+            var start = Ld(2021, 01, 01);
+            var end = Ld(2024, 01, 01);
+
+            var (unit, intervals) = IntervalCalculator.GetIntervals(start, end);
+
+            Assert.Equal(ReportIntervalUnit.Years, unit);
+
+            for (var i = 0; i < 3; i++)
+            {
+                Assert.Equal(start.PlusYears(i), intervals[i].Start);
+                Assert.Equal(start.PlusYears(i + 1).PlusDays(-1), intervals[i].End);
+            }
+            Assert.Equal(start.PlusYears(3), intervals.Last().Start);
+            Assert.Equal(end, intervals.Last().End);
+
+            // 1000 years
+            start = Ld(2021, 01, 01);
+            end = Ld(3021, 12, 31);
+
+            (unit, intervals) = IntervalCalculator.GetIntervals(start, end);
+
+            Assert.Equal(ReportIntervalUnit.Years, unit);
+
+            for (var i = 0; i < 1000; i++)
+            {
+                Assert.Equal(start.PlusYears(i), intervals[i].Start);
+                Assert.Equal(start.PlusYears(i + 1).PlusDays(-1), intervals[i].End);
+            }
         }
 
         private static LocalDate Ld(int year, int month, int day)
