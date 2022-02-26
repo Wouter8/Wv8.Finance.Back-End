@@ -128,14 +128,9 @@ namespace PersonalFinance.Business.Shared
         /// <returns>A list of daily balance intervals.</returns>
         public static List<BalanceInterval> ToDailyIntervals(this List<BalanceInterval> intervals)
         {
-            var result = new List<BalanceInterval>();
-
-            foreach (var bi in intervals)
-            {
-                result.AddRange(bi.Interval.Select(i => new BalanceInterval(i, i, bi.Balance)));
-            }
-
-            return result;
+            return intervals
+                .SelectMany(i => i.Interval.Select(d => new BalanceInterval(d, d, i.Balance)))
+                .ToList();
         }
 
         /// <summary>
