@@ -219,8 +219,19 @@ namespace PersonalFinance.Business.Splitwise
                         // If the account or category is now obsolete, then the Splitwise transaction has to be re-imported.
                         !transaction.Value.ObsoleteAccountOrCategory)
                     {
-                        transaction = splitwiseTransaction.ToTransaction(
-                            transaction.Value.Account, transaction.Value.Category);
+                        if (transaction.Value.Type == TransactionType.Transfer)
+                        {
+                            var (splitwiseAccount, otherAccount) =
+                                transaction.Value.Account.Type == AccountType.Splitwise
+                                    ? (transaction.Value.Account, transaction.Value.ReceivingAccount)
+                                    : (transaction.Value.ReceivingAccount, transaction.Value.Account);
+                            transaction = splitwiseTransaction.ToTransaction(splitwiseAccount, otherAccount);
+                        }
+                        else
+                        {
+                            transaction = splitwiseTransaction.ToTransaction(
+                                transaction.Value.Account, transaction.Value.Category);
+                        }
 
                         this.Context.Transactions.Add(transaction.Value);
 

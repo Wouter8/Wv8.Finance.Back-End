@@ -162,7 +162,7 @@ namespace PersonalFinance.Business.Splitwise
         /// Also marks the Splitwise transaction as imported.
         /// </summary>
         /// <param name="entity">The Splitwise transaction.</param>
-        /// <param name="splitwiseAccount">The Spltiwise account.</param>
+        /// <param name="splitwiseAccount">The Splitwise account.</param>
         /// <param name="internalAccount">The receiving/sending account.</param>
         /// <returns>The created transaction.</returns>
         public static TransactionEntity ToTransaction(
