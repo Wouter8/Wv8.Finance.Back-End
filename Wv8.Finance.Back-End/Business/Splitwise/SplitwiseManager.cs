@@ -164,7 +164,6 @@ namespace PersonalFinance.Business.Splitwise
 
                 foreach (var newExpense in newExpenses)
                 {
-                    Console.WriteLine(newExpense.Id);
                     var splitwiseTransactionMaybe = splitwiseTransactionsById.TryGetValue(newExpense.Id);
 
                     if (splitwiseTransactionMaybe.IsSome &&
@@ -218,7 +217,7 @@ namespace PersonalFinance.Business.Splitwise
                     // then try to update the transaction.
                     if (transaction.IsSome && splitwiseTransaction.Importable &&
                         // If the account or category is now obsolete, then the Splitwise transaction has to be re-imported.
-                        !transaction.Value.Account.IsObsolete && !transaction.Value.Category.IsObsolete)
+                        !transaction.Value.ObsoleteAccountOrCategory)
                     {
                         transaction = splitwiseTransaction.ToTransaction(
                             transaction.Value.Account, transaction.Value.Category);
