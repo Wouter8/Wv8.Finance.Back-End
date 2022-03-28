@@ -34,7 +34,7 @@
         /// <inheritdoc />
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            this.timer = new Timer(this.Import, null, TimeSpan.FromMinutes(1), TimeSpan.FromHours(1));
+            this.timer = new Timer(this.Import, null, TimeSpan.FromSeconds(5), TimeSpan.FromHours(1));
 
             return Task.CompletedTask;
         }

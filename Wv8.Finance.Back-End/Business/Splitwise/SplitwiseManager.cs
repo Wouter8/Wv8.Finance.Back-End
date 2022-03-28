@@ -164,6 +164,7 @@ namespace PersonalFinance.Business.Splitwise
 
                 foreach (var newExpense in newExpenses)
                 {
+                    Console.WriteLine(newExpense.Id);
                     var splitwiseTransactionMaybe = splitwiseTransactionsById.TryGetValue(newExpense.Id);
 
                     if (splitwiseTransactionMaybe.IsSome &&
