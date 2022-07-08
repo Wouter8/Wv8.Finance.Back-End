@@ -43,14 +43,8 @@ jobs:
       - name: Test
         run: dotnet test
         working-directory: ${{env.workingDirectory}}
-      - name: Set Splitwise production API key
-        run: sed -i 's@{secrets.SplitwiseApiKey}@${{secrets.SPLITWISE_API_KEY}}@g' appsettings.Production.json
-        working-directory: ${{env.appSettingsDirectory}}
-      - name: Set Splitwise production user id
-        run: sed -i 's@{secrets.SplitwiseUserId}@${{secrets.SPLITWISE_USER_ID}}@g' appsettings.Production.json
-        working-directory: ${{env.appSettingsDirectory}}
-      - name: Set Splitwise production group id
-        run: sed -i 's@{secrets.SplitwiseGroupId}@${{secrets.SPLITWISE_GROUP_ID}}@g' appsettings.Production.json
+      - name: Set application settings
+        run: sed -i 's@{secrets.ApplicationSetings}@${{secrets.APPLICATION_SETTINGS}}@g' appsettings.Production.json
         working-directory: ${{env.appSettingsDirectory}}
       - name: Publish with dotnet
         run: dotnet publish Service -c Release -o publish
