@@ -44,7 +44,7 @@ jobs:
         run: dotnet test
         working-directory: ${{env.workingDirectory}}
       - name: Set application settings
-        run: sed -i 's@{secrets.ApplicationSetings}@${{secrets.APPLICATION_SETTINGS}}@g' appsettings.Production.json
+        run: sed -i 's@{secrets.ApplicationSettings}@${{secrets.APPLICATION_SETTINGS}}@g' appsettings.Production.json
         working-directory: ${{env.appSettingsDirectory}}
       - name: Publish with dotnet
         run: dotnet publish Service -c Release -o publish
