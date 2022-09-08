@@ -70,12 +70,21 @@ namespace PersonalFinance.Data.Models
         /// Indicates whether or not the transaction can be edited within this application.
         /// This can be false if the transaction is imported from Splitwise and someone else paid for it, the
         /// transaction should then be updated in Splitwise.
-        /// Note that the category or receiving account of a transaction canalways be changed, since this is
+        /// Note that the category or receiving account of a transaction can always be changed, since this is
         /// only used internally.
         /// </summary>
         public bool FullyEditable =>
             this.SplitwiseTransaction.ToMaybe()
                 .Select(t => this.Type == TransactionType.Expense && t.PaidAmount > 0)
                 .ValueOrElse(true);
+
+        /// <summary>
+        /// <c>true</c> if the account of this transaction and either the receiving account or category is obsolete,
+        /// <c>false</c> otherwise.
+        /// </summary>
+        public bool ObsoleteAccountOrCategory =>
+            this.Type == TransactionType.Transfer
+                ? this.Account.IsObsolete || this.ReceivingAccount.IsObsolete
+                : this.Account.IsObsolete || this.Category.IsObsolete;
     }
 }
