@@ -23,7 +23,7 @@ namespace PersonalFinance.Business.Transaction
             foreach (var transaction in transactions)
             {
                 if (transaction.Type == TransactionType.Expense)
-                    expense += transaction.PersonalAmount;
+                    expense -= transaction.PersonalAmount;
                 else if (transaction.Type == TransactionType.Income)
                     income += transaction.PersonalAmount;
             }
@@ -59,7 +59,11 @@ namespace PersonalFinance.Business.Transaction
             // Transfer transactions do not have a category so are irrelevant here.
             transactions = transactions.Where(t => t.Type != TransactionType.Transfer).ToList();
 
-            var categories = transactions.Select(t => t.Category).Distinct(c => c.Id).ToList();
+            var categories = transactions
+                .Select(t => t.Category)
+                .Union(transactions.Where(t => t.Category.ParentCategoryId.HasValue).Select(t => t.Category.ParentCategory))
+                .Distinct(c => c.Id)
+                .ToList();
             var childCategories = new Dictionary<int, List<int>>();
             foreach (var category in categories)
             {

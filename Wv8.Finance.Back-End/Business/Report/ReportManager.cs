@@ -6,11 +6,13 @@ namespace PersonalFinance.Business.Report
     using NodaTime;
     using PersonalFinance.Business.Account;
     using PersonalFinance.Business.Budget;
+    using PersonalFinance.Business.Category;
     using PersonalFinance.Business.Shared;
     using PersonalFinance.Business.Transaction;
     using PersonalFinance.Common;
     using PersonalFinance.Common.DataTransfer.Reports;
     using PersonalFinance.Common.Enums;
+    using PersonalFinance.Common.Extensions;
     using PersonalFinance.Data;
     using PersonalFinance.Data.Extensions;
     using Wv8.Core;
@@ -165,9 +167,21 @@ namespace PersonalFinance.Business.Report
                 .ToFixedPeriod(start, end)
                 .ToDailyIntervals();
 
+            // TODO: it probably is better to not always include all related entities and just retrieve them manually or include them explicitly for each use case.
             var transactions = this.Context.Transactions.GetTransactions(Maybe<int>.None, start, end, true);
             var transactionsByInterval = transactions.GroupByInterval(intervals);
             var transactionsByCategory = transactions.GroupByCategory();
+
+            var categories = this.Context.Categories.IncludeAll().ToList();
+            var rootCategories = categories
+                .Where(c => !c.ParentCategoryId.HasValue)
+                .ToDictionary(c => c.Id, c => transactionsByCategory.TryGetList(c.Id).Sum());
+            var childCategories = categories
+                .Where(c => c.ParentCategoryId.HasValue)
+                .ToList()
+                .GroupBy(c => c.ParentCategoryId.Value)
+                .ToDictionary(g => g.Key, g => g.ToDictionary(
+                    c => c.Id, c => transactionsByCategory.TryGetList(c.Id).Sum()));
 
             return new PeriodReport
             {
@@ -175,10 +189,10 @@ namespace PersonalFinance.Business.Report
                 Unit = unit,
                 Totals = transactions.Sum(),
                 SumsPerInterval = transactionsByInterval.Select(kv => kv.Value.Sum()).ToList(),
-                TotalsPerCategory = transactionsByCategory.ToDictionary(
-                    kv => kv.Key,
-                    kv => kv.Value.Sum()),
-                DailyBalances = dailyBalances.ToDto(),
+                TotalsPerRootCategory = rootCategories,
+                TotalsPerChildCategory = childCategories,
+                DailyNetWorth = dailyBalances.ToDto(),
+                Categories = categories.ToDictionary(c => c.Id, c => c.AsCategory()),
             };
         }
     }

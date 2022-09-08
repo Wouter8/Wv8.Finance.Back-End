@@ -1,5 +1,6 @@
 ﻿namespace PersonalFinance.Service.Controllers
 {
+    using System.Threading;
     using Microsoft.AspNetCore.Mvc;
     using NodaTime;
     using PersonalFinance.Business.Report;
@@ -57,6 +58,19 @@
         public AccountReport GetAccountReport(int accountId, string start, string end)
         {
             return this.manager.GetAccountReport(accountId, start, end);
+        }
+
+        /// <summary>
+        /// Retrieves the report for a given period.
+        /// </summary>
+        /// <param name="start">The first date of the report.</param>
+        /// <param name="end">The last date of the report.</param>
+        /// <returns>The period report.</returns>
+        [HttpGet]
+        public PeriodReport GetPeriodReport(string start, string end)
+        {
+            Thread.Sleep(2500);
+            return this.manager.GetPeriodReport(start, end);
         }
     }
 }
