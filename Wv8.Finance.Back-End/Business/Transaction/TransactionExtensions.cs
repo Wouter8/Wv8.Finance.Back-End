@@ -1,5 +1,6 @@
 namespace PersonalFinance.Business.Transaction
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using NodaTime;
@@ -43,7 +44,7 @@ namespace PersonalFinance.Business.Transaction
 
             foreach (var transaction in transactions)
             {
-                var interval = intervals.First(i => i.Start >= transaction.Date);
+                var interval = intervals.First(i => i.End >= transaction.Date);
 
                 var intervalTransactions = transactionsByInterval.TryGetList(interval);
                 intervalTransactions.Add(transaction);

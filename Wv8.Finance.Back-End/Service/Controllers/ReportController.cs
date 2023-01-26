@@ -1,5 +1,6 @@
 ﻿namespace PersonalFinance.Service.Controllers
 {
+    using System.Collections.Generic;
     using System.Threading;
     using Microsoft.AspNetCore.Mvc;
     using NodaTime;
@@ -65,12 +66,12 @@
         /// </summary>
         /// <param name="start">The first date of the report.</param>
         /// <param name="end">The last date of the report.</param>
+        /// <param name="categoryIds">Only include transactions that have one of these category ids, if empty no filter is applied.</param>
         /// <returns>The period report.</returns>
         [HttpGet]
-        public PeriodReport GetPeriodReport(string start, string end)
+        public PeriodReport GetPeriodReport(string start, string end, List<int> categoryIds)
         {
-            Thread.Sleep(2500);
-            return this.manager.GetPeriodReport(start, end);
+            return this.manager.GetPeriodReport(start, end, categoryIds);
         }
     }
 }

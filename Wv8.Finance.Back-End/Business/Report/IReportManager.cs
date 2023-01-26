@@ -1,5 +1,6 @@
 namespace PersonalFinance.Business.Report
 {
+    using System.Collections.Generic;
     using NodaTime;
     using PersonalFinance.Common.DataTransfer.Reports;
 
@@ -37,7 +38,8 @@ namespace PersonalFinance.Business.Report
         /// </summary>
         /// <param name="start">The first date of the report.</param>
         /// <param name="end">The last date of the report.</param>
+        /// <param name="categoryIds">Only include transactions that have one of these category ids, if empty no filter is applied.</param>
         /// <returns>The period report.</returns>
-        PeriodReport GetPeriodReport(string start, string end);
+        PeriodReport GetPeriodReport(string start, string end, List<int> categoryIds);
     }
 }

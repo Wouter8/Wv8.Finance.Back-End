@@ -152,7 +152,8 @@ namespace PersonalFinance.Business.Report
             };
         }
 
-        public PeriodReport GetPeriodReport(string startString, string endString)
+        /// <inheritdoc/>
+        public PeriodReport GetPeriodReport(string startString, string endString, List<int> categoryFilter)
         {
             var start = this.validator.DateString(startString, "start");
             var end = this.validator.DateString(endString, "end");
@@ -168,7 +169,7 @@ namespace PersonalFinance.Business.Report
                 .ToDailyIntervals();
 
             // TODO: it probably is better to not always include all related entities and just retrieve them manually or include them explicitly for each use case.
-            var transactions = this.Context.Transactions.GetTransactions(Maybe<int>.None, start, end, true);
+            var transactions = this.Context.Transactions.GetTransactions(categoryFilter, start, end, true);
             var transactionsByInterval = transactions.GroupByInterval(intervals);
             var transactionsByCategory = transactions.GroupByCategory();
 
