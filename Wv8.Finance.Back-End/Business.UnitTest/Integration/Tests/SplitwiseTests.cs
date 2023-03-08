@@ -22,7 +22,7 @@ namespace Business.UnitTest.Integration.Tests
     /// </summary>
     public class SplitwiseTests : BaseIntegrationTest
     {
-        private int splitwiseUserId = 1;
+        private long splitwiseUserId = 1;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SplitwiseTests"/> class.
@@ -1094,7 +1094,7 @@ namespace Business.UnitTest.Integration.Tests
             return this.SplitwiseContextMock.GenerateUser(this.splitwiseUserId, "User");
         }
 
-        private Split GenerateSplit(int userId = 0, decimal amount = 10, string userName = "User")
+        private Split GenerateSplit(long userId = 0, decimal amount = 10, string userName = "User")
         {
             return new Split
             {

@@ -70,7 +70,7 @@ namespace PersonalFinance.Business.Splitwise
         }
 
         /// <inheritdoc />
-        public Transaction CompleteTransferImport(int splitwiseId, int accountId)
+        public Transaction CompleteTransferImport(long splitwiseId, int accountId)
         {
             var splitwiseTransaction = this.Context.SplitwiseTransactions.GetEntity(splitwiseId);
             var splitwiseAccount = this.Context.Accounts.GetSplitwiseEntity();
@@ -96,7 +96,7 @@ namespace PersonalFinance.Business.Splitwise
         }
 
         /// <inheritdoc />
-        public Transaction CompleteTransactionImport(int splitwiseId, int categoryId, Maybe<int> accountId)
+        public Transaction CompleteTransactionImport(long splitwiseId, int categoryId, Maybe<int> accountId)
         {
             var splitwiseTransaction = this.Context.SplitwiseTransactions.GetEntity(splitwiseId);
             var splitwiseAccount = this.Context.Accounts.GetSplitwiseEntity();

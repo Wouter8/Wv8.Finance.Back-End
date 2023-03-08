@@ -12,7 +12,7 @@ namespace PersonalFinance.Data.External.Splitwise.Models
         /// <summary>
         /// The identifier of the expense.
         /// </summary>
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         /// <summary>
         /// The description of the expense.

@@ -33,7 +33,7 @@ namespace PersonalFinance.Business.Splitwise
         /// <param name="splitwiseId">The identifier of the Splitwise transaction.</param>
         /// <param name="accountId">The sending/receiving account for the transaction.</param>
         /// <returns>The imported transaction.</returns>
-        public Transaction CompleteTransferImport(int splitwiseId, int accountId);
+        public Transaction CompleteTransferImport(long splitwiseId, int accountId);
 
         /// <summary>
         /// Imports a Splitwise transaction by specifying a category for the transaction.
@@ -43,7 +43,7 @@ namespace PersonalFinance.Business.Splitwise
         /// <param name="accountId">The account identifier for which the transaction must be imported. This is only
         /// relevant if the expense of <paramref name="splitwiseId"/> has been paid for by the user.</param>
         /// <returns>The imported transaction.</returns>
-        public Transaction CompleteTransactionImport(int splitwiseId, int categoryId, Maybe<int> accountId);
+        public Transaction CompleteTransactionImport(long splitwiseId, int categoryId, Maybe<int> accountId);
 
         /// <summary>
         /// Imports new/updated transactions from Splitwise.

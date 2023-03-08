@@ -11,7 +11,7 @@ namespace PersonalFinance.Data.External.Splitwise.Models
         /// The identifier of the user.
         /// </summary>
         /// <remarks>This identifier is directly imported from Splitwise.</remarks>
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         /// <summary>
         /// The first name of the user.

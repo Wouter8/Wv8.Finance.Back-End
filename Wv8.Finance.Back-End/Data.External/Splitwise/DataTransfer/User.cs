@@ -10,7 +10,7 @@ namespace PersonalFinance.Data.External.Splitwise.DataTransfer
         /// <summary>
         /// The identifier of the user.
         /// </summary>
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         /// <summary>
         /// The first name of the user.

@@ -15,12 +15,12 @@ namespace PersonalFinance.Common.DataTransfer.Output
         /// <summary>
         /// The identifier of the Splitwise transaction this split belongs to.
         /// </summary>
-        public Maybe<int> SplitwiseTransactionId { get; set; }
+        public Maybe<long> SplitwiseTransactionId { get; set; }
 
         /// <summary>
         /// The identifier of the user from Splitwise who is linked to this split.
         /// </summary>
-        public int SplitwiseUserId { get; set; }
+        public long SplitwiseUserId { get; set; }
 
         /// <summary>
         /// The name of the user from Splitwise. This is used as back-up when the user has become obsolete.

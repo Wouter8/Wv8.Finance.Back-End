@@ -15,7 +15,7 @@ namespace PersonalFinance.Data.Models
         /// This might not have a value when the transaction is not yet processed and therefore no Splitwise
         /// transaction is created.
         /// </summary>
-        public int? SplitwiseTransactionId { get; set; }
+        public long? SplitwiseTransactionId { get; set; }
 
         /// <summary>
         /// The identifier of the transaction this split belongs to.
@@ -27,7 +27,7 @@ namespace PersonalFinance.Data.Models
         /// <summary>
         /// The identifier of the user from Splitwise who is linked to this split.
         /// </summary>
-        public int SplitwiseUserId { get; set; }
+        public long SplitwiseUserId { get; set; }
 
         /// <summary>
         /// The name of the user from Splitwise. This is used as back-up when the user has become obsolete.

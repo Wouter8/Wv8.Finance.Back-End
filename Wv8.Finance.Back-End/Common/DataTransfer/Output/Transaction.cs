@@ -38,7 +38,7 @@
         /// <summary>
         /// Optionally, the identifier of the Splitwise transaction this transaction is linked to.
         /// </summary>
-        public Maybe<int> SplitwiseTransactionId { get; set; }
+        public Maybe<long> SplitwiseTransactionId { get; set; }
 
         /// <summary>
         /// Optionally, the Splitwise transaction this transaction is linked to.

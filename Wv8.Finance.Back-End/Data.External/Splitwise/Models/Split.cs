@@ -8,7 +8,7 @@ namespace PersonalFinance.Data.External.Splitwise.Models
         /// <summary>
         /// The user identifier from Splitwise.
         /// </summary>
-        public int UserId { get; set; }
+        public long UserId { get; set; }
 
         /// <summary>
         /// The name of the user from Splitwise.
