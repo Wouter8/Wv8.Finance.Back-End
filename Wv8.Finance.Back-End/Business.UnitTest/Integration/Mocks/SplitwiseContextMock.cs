@@ -63,7 +63,7 @@ namespace Business.UnitTest.Integration.Mocks
         }
 
         /// <inheritdoc />
-        public void DeleteExpense(int id)
+        public void DeleteExpense(long id)
         {
             this.Expenses.RemoveAll(e => e.Id == id);
         }

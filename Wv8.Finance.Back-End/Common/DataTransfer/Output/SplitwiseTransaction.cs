@@ -13,7 +13,7 @@ namespace PersonalFinance.Common.DataTransfer.Output
         /// The identifier of the transaction.
         /// </summary>
         /// <remarks>This identifier is directly imported from Splitwise.</remarks>
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         /// <summary>
         /// The description of the transaction.

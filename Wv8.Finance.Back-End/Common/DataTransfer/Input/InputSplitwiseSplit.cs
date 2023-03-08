@@ -8,7 +8,7 @@ namespace PersonalFinance.Common.DataTransfer.Input
         /// <summary>
         /// The identifier of the Splitwise user the split is meant for.
         /// </summary>
-        public int UserId { get; set; }
+        public long UserId { get; set; }
 
         /// <summary>
         /// The amount paid for the user.

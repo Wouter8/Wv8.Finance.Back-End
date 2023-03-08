@@ -44,11 +44,11 @@
         /// <summary>
         /// The id of the user in Splitwise.
         /// </summary>
-        public int SplitwiseUserId { get; set; }
+        public long SplitwiseUserId { get; set; }
 
         /// <summary>
         /// The id of the group in Splitwise.
         /// </summary>
-        public int SplitwiseGroupId { get; set; }
+        public long SplitwiseGroupId { get; set; }
     }
 }

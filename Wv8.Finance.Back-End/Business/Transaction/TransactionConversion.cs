@@ -40,7 +40,7 @@
         /// </summary>
         /// <param name="split">The inputted split.</param>
         /// <returns>The created entity.</returns>
-        public static SplitDetailEntity ToSplitDetailEntity(this InputSplitwiseSplit split, Dictionary<int, Splitwise.User> splitwiseUsers)
+        public static SplitDetailEntity ToSplitDetailEntity(this InputSplitwiseSplit split, Dictionary<long, Splitwise.User> splitwiseUsers)
         {
             return new SplitDetailEntity
             {

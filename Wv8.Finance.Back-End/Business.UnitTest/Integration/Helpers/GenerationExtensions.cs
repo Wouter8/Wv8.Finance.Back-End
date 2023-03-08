@@ -297,10 +297,10 @@ namespace Business.UnitTest.Integration.Helpers
         /// <returns>The created entity.</returns>
         public static SplitDetailEntity GenerateSplitDetail(
             this Context context,
-            int splitwiseUserId,
+            long splitwiseUserId,
             decimal amount = 10m,
             int? transactionId = null,
-            int? splitwiseTransactionId = null,
+            long? splitwiseTransactionId = null,
             string splitwiseUserName = "User")
         {
             return context.SplitDetails.Add(new SplitDetailEntity
@@ -328,7 +328,7 @@ namespace Business.UnitTest.Integration.Helpers
         /// <returns>The created expense.</returns>
         public static Expense GenerateExpense(
             this SplitwiseContextMock splitwiseContext,
-            int id = 0,
+            long id = 0,
             string description = null,
             LocalDate? date = null,
             bool isDeleted = false,
@@ -364,7 +364,7 @@ namespace Business.UnitTest.Integration.Helpers
         /// <returns>The created expense.</returns>
         public static User GenerateUser(
             this SplitwiseContextMock splitwiseContext,
-            int id = 0,
+            long id = 0,
             string firstName = null,
             string lastName = null)
         {

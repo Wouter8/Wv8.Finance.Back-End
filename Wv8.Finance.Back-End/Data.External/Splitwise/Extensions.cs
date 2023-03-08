@@ -19,7 +19,7 @@ namespace PersonalFinance.Data.External.Splitwise
         /// <param name="expense">The expense from Splitwise.</param>
         /// <param name="userId">The user id.</param>
         /// <returns>The domain expense object.</returns>
-        public static Expense ToDomainObject(this DT.Expense expense, int userId)
+        public static Expense ToDomainObject(this DT.Expense expense, long userId)
         {
             var user = expense.Users.SingleOrNone(u => u.User.Id == userId);
 

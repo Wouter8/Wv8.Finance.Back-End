@@ -34,7 +34,7 @@ namespace PersonalFinance.Data.External.Splitwise
         /// Deletes an expense in Splitwise.
         /// </summary>
         /// <param name="id">The identifier of the expense in Splitwise.</param>
-        public void DeleteExpense(int id);
+        public void DeleteExpense(long id);
 
         /// <summary>
         /// Gets all expenses which were updated/created after the specified timestamp.

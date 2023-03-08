@@ -33,12 +33,12 @@ namespace PersonalFinance.Data.External.Splitwise
         /// <summary>
         /// The user id in Splitwise.
         /// </summary>
-        private readonly int userId;
+        private readonly long userId;
 
         /// <summary>
         /// The group id in Splitwise.
         /// </summary>
-        private readonly int groupId;
+        private readonly long groupId;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SplitwiseContext"/> class.
@@ -108,7 +108,7 @@ namespace PersonalFinance.Data.External.Splitwise
         }
 
         /// <inheritdoc/>
-        public void DeleteExpense(int id)
+        public void DeleteExpense(long id)
         {
             this.VerifyEnabled();
 

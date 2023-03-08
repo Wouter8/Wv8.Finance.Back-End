@@ -266,7 +266,7 @@ namespace PersonalFinance.Data.Extensions
         /// <param name="set">The database set.</param>
         /// <param name="id">The identifier of the Splitwise transaction to be retrieved.</param>
         /// <returns>The transaction.</returns>
-        public static SplitwiseTransactionEntity GetEntity(this DbSet<SplitwiseTransactionEntity> set, int id)
+        public static SplitwiseTransactionEntity GetEntity(this DbSet<SplitwiseTransactionEntity> set, long id)
         {
             return set
                 .IncludeAll()

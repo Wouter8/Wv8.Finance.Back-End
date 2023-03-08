@@ -41,7 +41,7 @@ namespace PersonalFinance.Data.Models
         /// <summary>
         /// Optionally, the identifier of the Splitwise transaction this transaction is linked to.
         /// </summary>
-        public int? SplitwiseTransactionId { get; set; }
+        public long? SplitwiseTransactionId { get; set; }
 
         /// <summary>
         /// Optionally, the Splitwise transaction this transaction is linked to.
