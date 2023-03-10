@@ -29,7 +29,7 @@
         /// <returns>The strings.</returns>
         public static List<string> ToDateStrings(this List<LocalDate> dates)
         {
-            return dates.Select(d => d.ToString("d", new CultureInfo("en-US"))).ToList();
+            return dates.Select(ToDateString).ToList();
         }
 
         /// <summary>

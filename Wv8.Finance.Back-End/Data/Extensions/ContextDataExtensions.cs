@@ -298,15 +298,45 @@ namespace PersonalFinance.Data.Extensions
         /// Retrieves a list of transactions based on some filters.
         /// </summary>
         /// <param name="set">The database set.</param>
-        /// <param name="categoryId">The category identifier.</param>
+        /// <param name="categoryId">Optionally, the category identifier.</param>
         /// <param name="start">The start date of the period to search for.</param>
         /// <param name="end">The end date of the period to search for.</param>
+        /// <param name="mustBeProcessed"><c>true</c> if the transaction must be processed to be returned, <c>false</c> otherwise.</param>
         /// <returns>The list of transactions.</returns>
-        public static List<TransactionEntity> GetTransactions(this DbSet<TransactionEntity> set, int categoryId, LocalDate start, LocalDate end)
+        public static List<TransactionEntity> GetTransactions(
+            this DbSet<TransactionEntity> set, Maybe<int> categoryId, LocalDate start, LocalDate end, bool mustBeProcessed)
         {
             return set
                 .IncludeAll()
-                .Where(t => t.CategoryId == categoryId || (t.CategoryId.HasValue && t.Category.ParentCategoryId == categoryId))
+                .WhereIf(
+                    categoryId.IsSome,
+                    t => t.CategoryId == categoryId.Value || (t.CategoryId.HasValue && t.Category.ParentCategoryId == categoryId.Value))
+                .WhereIf(mustBeProcessed, t => t.Processed)
+                .Where(t => start <= t.Date && end >= t.Date)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Retrieves a list of transactions based on some filters.
+        /// </summary>
+        /// <param name="set">The database set.</param>
+        /// <param name="categoryIds">The category identifiers to filter on, if empty no filter is applied.</param>
+        /// <param name="start">The start date of the period to search for.</param>
+        /// <param name="end">The end date of the period to search for.</param>
+        /// <param name="mustBeProcessed"><c>true</c> if the transaction must be processed to be returned, <c>false</c> otherwise.</param>
+        /// <returns>The list of transactions.</returns>
+        public static List<TransactionEntity> GetTransactions(
+            this DbSet<TransactionEntity> set, List<int> categoryIds, LocalDate start, LocalDate end, bool mustBeProcessed)
+        {
+            return set
+                .IncludeAll()
+                .WhereIf(
+                    categoryIds.Any(),
+                    t =>
+                        t.CategoryId.HasValue &&
+                        (categoryIds.Contains(t.CategoryId.Value)
+                         || (t.Category.ParentCategoryId.HasValue && categoryIds.Contains(t.Category.ParentCategoryId.Value))))
+                .WhereIf(mustBeProcessed, t => t.Processed)
                 .Where(t => start <= t.Date && end >= t.Date)
                 .ToList();
         }

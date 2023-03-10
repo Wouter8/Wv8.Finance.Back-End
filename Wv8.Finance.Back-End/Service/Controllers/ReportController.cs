@@ -1,7 +1,7 @@
 ﻿namespace PersonalFinance.Service.Controllers
 {
+    using System.Collections.Generic;
     using Microsoft.AspNetCore.Mvc;
-    using NodaTime;
     using PersonalFinance.Business.Report;
     using PersonalFinance.Common.DataTransfer.Reports;
 
@@ -57,6 +57,17 @@
         public AccountReport GetAccountReport(int accountId, string start, string end)
         {
             return this.manager.GetAccountReport(accountId, start, end);
+        }
+
+        /// <summary>
+        /// Retrieves the report for a given period.
+        /// </summary>
+        /// <param name="data">The settings for the report.</param>
+        /// <returns>The period report.</returns>
+        [HttpPost]
+        public PeriodReport GetPeriodReport([FromBody] PeriodReportData data)
+        {
+            return this.manager.GetPeriodReport(data.Start, data.End, data.CategoryIds ?? new List<int>());
         }
     }
 }

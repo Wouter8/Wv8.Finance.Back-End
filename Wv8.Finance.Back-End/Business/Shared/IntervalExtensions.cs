@@ -8,7 +8,6 @@ namespace PersonalFinance.Business.Shared
     using PersonalFinance.Data.Models;
     using Wv8.Core;
     using Wv8.Core.Collections;
-    using Wv8.Core.EntityFramework;
 
     /// <summary>
     /// A class containing extension methods relevant to intervals.
@@ -129,14 +128,19 @@ namespace PersonalFinance.Business.Shared
         /// <returns>A list of daily balance intervals.</returns>
         public static List<BalanceInterval> ToDailyIntervals(this List<BalanceInterval> intervals)
         {
-            var result = new List<BalanceInterval>();
+            return intervals
+                .SelectMany(i => i.Interval.Select(d => new BalanceInterval(d, d, i.Balance)))
+                .ToList();
+        }
 
-            foreach (var bi in intervals)
-            {
-                result.AddRange(bi.Interval.Select(i => new BalanceInterval(i, i, bi.Balance)));
-            }
-
-            return result;
+        /// <summary>
+        /// Converts a list of balance intervals to a type which can be send to the front-end.
+        /// </summary>
+        /// <param name="intervals">The intervals.</param>
+        /// <returns>The dto.</returns>
+        public static Dictionary<string, decimal> ToDto(this List<BalanceInterval> intervals)
+        {
+            return intervals.ToDictionary(i => i.Interval.Start.ToDateString(), i => i.Balance);
         }
 
         /// <summary>
