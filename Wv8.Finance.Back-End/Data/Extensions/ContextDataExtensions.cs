@@ -334,12 +334,11 @@ namespace PersonalFinance.Data.Extensions
                     categoryIds.Any(),
                     t =>
                         t.CategoryId.HasValue &&
-                        (categoryIds.Contains(t.CategoryId.Value) 
+                        (categoryIds.Contains(t.CategoryId.Value)
                          || (t.Category.ParentCategoryId.HasValue && categoryIds.Contains(t.Category.ParentCategoryId.Value))))
                 .WhereIf(mustBeProcessed, t => t.Processed)
                 .Where(t => start <= t.Date && end >= t.Date)
                 .ToList();
-
         }
 
         /// <summary>

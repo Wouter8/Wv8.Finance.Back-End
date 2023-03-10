@@ -1,9 +1,7 @@
 ﻿namespace PersonalFinance.Service.Controllers
 {
     using System.Collections.Generic;
-    using System.Threading;
     using Microsoft.AspNetCore.Mvc;
-    using NodaTime;
     using PersonalFinance.Business.Report;
     using PersonalFinance.Common.DataTransfer.Reports;
 
@@ -64,14 +62,12 @@
         /// <summary>
         /// Retrieves the report for a given period.
         /// </summary>
-        /// <param name="start">The first date of the report.</param>
-        /// <param name="end">The last date of the report.</param>
-        /// <param name="categoryIds">Only include transactions that have one of these category ids, if empty no filter is applied.</param>
+        /// <param name="data">The settings for the report.</param>
         /// <returns>The period report.</returns>
-        [HttpGet]
-        public PeriodReport GetPeriodReport(string start, string end, List<int> categoryIds)
+        [HttpPost]
+        public PeriodReport GetPeriodReport([FromBody] PeriodReportData data)
         {
-            return this.manager.GetPeriodReport(start, end, categoryIds);
+            return this.manager.GetPeriodReport(data.Start, data.End, data.CategoryIds ?? new List<int>());
         }
     }
 }
