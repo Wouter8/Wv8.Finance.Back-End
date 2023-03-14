@@ -184,12 +184,14 @@ namespace PersonalFinance.Business.Report
                 .ToDictionary(g => g.Key, g => g.ToDictionary(
                     c => c.Id, c => transactionsByCategory.TryGetList(c.Id).Sum()));
 
+            var t = transactionsByInterval.Select(kv => kv.Value.Sum()).ToList();
+
             return new PeriodReport
             {
                 Dates = intervals.ToDates().ToDateStrings(),
                 Unit = unit,
                 Totals = transactions.Sum(),
-                SumsPerInterval = transactionsByInterval.Select(kv => kv.Value.Sum()).ToList(),
+                SumsPerInterval = intervals.Select(i => transactionsByInterval.TryGetList(i).Sum()).ToList(),
                 TotalsPerRootCategory = rootCategories,
                 TotalsPerChildCategory = childCategories,
                 DailyNetWorth = dailyBalances.ToDto(),
