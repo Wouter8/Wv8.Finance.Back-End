@@ -58,7 +58,7 @@ namespace PersonalFinance.Service.Controllers
         /// relevant if the expense of <paramref name="splitwiseId"/> has been paid for by the user.</param>
         /// <returns>The imported transaction.</returns>
         [HttpPost("complete-import/{splitwiseId}")]
-        public Transaction CompleteTransactionImport(int splitwiseId, int categoryId, Maybe<int> accountId)
+        public Transaction CompleteTransactionImport(long splitwiseId, int categoryId, Maybe<int> accountId)
         {
             return this.manager.CompleteTransactionImport(splitwiseId, categoryId, accountId);
         }
@@ -71,7 +71,7 @@ namespace PersonalFinance.Service.Controllers
         /// <param name="accountId">The receiving account for the transaction.</param>
         /// <returns>The imported transaction.</returns>
         [HttpPost("complete-import-transfer/{splitwiseId}")]
-        public Transaction CompleteTransferImport(int splitwiseId, int accountId)
+        public Transaction CompleteTransferImport(long splitwiseId, int accountId)
         {
             return this.manager.CompleteTransferImport(splitwiseId, accountId);
         }
